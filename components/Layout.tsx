@@ -28,6 +28,11 @@ const NavItem: React.FC<{
 );
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewChange, onLogout }) => {
+  // Corrigir o tipo ViewState para incluir 'BALANCE'
+  const handleViewChange = (view: ViewState | 'BALANCE') => {
+    onViewChange(view as ViewState);
+  };
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       {/* Sidebar */}
@@ -84,7 +89,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewCha
             icon={<Scale size={20} />} 
             label="Balanço" 
             active={currentView === 'BALANCE'} 
-            onClick={() => onViewChange('BALANCE')} 
+            onClick={() => handleViewChange('BALANCE')} 
           />
           <NavItem 
             icon={<PieChart size={20} />} 
