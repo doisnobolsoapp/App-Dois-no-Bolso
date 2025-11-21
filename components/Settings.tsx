@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { AppData } from '../types';
-// import { Language } from '../types'; // Comentado - tipo não existe
 
 interface SettingsProps {
   data: AppData;
@@ -8,6 +7,8 @@ interface SettingsProps {
 }
 
 export const Settings: React.FC<SettingsProps> = ({ data, onDataUpdate }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleUserModeChange = (mode: 'INDIVIDUAL' | 'COUPLE') => {
     onDataUpdate({
       ...data,
@@ -20,6 +21,66 @@ export const Settings: React.FC<SettingsProps> = ({ data, onDataUpdate }) => {
       ...data,
       language: language as any
     });
+  };
+
+  const handleExportData = () => {
+    const dataStr = JSON.stringify(data, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `dois-no-bolso-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target?.result as string) as AppData;
+        // Validar minimamente a estrutura dos dados?
+        if (importedData && typeof importedData === 'object') {
+          if (window.confirm('Isso substituirá todos os seus dados atuais. Tem certeza?')) {
+            onDataUpdate(importedData);
+          }
+        } else {
+          alert('Arquivo inválido.');
+        }
+      } catch (error) {
+        alert('Erro ao ler o arquivo. Certifique-se de que é um JSON válido.');
+      }
+    };
+    reader.readAsText(file);
+    // Resetar o input para permitir importar o mesmo arquivo novamente
+    event.target.value = '';
+  };
+
+  const handleClearData = () => {
+    if (window.confirm('Isso removerá permanentemente todos os seus dados. Tem certeza?')) {
+      const emptyData: AppData = {
+        transactions: [],
+        goals: [],
+        accounts: [],
+        creditCards: [],
+        investments: [],
+        properties: [],
+        debts: [],
+        customCategories: [],
+        userMode: 'INDIVIDUAL',
+        language: 'PT'
+      };
+      onDataUpdate(emptyData);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   return (
@@ -73,12 +134,34 @@ export const Settings: React.FC<SettingsProps> = ({ data, onDataUpdate }) => {
       <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
         <h3 className="font-bold text-lg text-slate-800 mb-4">Gerenciamento de Dados</h3>
         <div className="space-y-3">
-          <button className="w-full text-left p-3 bg-red-50 text-red-700 rounded-lg border border-red-200 hover:bg-red-100 transition-colors">
+          <button 
+            onClick={handleExportData}
+            className="w-full text-left p-3 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors"
+          >
             <div className="font-bold">Exportar Dados</div>
             <div className="text-sm">Baixe backup dos seus dados</div>
           </button>
+
+          <button 
+            onClick={triggerFileInput}
+            className="w-full text-left p-3 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors"
+          >
+            <div className="font-bold">Importar Dados</div>
+            <div className="text-sm">Restaurar de um backup</div>
+          </button>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImportData}
+            accept=".json"
+            className="hidden"
+          />
           
-          <button className="w-full text-left p-3 bg-amber-50 text-amber-700 rounded-lg border border-amber-200 hover:bg-amber-100 transition-colors">
+          <button 
+            onClick={handleClearData}
+            className="w-full text-left p-3 bg-red-50 text-red-700 rounded-lg border border-red-200 hover:bg-red-100 transition-colors"
+          >
             <div className="font-bold">Limpar Dados</div>
             <div className="text-sm">Remove todas as informações (irreversível)</div>
           </button>
