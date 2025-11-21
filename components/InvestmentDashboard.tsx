@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { AppData, Investment, InvestmentType, InvestmentStrategy, TransactionType, PaymentMethod } from '../types';
 import { INVESTMENT_TYPE_LABELS, INVESTMENT_STRATEGY_LABELS } from '../constants';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { TrendingUp, Plus, DollarSign, ArrowUpRight, ArrowDownRight, RefreshCw, Trash2 } from 'lucide-react';
+import { Plus, DollarSign, ArrowUpRight, ArrowDownRight, RefreshCw, Trash2 } from 'lucide-react';
 
 interface InvestmentDashboardProps {
   data: AppData;
