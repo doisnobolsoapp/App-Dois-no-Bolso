@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Goal } from '../types';
-import { Target, Plus, Trash2, Trophy } from 'lucide-react';
+import { Target, Plus, Trophy } from 'lucide-react'; // Removido: Trash2
 
 interface GoalsProps {
   goals: Goal[];
