@@ -1,4 +1,3 @@
-
 import { Category, TransactionType, PaymentMethod, InvestmentType, InvestmentStrategy } from './types';
 
 export const INITIAL_DATA_KEY = 'dois_no_bolso_data_v3'; // Bumped version
@@ -14,7 +13,8 @@ export const PAYMENT_METHOD_LABELS = {
   [PaymentMethod.CASH]: 'Dinheiro',
   [PaymentMethod.BANK_TRANSFER]: 'Pix / Transferência',
   [PaymentMethod.DEBIT_CARD]: 'Débito',
-  [PaymentMethod.CREDIT_CARD]: 'Crédito'
+  [PaymentMethod.CREDIT_CARD]: 'Crédito',
+  [PaymentMethod.PIX]: 'Pix'
 };
 
 export const INVESTMENT_TYPE_LABELS = {
