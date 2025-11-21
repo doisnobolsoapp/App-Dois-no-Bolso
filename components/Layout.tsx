@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { ViewState } from '../types';
-import { LayoutDashboard, Receipt, Target, PieChart, MessageSquareText, Settings, Landmark, CreditCard as CreditCardIcon, TrendingUp, LogOut, Scale, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, Receipt, Target, PieChart, MessageSquare, Settings, Landmark, CreditCard as CreditCardIcon, TrendingUp, LogOut, Scale, CalendarDays } from 'lucide-react';
 import { Logo } from './Logo';
 
 interface LayoutProps {
@@ -98,7 +97,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewCha
           
           <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Assistente</p>
           <NavItem 
-            icon={<MessageSquareText size={20} />} 
+            icon={<MessageSquare size={20} />} 
             label="Chat Inteligente" 
             active={currentView === 'CHAT'} 
             onClick={() => onViewChange('CHAT')} 
@@ -154,7 +153,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewCha
         </button>
         <button onClick={() => onViewChange('CHAT')} className={`p-2 flex flex-col items-center ${currentView === 'CHAT' ? 'text-brand-600' : 'text-slate-400'}`}>
           <div className="bg-brand-500 text-white p-2 rounded-full -mt-8 shadow-lg">
-             <MessageSquareText size={24} />
+             <MessageSquare size={24} />
           </div>
           <span className="text-[10px] mt-1 font-bold text-brand-600">IA</span>
         </button>
