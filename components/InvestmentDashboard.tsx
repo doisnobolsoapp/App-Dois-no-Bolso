@@ -1,9 +1,8 @@
-
 import React, { useState, useMemo } from 'react';
 import { AppData, Investment, InvestmentType, InvestmentStrategy, TransactionType, PaymentMethod } from '../types';
 import { INVESTMENT_TYPE_LABELS, INVESTMENT_STRATEGY_LABELS } from '../constants';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { TrendingUp, Plus, DollarSign, ArrowUpRight, ArrowDownRight, MoreHorizontal, RefreshCw, History, Trash2 } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { TrendingUp, Plus, DollarSign, ArrowUpRight, ArrowDownRight, RefreshCw, Trash2 } from 'lucide-react';
 
 interface InvestmentDashboardProps {
   data: AppData;
@@ -156,7 +155,7 @@ export const InvestmentDashboard: React.FC<InvestmentDashboardProps> = ({ data, 
                  <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie data={allocationData} cx="50%" cy="50%" innerRadius={30} outerRadius={50} paddingAngle={5} dataKey="value">
-                            {allocationData.map((entry, index) => (
+                            {allocationData.map((_entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                         </Pie>
