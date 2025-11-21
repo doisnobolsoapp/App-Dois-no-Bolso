@@ -55,7 +55,31 @@ export const Reports: React.FC<ReportsProps> = ({ data }) => {
             )}
         </div>
 
-        {/* ... resto do código permanece igual */}
+        <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4">Insights Rápidos</h3>
+            <ul className="space-y-4">
+                <li className="flex items-start">
+                    <div className="bg-blue-100 text-blue-600 p-2 rounded-lg mr-3">💡</div>
+                    <div>
+                        <p className="font-medium text-slate-800">Maior Gasto</p>
+                        <p className="text-sm text-slate-500">
+                             {categoryData.length > 0 
+                             ? `${categoryData.sort((a,b) => b.value - a.value)[0].name} representa sua maior categoria de despesas.`
+                             : 'Registre despesas para ver insights.'}
+                        </p>
+                    </div>
+                </li>
+                 <li className="flex items-start">
+                    <div className="bg-green-100 text-green-600 p-2 rounded-lg mr-3">📈</div>
+                    <div>
+                        <p className="font-medium text-slate-800">Investimentos</p>
+                        <p className="text-sm text-slate-500">
+                            Mantenha aportes regulares para acelerar suas metas.
+                        </p>
+                    </div>
+                </li>
+            </ul>
+        </div>
       </div>
     </div>
   );
