@@ -88,7 +88,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewCha
           <NavItem 
             icon={<Scale size={20} />} 
             label="Balanço" 
-            active={currentView === 'BALANCE'} 
+            active={currentView === 'BALANCE' as ViewState}
             onClick={() => handleViewChange('BALANCE')} 
           />
           <NavItem 
