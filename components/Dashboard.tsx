@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { AppData, TransactionType, ViewState } from '../types';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, TrendingDown, Wallet, Target, PieChart, Calendar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 interface DashboardProps {
