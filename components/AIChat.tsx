@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, Loader2 } from 'lucide-react';
-import { AppData, TransactionType, PaymentMethod, Category } from '../types';
+import { AppData, TransactionType, PaymentMethod } from '../types';
 import { createGeminiClient, getGeminiModel, SYSTEM_INSTRUCTION } from '../services/geminiService';
 
 interface AIChatProps {
