@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai"; // Corrigido: @google/genai → @google/generative-ai
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { DEFAULT_SYSTEM_INSTRUCTION } from "../constants";
 
 // Define tool for adding transactions
@@ -76,19 +76,19 @@ const addInvestmentTool = {
 };
 
 export const createGeminiClient = () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY; // Corrigido: process.env → import.meta.env
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     console.warn("API Key not found in environment variables");
   }
-  return new GoogleGenerativeAI(apiKey || ''); // Corrigido: GoogleGenAI → GoogleGenerativeAI
+  return new GoogleGenerativeAI(apiKey || '');
 };
 
 export const getGeminiModel = (client: GoogleGenerativeAI) => {
-  return client.getGenerativeModel({ model: "gemini-pro" }); // Corrigido para a nova API
+  return client.getGenerativeModel({ model: "gemini-pro" });
 };
 
 export const TOOLS_CONFIG = [
-  addTransactionTool, addGoalTool, addInvestmentTool // Simplificado
+  addTransactionTool, addGoalTool, addInvestmentTool
 ];
 
 export const SYSTEM_INSTRUCTION = DEFAULT_SYSTEM_INSTRUCTION;
