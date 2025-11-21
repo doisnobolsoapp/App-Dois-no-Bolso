@@ -1,37 +1,36 @@
-
-import { GoogleGenAI, FunctionDeclaration, Type } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai"; // Corrigido: @google/genai → @google/generative-ai
 import { DEFAULT_SYSTEM_INSTRUCTION } from "../constants";
 
 // Define tool for adding transactions
-const addTransactionTool: FunctionDeclaration = {
+const addTransactionTool = {
   name: "addTransaction",
   description: "Adicionar uma nova transação financeira (receita, despesa, investimento, etc).",
   parameters: {
-    type: Type.OBJECT,
+    type: "OBJECT",
     properties: {
       type: {
-        type: Type.STRING,
+        type: "STRING",
         enum: ["INCOME", "EXPENSE", "INVESTMENT", "LOAN"],
         description: "O tipo da transação."
       },
       category: {
-        type: Type.STRING,
+        type: "STRING",
         description: "A categoria da transação (ex: Alimentação, Salário, Lazer)."
       },
       amount: {
-        type: Type.NUMBER,
+        type: "NUMBER",
         description: "O valor numérico da transação."
       },
       description: {
-        type: Type.STRING,
+        type: "STRING",
         description: "Uma breve descrição ou nome da transação."
       },
       date: {
-        type: Type.STRING,
+        type: "STRING",
         description: "Data no formato YYYY-MM-DD. Se não especificado, use a data de hoje."
       },
       paid: {
-        type: Type.BOOLEAN,
+        type: "BOOLEAN",
         description: "Se a conta já foi paga ou recebida. True por padrão para despesas imediatas."
       }
     },
@@ -39,35 +38,35 @@ const addTransactionTool: FunctionDeclaration = {
   }
 };
 
-const addGoalTool: FunctionDeclaration = {
+const addGoalTool = {
   name: "addGoal",
   description: "Criar uma nova meta financeira.",
   parameters: {
-    type: Type.OBJECT,
+    type: "OBJECT",
     properties: {
-      name: { type: Type.STRING, description: "Nome da meta (ex: Viagem para Paris)." },
-      targetAmount: { type: Type.NUMBER, description: "Valor alvo a ser atingido." },
-      deadline: { type: Type.STRING, description: "Data limite para a meta (YYYY-MM-DD)." }
+      name: { type: "STRING", description: "Nome da meta (ex: Viagem para Paris)." },
+      targetAmount: { type: "NUMBER", description: "Valor alvo a ser atingido." },
+      deadline: { type: "STRING", description: "Data limite para a meta (YYYY-MM-DD)." }
     },
     required: ["name", "targetAmount"]
   }
 };
 
-const addInvestmentTool: FunctionDeclaration = {
+const addInvestmentTool = {
     name: "addInvestment",
     description: "Cadastrar um novo ativo de investimento na carteira (Apenas cadastro, não aporte).",
     parameters: {
-        type: Type.OBJECT,
+        type: "OBJECT",
         properties: {
-            name: { type: Type.STRING, description: "Nome ou Ticker do ativo (ex: PETR4, CDB Inter)." },
+            name: { type: "STRING", description: "Nome ou Ticker do ativo (ex: PETR4, CDB Inter)." },
             type: { 
-                type: Type.STRING, 
+                type: "STRING", 
                 enum: ["FIXED_INCOME", "STOCK", "FII", "CRYPTO", "FUND", "PENSION", "SAVINGS", "INTERNATIONAL", "OTHER"],
                 description: "Tipo do investimento." 
             },
-            broker: { type: Type.STRING, description: "Corretora ou banco." },
+            broker: { type: "STRING", description: "Corretora ou banco." },
             strategy: {
-                type: Type.STRING,
+                type: "STRING",
                 enum: ["RESERVE", "LONG_TERM", "SHORT_TERM", "SWING_TRADE", "HOLD"],
                 description: "Estratégia do investimento."
             }
@@ -77,19 +76,19 @@ const addInvestmentTool: FunctionDeclaration = {
 };
 
 export const createGeminiClient = () => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY; // Corrigido: process.env → import.meta.env
   if (!apiKey) {
-    console.warn("API Key not found in process.env");
+    console.warn("API Key not found in environment variables");
   }
-  return new GoogleGenAI({ apiKey: apiKey || '' });
+  return new GoogleGenerativeAI(apiKey || ''); // Corrigido: GoogleGenAI → GoogleGenerativeAI
 };
 
-export const getGeminiModel = (client: GoogleGenAI) => {
-  return client.models; // Access to generateContent
+export const getGeminiModel = (client: GoogleGenerativeAI) => {
+  return client.getGenerativeModel({ model: "gemini-pro" }); // Corrigido para a nova API
 };
 
 export const TOOLS_CONFIG = [
-  { functionDeclarations: [addTransactionTool, addGoalTool, addInvestmentTool] }
+  addTransactionTool, addGoalTool, addInvestmentTool // Simplificado
 ];
 
 export const SYSTEM_INSTRUCTION = DEFAULT_SYSTEM_INSTRUCTION;
