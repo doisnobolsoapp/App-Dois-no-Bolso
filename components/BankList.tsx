@@ -20,27 +20,31 @@ export const BankList: React.FC<BankListProps> = ({ accounts, onAddAccount, onDe
     e.preventDefault();
     const balance = parseFloat(formBalance) || 0;
 
-    if (editingAccount) {
-      onUpdateAccount({
-        ...editingAccount,
-        name: formName,
-        initialBalance: balance,
-        institution: formInstitution
-      });
-    } else {
-      onAddAccount({
-        name: formName,
-        initialBalance: balance,
-        institution: formInstitution
-      });
-    }
+   if (editingAccount) {
+    onUpdateAccount({
+      ...editingAccount,
+      name: formName,
+      initialBalance: balance,
+      institution: formInstitution,
+      type: 'Corrente', // Adicione valor padrão
+      color: '#3B82F6' // Adicione valor padrão
+    });
+  } else {
+     nAddAccount({
+      name: formName,
+      initialBalance: balance,
+      institution: formInstitution,
+      type: 'Corrente', // Adicione valor padrão
+      color: '#3B82F6' // Adicione valor padrão
+    });
+  }
 
     setIsModalOpen(false);
-    setEditingAccount(null);
-    setFormName('');
-    setFormBalance('');
-    setFormInstitution('');
-  };
+  setEditingAccount(null);
+  setFormName('');
+  setFormBalance('');
+  setFormInstitution('');
+};
 
   const openEditModal = (account: Account) => {
     setEditingAccount(account);
