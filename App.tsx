@@ -5,17 +5,17 @@ import { Dashboard } from './components/Dashboard';
 // Removido: import { SettingsPanel } from './components/SettingsPanel';
 import { loadData, saveData, addTransaction, addMultipleTransactions, deleteTransaction, addGoal, updateGoal, addAccount, deleteAccount, addCreditCard, deleteCreditCard, addInvestment, addInvestmentMovement, deleteInvestment, addProperty, deleteProperty, addDebt, deleteDebt, addCustomCategory } from './services/storageService';
 
-// Lazy load dos componentes pesados
-const TransactionList = lazy(() => import('./components/TransactionList'));
-const Goals = lazy(() => import('./components/Goals'));
-const Reports = lazy(() => import('./components/Reports'));
-const FinancialCalendar = lazy(() => import('./components/FinancialCalendar'));
-const BankList = lazy(() => import('./components/BankList'));
-const CreditCardList = lazy(() => import('./components/CreditCardList'));
-const InvestmentDashboard = lazy(() => import('./components/InvestmentDashboard'));
-const BalanceSheet = lazy(() => import('./components/BalanceSheet'));
-const AIChat = lazy(() => import('./components/AIChat'));
-const Settings = lazy(() => import('./components/Settings'));
+// Lazy load dos componentes pesados - corrigido para named exports
+const TransactionList = lazy(() => import('./components/TransactionList').then(module => ({ default: module.TransactionList })));
+const Goals = lazy(() => import('./components/Goals').then(module => ({ default: module.Goals })));
+const Reports = lazy(() => import('./components/Reports').then(module => ({ default: module.Reports })));
+const FinancialCalendar = lazy(() => import('./components/FinancialCalendar').then(module => ({ default: module.FinancialCalendar })));
+const BankList = lazy(() => import('./components/BankList').then(module => ({ default: module.BankList })));
+const CreditCardList = lazy(() => import('./components/CreditCardList').then(module => ({ default: module.CreditCardList })));
+const InvestmentDashboard = lazy(() => import('./components/InvestmentDashboard').then(module => ({ default: module.InvestmentDashboard })));
+const BalanceSheet = lazy(() => import('./components/BalanceSheet').then(module => ({ default: module.BalanceSheet })));
+const AIChat = lazy(() => import('./components/AIChat').then(module => ({ default: module.AIChat })));
+const Settings = lazy(() => import('./components/Settings').then(module => ({ default: module.Settings })));
 
 // Loading component
 const LoadingSpinner = () => (
