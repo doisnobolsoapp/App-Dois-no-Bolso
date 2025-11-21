@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { AppData, Transaction, TransactionType } from '../types';
 import { ChevronLeft, ChevronRight, Plus, CheckCircle, AlertCircle, Clock, X, Filter, CalendarDays } from 'lucide-react';
@@ -9,14 +8,6 @@ interface FinancialCalendarProps {
   onDeleteTransaction: (id: string) => void;
   currentUserId: string;
 }
-
-const STATUS_COLORS = {
-  PAID: 'bg-green-100 border-green-200 text-green-800',
-  DUE_TODAY: 'bg-yellow-100 border-yellow-200 text-yellow-800',
-  DUE_TOMORROW: 'bg-blue-100 border-blue-200 text-blue-800',
-  OVERDUE: 'bg-red-100 border-red-200 text-red-800',
-  NORMAL: 'bg-slate-100 border-slate-200 text-slate-600'
-};
 
 export const FinancialCalendar: React.FC<FinancialCalendarProps> = ({ data, onAddTransaction, onDeleteTransaction, currentUserId }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
