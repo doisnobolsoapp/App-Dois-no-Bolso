@@ -11,7 +11,7 @@ import { CreditCardList } from './components/CreditCardList';
 import { InvestmentDashboard } from './components/InvestmentDashboard';
 import { BalanceSheet } from './components/BalanceSheet';
 import { AIChat } from './components/AIChat';
-// Removido: import { SettingsPanel } from './components/SettingsPanel';
+import { Settings } from './components/Settings'; // Adicione esta linha
 import { loadData, saveData, addTransaction, addMultipleTransactions, deleteTransaction, addGoal, updateGoal, addAccount, deleteAccount, addCreditCard, deleteCreditCard, addInvestment, addInvestmentMovement, deleteInvestment, addProperty, deleteProperty, addDebt, deleteDebt, addCustomCategory } from './services/storageService';
 
 function App() {
@@ -217,12 +217,12 @@ function App() {
           />
         );
       case 'SETTINGS':
-  return (
-    <Settings 
-      data={data}
-      onDataUpdate={setData}
-    />
-  );
+        return (
+          <Settings 
+            data={data}
+            onDataUpdate={setData}
+          />
+        );
       default:
         return <Dashboard data={data} onViewChange={setCurrentView} />;
     }
