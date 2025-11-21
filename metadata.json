@@ -1,0 +1,7 @@
+{
+  "name": "Dois no Bolso",
+  "description": "Seu assistente financeiro inteligente para organização pessoal ou de casais. Gerencie receitas, despesas, metas e investimentos com a ajuda de IA.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
