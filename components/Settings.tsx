@@ -1,143 +1,89 @@
-
-import React, { useRef, useState } from 'react';
-import { AppData, Language } from '../types';
-import { Download, Upload, AlertTriangle, Globe, Save } from 'lucide-react';
+import React from 'react';
+import { AppData } from '../types';
+// import { Language } from '../types'; // Comentado - tipo não existe
 
 interface SettingsProps {
   data: AppData;
-  onRestore: (data: AppData) => void;
-  onUpdateLanguage: (lang: Language) => void;
+  onDataUpdate: (data: AppData) => void;
 }
 
-export const Settings: React.FC<SettingsProps> = ({ data, onRestore, onUpdateLanguage }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [lang, setLang] = useState<Language>(data.language || 'PT');
-
-  const handleBackup = () => {
-    const jsonString = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `backup-dois-no-bolso-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+export const Settings: React.FC<SettingsProps> = ({ data, onDataUpdate }) => {
+  const handleUserModeChange = (mode: 'INDIVIDUAL' | 'COUPLE') => {
+    onDataUpdate({
+      ...data,
+      userMode: mode
+    });
   };
 
-  const handleRestoreClick = () => {
-    fileInputRef.current?.click();
+  const handleLanguageChange = (language: string) => {
+    onDataUpdate({
+      ...data,
+      language: language as any
+    });
   };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const json = JSON.parse(event.target?.result as string);
-        if (json.transactions && json.goals) {
-            if(window.confirm("Tem certeza? Isso substituirá todos os dados atuais.")) {
-                onRestore(json);
-                alert("Dados restaurados com sucesso!");
-            }
-        } else {
-            alert("Arquivo de backup inválido.");
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Erro ao ler arquivo.");
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
-
-  const handleSaveSettings = () => {
-      onUpdateLanguage(lang);
-      alert("Configurações salvas com sucesso!");
-  }
 
   return (
     <div className="pb-20 space-y-6">
-        <h2 className="text-2xl font-bold text-slate-800">Configurações</h2>
-        
-        {/* General Settings */}
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-             <div className="flex items-center mb-4 text-slate-800 font-semibold">
-                 <Globe className="mr-2" size={20}/>
-                 <h3>Geral</h3>
-             </div>
-             
-             <div className="space-y-4">
-                 <div>
-                     <label className="block text-sm font-medium text-slate-700 mb-1">Idioma do Aplicativo</label>
-                     <select 
-                        value={lang} 
-                        onChange={(e) => setLang(e.target.value as Language)}
-                        className="w-full md:w-1/2 px-3 py-2 border border-slate-300 rounded-lg bg-white"
-                     >
-                         <option value="PT">Português (Brasil)</option>
-                         <option value="EN">English (US)</option>
-                         <option value="ES">Español</option>
-                     </select>
-                     <p className="text-xs text-slate-500 mt-1">Altera os textos principais da interface (Simulado).</p>
-                 </div>
-
-                 <button 
-                    onClick={handleSaveSettings}
-                    className="flex items-center px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
-                 >
-                     <Save size={18} className="mr-2" />
-                     Salvar Preferências
-                 </button>
-             </div>
+      <h2 className="text-2xl font-bold text-slate-800">Configurações</h2>
+      
+      {/* User Mode */}
+      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+        <h3 className="font-bold text-lg text-slate-800 mb-4">Modo de Uso</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button
+            onClick={() => handleUserModeChange('INDIVIDUAL')}
+            className={`p-4 rounded-lg border-2 text-left transition-colors ${
+              data.userMode === 'INDIVIDUAL'
+                ? 'border-brand-500 bg-brand-50 text-brand-700'
+                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+            }`}
+          >
+            <div className="font-bold mb-1">Individual</div>
+            <div className="text-sm text-slate-500">Uso pessoal para uma única pessoa</div>
+          </button>
+          
+          <button
+            onClick={() => handleUserModeChange('COUPLE')}
+            className={`p-4 rounded-lg border-2 text-left transition-colors ${
+              data.userMode === 'COUPLE'
+                ? 'border-brand-500 bg-brand-50 text-brand-700'
+                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+            }`}
+          >
+            <div className="font-bold mb-1">Casal</div>
+            <div className="text-sm text-slate-500">Compartilhado entre duas pessoas</div>
+          </button>
         </div>
+      </div>
 
-        {/* Backup & Restore */}
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-             <h3 className="text-lg font-semibold text-slate-800 mb-2">Segurança dos Dados</h3>
-             <p className="text-slate-500 text-sm mb-6">
-                 Seus dados ficam salvos apenas neste dispositivo/navegador. Faça backups regulares para não perder suas informações.
-             </p>
+      {/* Language */}
+      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+        <h3 className="font-bold text-lg text-slate-800 mb-4">Idioma</h3>
+        <select
+          value={data.language}
+          onChange={(e) => handleLanguageChange(e.target.value)}
+          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white"
+        >
+          <option value="PT">Português (Brasil)</option>
+          <option value="EN">English</option>
+        </select>
+      </div>
 
-             <div className="flex flex-col sm:flex-row gap-4">
-                 <button 
-                    onClick={handleBackup}
-                    className="flex-1 flex items-center justify-center bg-brand-50 text-brand-700 border border-brand-200 py-3 px-4 rounded-lg hover:bg-brand-100 transition-colors font-medium"
-                 >
-                     <Download className="mr-2" size={20} />
-                     Baixar Backup (JSON)
-                 </button>
-                 
-                 <button 
-                    onClick={handleRestoreClick}
-                    className="flex-1 flex items-center justify-center bg-white text-slate-700 border border-slate-300 py-3 px-4 rounded-lg hover:bg-slate-50 transition-colors font-medium"
-                 >
-                     <Upload className="mr-2" size={20} />
-                     Restaurar Backup
-                 </button>
-                 <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleFileChange} 
-                    accept=".json" 
-                    className="hidden" 
-                 />
-             </div>
+      {/* Data Management */}
+      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+        <h3 className="font-bold text-lg text-slate-800 mb-4">Gerenciamento de Dados</h3>
+        <div className="space-y-3">
+          <button className="w-full text-left p-3 bg-red-50 text-red-700 rounded-lg border border-red-200 hover:bg-red-100 transition-colors">
+            <div className="font-bold">Exportar Dados</div>
+            <div className="text-sm">Baixe backup dos seus dados</div>
+          </button>
+          
+          <button className="w-full text-left p-3 bg-amber-50 text-amber-700 rounded-lg border border-amber-200 hover:bg-amber-100 transition-colors">
+            <div className="font-bold">Limpar Dados</div>
+            <div className="text-sm">Remove todas as informações (irreversível)</div>
+          </button>
         </div>
-
-        {/* Danger Zone */}
-        <div className="bg-red-50 rounded-xl border border-red-100 p-6 flex items-start">
-            <AlertTriangle className="text-red-500 mr-3 flex-shrink-0" />
-            <div>
-                <h4 className="text-red-800 font-bold text-sm">Zona de Perigo</h4>
-                <p className="text-red-700 text-sm mt-1">
-                    Limpar os dados do navegador apagará todas as suas transações se você não tiver um backup salvo.
-                </p>
-            </div>
-        </div>
+      </div>
     </div>
   );
 };
