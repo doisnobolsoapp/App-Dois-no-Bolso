@@ -1,8 +1,7 @@
-
 import React, { useState, useMemo } from 'react';
 import { AppData, Transaction, TransactionType, Category, PaymentMethod } from '../types';
 import { TRANSACTION_TYPES_LABELS, CATEGORY_OPTIONS, PAYMENT_METHOD_LABELS } from '../constants';
-import { Trash2, Plus, CreditCard, Landmark, Tag, X, Check } from 'lucide-react';
+import { Trash2, Plus, CreditCard, Landmark, Tag, X } from 'lucide-react'; // Removido: Check
 
 interface TransactionListProps {
   data: AppData;
