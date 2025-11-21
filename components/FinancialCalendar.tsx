@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { AppData, Transaction, TransactionType } from '../types';
-import { ChevronLeft, ChevronRight, Plus, CheckCircle, AlertCircle, Clock, X, Filter, CalendarDays } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, CheckCircle, Clock, X, Filter, CalendarDays } from 'lucide-react';
+// Removido: AlertCircle
 
 interface FinancialCalendarProps {
   data: AppData;
@@ -8,7 +9,6 @@ interface FinancialCalendarProps {
   onDeleteTransaction: (id: string) => void;
   currentUserId: string;
 }
-
 export const FinancialCalendar: React.FC<FinancialCalendarProps> = ({ data, onAddTransaction, onDeleteTransaction, currentUserId }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
