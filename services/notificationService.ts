@@ -1,8 +1,7 @@
-
 import { Transaction, TransactionType } from "../types";
 import { updateTransactionNotification } from "./storageService";
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const _ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export const requestNotificationPermission = async () => {
     if (!("Notification" in window)) {
