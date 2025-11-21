@@ -10,7 +10,7 @@ interface BalanceSheetProps {
   onDeleteDebt: (id: string) => void;
 }
 
-export const BalanceSheet: React.FC<BalanceSheetProps> = ({ data, onAddProperty, onDeleteProperty, onAddDebt, onDeleteDebt }) => {
+export const BalanceSheet: React.FC<BalanceSheetProps> = ({ data }) => {
   const assets = useMemo(() => {
     const totalCash = data.accounts.reduce((sum, acc) => sum + acc.initialBalance, 0);
     const totalInvestments = data.investments.reduce((sum, inv) => sum + (inv.quantity * inv.currentPrice), 0);
