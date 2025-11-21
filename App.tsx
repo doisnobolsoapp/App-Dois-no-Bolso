@@ -178,7 +178,7 @@ function App() {
       case 'CARDS':
         return (
           <CreditCardList 
-            cards={data.creditCards}
+            creditCards={data.creditCards}
             onAddCreditCard={handleAddCreditCard}
             onDeleteCreditCard={handleDeleteCreditCard}
             onUpdateCreditCard={(card: CreditCard) => {
