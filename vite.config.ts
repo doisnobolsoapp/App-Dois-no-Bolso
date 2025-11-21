@@ -16,25 +16,6 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          // Estratégia automática que só agrupa o que existe
-          if (id.includes('node_modules')) {
-            // Separa React em seu próprio chunk
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'vendor-react';
-            }
-            // Separa outras bibliotecas conhecidas se existirem
-            if (id.includes('chart') || id.includes('recharts')) {
-              return 'vendor-charts';
-            }
-            // Todas as outras bibliotecas vão para vendor
-            return 'vendor';
-          }
-        }
-      }
-    },
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 800, // Aumenta um pouco o limite
   }
 })
