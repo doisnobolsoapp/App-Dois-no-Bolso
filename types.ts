@@ -1,68 +1,89 @@
+// Mantenha apenas UMA definição da interface Account
+export interface Account {
+  id: string;
+  name: string;
+  initialBalance: number;
+  institution?: string;
+  type?: string; // Apenas esta linha para 'type'
+  color?: string;
+}
+
+// O resto do arquivo permanece igual...
+export interface Transaction {
+  id: string;
+  type: TransactionType;
+  description: string;
+  amount: number;
+  category: string;
+  date: string;
+  paid: boolean;
+  dueDate?: string;
+  notificationSent?: boolean;
+  paymentMethod: PaymentMethod;
+  accountId?: string;
+  cardId?: string;
+  installments?: { current: number; total: number };
+  investmentId?: string;
+  createdBy?: string;
+}
 
 export enum TransactionType {
   INCOME = 'INCOME',
-  EXPENSE = 'EXPENSE',
-  INVESTMENT = 'INVESTMENT', // Used for cash flow
+  EXPENSE = 'EXPENSE', 
+  INVESTMENT = 'INVESTMENT',
   LOAN = 'LOAN'
 }
 
 export enum PaymentMethod {
   CASH = 'CASH',
-  BANK_TRANSFER = 'BANK_TRANSFER', // Pix, TED, DOC
   CREDIT_CARD = 'CREDIT_CARD',
-  DEBIT_CARD = 'DEBIT_CARD'
+  DEBIT_CARD = 'DEBIT_CARD',
+  BANK_TRANSFER = 'BANK_TRANSFER',
+  PIX = 'PIX'
 }
 
 export enum Category {
-  // Income
+  FOOD = 'Alimentação',
+  TRANSPORT = 'Transporte',
+  HOUSING = 'Moradia',
+  HEALTH = 'Saúde',
+  EDUCATION = 'Educação',
+  ENTERTAINMENT = 'Lazer',
+  SHOPPING = 'Compras',
+  SERVICES = 'Serviços',
+  TRAVEL = 'Viagens',
+  INVESTMENTS = 'Investimentos',
   SALARY = 'Salário',
   FREELANCE = 'Freelance',
-  DIVIDENDS = 'Dividendos',
-  OTHER_INCOME = 'Outras Receitas',
-  
-  // Expense
-  HOUSING = 'Habitação',
-  TRANSPORT = 'Transporte',
-  FOOD = 'Alimentação',
-  HEALTH = 'Saúde',
-  LEISURE = 'Lazer',
-  EDUCATION = 'Educação',
-  SHOPPING = 'Compras',
-  BILLS = 'Contas Fixas', // Luz, agua, internet
-  OTHER_EXPENSE = 'Outros Gastos',
-
-  // Investment (Generic for transaction list)
-  STOCKS = 'Ações',
-  FIXED_INCOME = 'Renda Fixa',
-  CRYPTO = 'Cripto',
-  RESERVE = 'Reserva de Emergência',
-
-  // Loan
-  MORTGAGE = 'Financiamento Imobiliário',
-  CAR_LOAN = 'Financiamento Veículo',
-  PERSONAL_LOAN = 'Empréstimo Pessoal'
+  OTHER = 'Outros'
 }
 
-// --- Investment Specific Types ---
-
-export enum InvestmentType {
-  FIXED_INCOME = 'FIXED_INCOME', // CDB, Tesouro
-  STOCK = 'STOCK', // Ações
-  FII = 'FII', // Fundos Imobiliários
-  CRYPTO = 'CRYPTO',
-  FUND = 'FUND', // Fundos de Investimento
-  PENSION = 'PENSION', // Previdência
-  SAVINGS = 'SAVINGS', // Poupança
-  INTERNATIONAL = 'INTERNATIONAL',
-  OTHER = 'OTHER'
+export interface Goal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: string;
 }
 
-export enum InvestmentStrategy {
-  RESERVE = 'RESERVE', // Reserva de Emergência
-  LONG_TERM = 'LONG_TERM', // Aposentadoria/Longo Prazo
-  SHORT_TERM = 'SHORT_TERM', // Curto Prazo/Viagem
-  SWING_TRADE = 'SWING_TRADE',
-  HOLD = 'HOLD'
+export interface CreditCard {
+  id: string;
+  name: string;
+  limit: number;
+  currentBalance?: number;
+}
+
+export interface Investment {
+  id: string;
+  name: string;
+  type: InvestmentType;
+  broker: string;
+  strategy: InvestmentStrategy;
+  quantity: number;
+  averagePrice: number;
+  currentPrice: number;
+  notes: string;
+  history: InvestmentHistory[];
 }
 
 export interface InvestmentHistory {
@@ -75,107 +96,42 @@ export interface InvestmentHistory {
   notes?: string;
 }
 
-export interface Investment {
-  id: string;
-  name: string; // Ticker or Name (e.g. PETR4, CDB Banco X)
-  type: InvestmentType;
-  broker: string; // Institution
-  strategy: InvestmentStrategy;
-  
-  quantity: number;
-  currentPrice: number; // Manually updated or last purchase
-  averagePrice: number; // Calculated
-  
-  notes?: string;
-  history: InvestmentHistory[];
+export enum InvestmentType {
+  FIXED_INCOME = 'FIXED_INCOME',
+  STOCK = 'STOCK', 
+  FII = 'FII',
+  CRYPTO = 'CRYPTO',
+  FUND = 'FUND',
+  PENSION = 'PENSION',
+  SAVINGS = 'SAVINGS',
+  INTERNATIONAL = 'INTERNATIONAL',
+  OTHER = 'OTHER'
 }
 
-// --- Existing Types ---
-
-export interface Account {
-  id: string;
-  name: string;
-  initialBalance: number;
-  institution?: string;
-  type?: string;
-  color: string;
+export enum InvestmentStrategy {
+  RESERVE = 'RESERVE',
+  LONG_TERM = 'LONG_TERM',
+  SHORT_TERM = 'SHORT_TERM', 
+  SWING_TRADE = 'SWING_TRADE',
+  HOLD = 'HOLD'
 }
-
-export interface CreditCard {
-  id: string;
-  name: string; // e.g. Nubank Gold
-  limit: number;
-  currentBalance?: number;
-  closingDay: number;
-  dueDay: number;
-  color: string;
-}
-
-export interface Transaction {
-  id: string;
-  date: string; // ISO string YYYY-MM-DD
-  type: TransactionType;
-  category: string;
-  amount: number;
-  description: string;
-  paid: boolean;
-  dueDate?: string; // For alerts
-  
-  // New fields
-  paymentMethod: PaymentMethod;
-  accountId?: string; // If paid via Bank/Debit
-  cardId?: string; // If paid via Credit Card
-  installments?: {
-    current: number;
-    total: number;
-  };
-  
-  // Calendar & Notification Logic
-  notificationSent?: boolean;
-  createdBy?: string; // For couple filtering (User ID or Name)
-
-  // Link to specific investment
-  investmentId?: string;
-}
-
-export interface Goal {
-  id: string;
-  name: string;
-  targetAmount: number;
-  currentAmount: number;
-  deadline: string;
-}
-
-// --- Balance Sheet Types ---
 
 export interface Property {
   id: string;
-  name: string; // e.g. Apartment, Car
+  name: string;
   value: number;
   currentValue?: number;
-  type: 'REAL_ESTATE' | 'VEHICLE' | 'OTHER';
-  dateAcquired?: string;
 }
 
 export interface Debt {
   id: string;
-  name: string; // e.g. Mortgage, Personal Loan
+  name: string;
   totalAmount: number;
   remainingAmount: number;
-  interestRate?: number;
-  dueDate?: string;
+  interestRate: number;
+  dueDate: string;
+  institution: string;
 }
-
-// --- Auth Types ---
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  mode: 'INDIVIDUAL' | 'COUPLE';
-}
-
-export type Language = 'PT' | 'EN' | 'ES';
 
 export interface AppData {
   transactions: Transaction[];
@@ -183,12 +139,22 @@ export interface AppData {
   accounts: Account[];
   creditCards: CreditCard[];
   investments: Investment[];
-  properties: Property[]; // New: Assets/Bens
-  debts: Debt[]; // New: Long term liabilities
+  properties: Property[];
+  debts: Debt[];
   customCategories: string[];
   userMode: 'INDIVIDUAL' | 'COUPLE';
-  userName?: string;
-  language: Language;
+  language: 'PT' | 'EN';
 }
 
-export type ViewState = 'DASHBOARD' | 'TRANSACTIONS' | 'GOALS' | 'REPORTS' | 'CHAT' | 'SETTINGS' | 'BANKS' | 'CARDS' | 'INVESTMENTS' | 'BALANCE' | 'CALENDAR';
+export type ViewState = 
+  | 'DASHBOARD' 
+  | 'TRANSACTIONS' 
+  | 'GOALS' 
+  | 'REPORTS' 
+  | 'CALENDAR'
+  | 'BANKS'
+  | 'CARDS'
+  | 'INVESTMENTS'
+  | 'BALANCE'
+  | 'CHAT'
+  | 'SETTINGS';
