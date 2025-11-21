@@ -1,5 +1,4 @@
-
-import { AppData, Transaction, Goal, TransactionType, Account, CreditCard, Investment, InvestmentHistory, Property, Debt } from '../types';
+import { AppData, Transaction, Goal, TransactionType, Account, CreditCard, Investment, Property, Debt } from '../types';
 import { INITIAL_DATA_KEY } from '../constants';
 
 const getInitialData = (): AppData => ({
