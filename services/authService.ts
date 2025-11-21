@@ -2,7 +2,7 @@
 
 // Simulação de serviço de autenticação
 export const authService = {
-  login: async (email: string, password: string) => {
+  login: async (email: string, _password: string) => { // Adicione underline para indicar parâmetro não usado
     // Simulação de chamada API
     return new Promise((resolve) => {
       setTimeout(() => {
