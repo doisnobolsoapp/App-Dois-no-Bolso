@@ -217,14 +217,12 @@ function App() {
           />
         );
       case 'SETTINGS':
-        return (
-          <div className="pb-20">
-            <h2 className="text-2xl font-bold text-slate-800 mb-6">Configurações</h2>
-            <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-              <p className="text-slate-500">Configurações em desenvolvimento...</p>
-            </div>
-          </div>
-        );
+  return (
+    <Settings 
+      data={data}
+      onDataUpdate={setData}
+    />
+  );
       default:
         return <Dashboard data={data} onViewChange={setCurrentView} />;
     }
