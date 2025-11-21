@@ -97,6 +97,7 @@ export interface Account {
   name: string; // e.g. Nubank, Itaú
   type: string; // e.g. Corrente, Poupança
   initialBalance: number;
+  institution?: string;
   color: string;
 }
 
@@ -104,6 +105,7 @@ export interface CreditCard {
   id: string;
   name: string; // e.g. Nubank Gold
   limit: number;
+  currentBalance?: number;
   closingDay: number;
   dueDay: number;
   color: string;
@@ -150,6 +152,7 @@ export interface Property {
   id: string;
   name: string; // e.g. Apartment, Car
   value: number;
+  currentValue?: number;
   type: 'REAL_ESTATE' | 'VEHICLE' | 'OTHER';
   dateAcquired?: string;
 }
@@ -188,4 +191,4 @@ export interface AppData {
   language: Language;
 }
 
-export type ViewState = 'DASHBOARD' | 'TRANSACTIONS' | 'GOALS' | 'REPORTS' | 'CHAT' | 'SETTINGS' | 'BANKS' | 'CARDS' | 'INVESTMENTS' | 'CALENDAR';
+export type ViewState = 'DASHBOARD' | 'TRANSACTIONS' | 'GOALS' | 'REPORTS' | 'CHAT' | 'SETTINGS' | 'BANKS' | 'CARDS' | 'INVESTMENTS' | 'BALANCE' | 'CALENDAR';
