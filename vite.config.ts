@@ -18,32 +18,23 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Agrupa React e React DOM
-          'vendor-react': ['react', 'react-dom'],
-          // Agrupa bibliotecas de utilitários (removemos @headlessui/react se não estiver instalado)
-          'vendor-utils': [
-            'date-fns', 
-            'lodash', 
-            'axios',
-            'uuid'
-          ],
-          // Agrupa bibliotecas de gráficos (se estiver usando)
-          'vendor-charts': [
-            'recharts',
-            'chart.js',
-            'react-chartjs-2'
-          ].filter(Boolean) // Remove valores undefined
+        manualChunks(id) {
+          // Estratégia automática que só agrupa o que existe
+          if (id.includes('node_modules')) {
+            // Separa React em seu próprio chunk
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'vendor-react';
+            }
+            // Separa outras bibliotecas conhecidas se existirem
+            if (id.includes('chart') || id.includes('recharts')) {
+              return 'vendor-charts';
+            }
+            // Todas as outras bibliotecas vão para vendor
+            return 'vendor';
+          }
         }
       }
     },
     chunkSizeWarningLimit: 600,
-    // Otimizações adicionais
-    minify: 'esbuild',
-    target: 'esnext'
-  },
-  // Otimização para desenvolvimento também
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'date-fns']
   }
 })
