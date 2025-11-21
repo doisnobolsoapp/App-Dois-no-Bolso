@@ -21,13 +21,7 @@ export default defineConfig({
         manualChunks: {
           // Agrupa React e React DOM
           'vendor-react': ['react', 'react-dom'],
-          // Agrupa bibliotecas de UI (se estiver usando)
-          'vendor-ui': [
-            '@headlessui/react', 
-            '@heroicons/react',
-            'lucide-react'
-          ],
-          // Agrupa bibliotecas de utilitários
+          // Agrupa bibliotecas de utilitários (removemos @headlessui/react se não estiver instalado)
           'vendor-utils': [
             'date-fns', 
             'lodash', 
@@ -39,7 +33,7 @@ export default defineConfig({
             'recharts',
             'chart.js',
             'react-chartjs-2'
-          ]
+          ].filter(Boolean) // Remove valores undefined
         }
       }
     },
