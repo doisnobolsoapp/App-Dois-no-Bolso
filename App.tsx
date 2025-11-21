@@ -11,7 +11,8 @@ import { CreditCardList } from './components/CreditCardList';
 import { InvestmentDashboard } from './components/InvestmentDashboard';
 import { BalanceSheet } from './components/BalanceSheet';
 import { AIChat } from './components/AIChat';
-import { Settings } from './components/Settings'; // Adicione esta linha
+import { Settings } from './components/Settings'; // Importação adicionada
+// Removido: import { SettingsPanel } from './components/SettingsPanel';
 import { loadData, saveData, addTransaction, addMultipleTransactions, deleteTransaction, addGoal, updateGoal, addAccount, deleteAccount, addCreditCard, deleteCreditCard, addInvestment, addInvestmentMovement, deleteInvestment, addProperty, deleteProperty, addDebt, deleteDebt, addCustomCategory } from './services/storageService';
 
 function App() {
