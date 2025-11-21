@@ -94,8 +94,7 @@ export interface Investment {
 
 export interface Account {
   id: string;
-  name: string; // e.g. Nubank, Itaú
-  type: string; // e.g. Corrente, Poupança
+  name: string;
   initialBalance: number;
   institution?: string;
   type?: string;
