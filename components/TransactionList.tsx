@@ -174,7 +174,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
                       <span className="text-[10px] text-slate-400 flex items-center">
                         {t.paymentMethod === PaymentMethod.CREDIT_CARD && <CreditCard size={10} className="mr-1"/>}
                         {t.paymentMethod === PaymentMethod.BANK_TRANSFER && <Landmark size={10} className="mr-1"/>}
-                        {PAYMENT_METHOD_LABELS[t.paymentMethod]}
+                       [PaymentMethod.PIX]: 'PIX'
                         {t.installments && ` (${t.installments.current}/${t.installments.total})`}
                       </span>
                   </div>
