@@ -101,7 +101,12 @@ export const updateGoal = (goal: Goal) => {
 
 export const addAccount = (a: Omit<Account, 'id'>): Account => {
   const data = loadData();
-  const newAccount: Account = { ...a, id: crypto.randomUUID() };
+  const newAccount: Account = { 
+    ...a, 
+    id: crypto.randomUUID(),
+    type: a.type || 'Corrente', // Valor padrão
+    color: a.color || '#3B82F6' // Valor padrão
+  };
   data.accounts.push(newAccount);
   saveData(data);
   return newAccount;
