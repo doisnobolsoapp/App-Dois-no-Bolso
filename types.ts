@@ -98,6 +98,7 @@ export interface Account {
   type: string; // e.g. Corrente, Poupança
   initialBalance: number;
   institution?: string;
+  type?: string;
   color: string;
 }
 
