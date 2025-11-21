@@ -4,16 +4,17 @@ import { Landmark, Home, TrendingUp, CreditCard, Scale, DollarSign, ArrowUpRight
 
 interface BalanceSheetProps {
   data: AppData;
+  onAddProperty: (p: any) => void;
+  onDeleteProperty: (id: string) => void;
+  onAddDebt: (d: any) => void;
+  onDeleteDebt: (id: string) => void;
 }
 
-const COLORS_ASSETS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
-// Removido: const COLORS_LIABILITIES = ['#FF6B6B', '#FFA726', '#FF7043', '#AB47BC', '#26C6DA'];
-
-export const BalanceSheet: React.FC<BalanceSheetProps> = ({ data }) => {
+export const BalanceSheet: React.FC<BalanceSheetProps> = ({ data, onAddProperty, onDeleteProperty, onAddDebt, onDeleteDebt }) => {
   const assets = useMemo(() => {
     const totalCash = data.accounts.reduce((sum, acc) => sum + acc.initialBalance, 0);
     const totalInvestments = data.investments.reduce((sum, inv) => sum + (inv.quantity * inv.currentPrice), 0);
-    const totalProperties = data.properties.reduce((sum, prop) => sum + prop.currentValue, 0);
+    const totalProperties = data.properties.reduce((sum, prop) => sum + (prop.currentValue || prop.value), 0);
     
     return [
       { name: 'Dinheiro em Contas', value: totalCash, icon: <Landmark className="text-blue-500" /> },
@@ -111,7 +112,7 @@ export const BalanceSheet: React.FC<BalanceSheetProps> = ({ data }) => {
               <p className="text-center text-slate-400 py-4">Nenhum ativo cadastrado</p>
             ) : (
               <div className="space-y-4">
-                {assets.map((asset, index) => (
+                {assets.map((asset) => (
                   <div key={asset.name} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                     <div className="flex items-center">
                       <div className="p-2 bg-white rounded-lg mr-3">
@@ -147,7 +148,7 @@ export const BalanceSheet: React.FC<BalanceSheetProps> = ({ data }) => {
               <p className="text-center text-slate-400 py-4">Nenhum passivo cadastrado</p>
             ) : (
               <div className="space-y-4">
-                {liabilities.map((liability, index) => (
+                {liabilities.map((liability) => (
                   <div key={liability.name} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                     <div className="flex items-center">
                       <div className="p-2 bg-white rounded-lg mr-3">
@@ -169,56 +170,6 @@ export const BalanceSheet: React.FC<BalanceSheetProps> = ({ data }) => {
                 ))}
               </div>
             )}
-          </div>
-        </div>
-      </div>
-
-      {/* Financial Health Tips */}
-      <div className="bg-white rounded-xl border border-slate-100 shadow-sm">
-        <div className="px-6 py-4 border-b border-slate-100">
-          <h3 className="font-bold text-lg text-slate-800">Recomendações</h3>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {netWorth < 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-center mb-2">
-                  <div className="bg-red-100 p-2 rounded-lg mr-3">
-                    <ArrowDownRight className="text-red-600" size={20} />
-                  </div>
-                  <h4 className="font-bold text-red-800">Atenção às Dívidas</h4>
-                </div>
-                <p className="text-sm text-red-700">
-                  Seu patrimônio líquido está negativo. Foque em reduzir dívidas de alta taxa de juros.
-                </p>
-              </div>
-            )}
-            
-            {totalLiabilities > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <div className="flex items-center mb-2">
-                  <div className="bg-amber-100 p-2 rounded-lg mr-3">
-                    <CreditCard className="text-amber-600" size={20} />
-                  </div>
-                  <h4 className="font-bold text-amber-800">Gestão de Dívidas</h4>
-                </div>
-                <p className="text-sm text-amber-700">
-                  Considere negociar taxas de juros ou consolidar dívidas para melhorar suas condições.
-                </p>
-              </div>
-            )}
-            
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <div className="bg-blue-100 p-2 rounded-lg mr-3">
-                  <TrendingUp className="text-blue-600" size={20} />
-                </div>
-                <h4 className="font-bold text-blue-800">Diversificação</h4>
-              </div>
-              <p className="text-sm text-blue-700">
-                Mantenha investimentos diversificados para proteger seu patrimônio contra volatilidade.
-              </p>
-            </div>
           </div>
         </div>
       </div>
