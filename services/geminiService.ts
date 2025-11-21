@@ -76,11 +76,12 @@ const addInvestmentTool = {
 };
 
 export const createGeminiClient = () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  // Corrigido: usar import.meta.env corretamente
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
   if (!apiKey) {
     console.warn("API Key not found in environment variables");
   }
-  return new GoogleGenerativeAI(apiKey || '');
+  return new GoogleGenerativeAI(apiKey);
 };
 
 export const getGeminiModel = (client: GoogleGenerativeAI) => {
