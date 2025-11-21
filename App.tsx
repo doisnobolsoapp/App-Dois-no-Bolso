@@ -11,7 +11,7 @@ import { CreditCardList } from './components/CreditCardList';
 import { InvestmentDashboard } from './components/InvestmentDashboard';
 import { BalanceSheet } from './components/BalanceSheet';
 import { AIChat } from './components/AIChat';
-import { SettingsPanel } from './components/SettingsPanel';
+// Removido: import { SettingsPanel } from './components/SettingsPanel';
 import { loadData, saveData, addTransaction, addMultipleTransactions, deleteTransaction, addGoal, updateGoal, addAccount, deleteAccount, addCreditCard, deleteCreditCard, addInvestment, addInvestmentMovement, deleteInvestment, addProperty, deleteProperty, addDebt, deleteDebt, addCustomCategory } from './services/storageService';
 
 function App() {
@@ -168,7 +168,7 @@ function App() {
             accounts={data.accounts}
             onAddAccount={handleAddAccount}
             onDeleteAccount={handleDeleteAccount}
-            onUpdateAccount={(account) => {
+            onUpdateAccount={(account: Account) => {
               // For now, delete and re-add since we don't have updateAccount
               handleDeleteAccount(account.id);
               handleAddAccount(account);
@@ -178,10 +178,10 @@ function App() {
       case 'CARDS':
         return (
           <CreditCardList 
-            creditCards={data.creditCards}
+            cards={data.creditCards}
             onAddCreditCard={handleAddCreditCard}
             onDeleteCreditCard={handleDeleteCreditCard}
-            onUpdateCreditCard={(card) => {
+            onUpdateCreditCard={(card: CreditCard) => {
               handleDeleteCreditCard(card.id);
               handleAddCreditCard(card);
             }}
@@ -218,10 +218,12 @@ function App() {
         );
       case 'SETTINGS':
         return (
-          <SettingsPanel 
-            data={data}
-            onDataUpdate={setData}
-          />
+          <div className="pb-20">
+            <h2 className="text-2xl font-bold text-slate-800 mb-6">Configurações</h2>
+            <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+              <p className="text-slate-500">Configurações em desenvolvimento...</p>
+            </div>
+          </div>
         );
       default:
         return <Dashboard data={data} onViewChange={setCurrentView} />;
