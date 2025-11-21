@@ -17,7 +17,7 @@ type Message = {
   timestamp: Date;
 };
 
-export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoal, onAddInvestment }) => {
+export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -88,7 +88,7 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
           type: TransactionType.EXPENSE,
           description: 'Despesa via assistente',
           amount: 50,
-          category: Category.OTHER,
+          category: 'Outros',
           date: new Date().toISOString().split('T')[0],
           paid: true,
           paymentMethod: PaymentMethod.CASH
