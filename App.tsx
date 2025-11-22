@@ -45,15 +45,20 @@ function App() {
     }
     setIsLoading(false);
 
-    // Registrar Service Worker se não estiver em desenvolvimento
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then((registration) => {
-          console.log('🚀 Service Worker registrado:', registration);
-        })
-        .catch((error) => {
-          console.log('❌ Erro no Service Worker:', error);
-        });
+    // Registrar Service Worker
+    if ('serviceWorker' in navigator) {
+      // Verifica se está em produção (simplificado)
+      const isProduction = !window.location.href.includes('localhost') && !window.location.href.includes('127.0.0.1');
+      
+      if (isProduction) {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log('🚀 Service Worker registrado:', registration);
+          })
+          .catch((error) => {
+            console.log('❌ Erro no Service Worker:', error);
+          });
+      }
     }
   }, []);
 
@@ -317,8 +322,6 @@ function App() {
         currentView={currentView} 
         onViewChange={setCurrentView}
         onLogout={handleLogout}
-        isOnline={isOnline}
-        isStandalone={isStandalone}
       >
         {renderCurrentView()}
         
