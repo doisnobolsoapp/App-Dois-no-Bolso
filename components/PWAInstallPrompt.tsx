@@ -46,7 +46,6 @@ export const PWAInstallPrompt: React.FC = () => {
       
       if (outcome === 'accepted') {
         console.log('✅ Usuário aceitou a instalação');
-        // Aqui você pode enviar analytics
       }
     } catch (error) {
       console.error('❌ Erro na instalação:', error);
