@@ -9,48 +9,89 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
-  const summary = useMemo(() => {
-    const income = data.transactions
-      .filter(t => t.type === TransactionType.INCOME)
-      .reduce((acc, t) => acc + t.amount, 0);
+  // CÁLCULOS CORRIGIDOS PARA PERÍODOS ESPECÍFICOS
+  const periodSummary = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
     
-    const expense = data.transactions
-      .filter(t => t.type === TransactionType.EXPENSE || t.type === TransactionType.LOAN)
-      .reduce((acc, t) => acc + t.amount, 0);
+    // Mês atual
+    const currentMonthTransactions = data.transactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      return transactionDate.getMonth() === currentMonth && 
+             transactionDate.getFullYear() === currentYear;
+    });
+
+    // Semestre atual (últimos 6 meses)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(now.getMonth() - 5);
+    
+    const semesterTransactions = data.transactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      return transactionDate >= sixMonthsAgo && transactionDate <= now;
+    });
+
+    // Ano atual
+    const yearTransactions = data.transactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      return transactionDate.getFullYear() === currentYear;
+    });
+
+    // Cálculos para cada período
+    const calculateSummary = (transactions: typeof data.transactions) => {
+      const income = transactions
+        .filter(t => t.type === TransactionType.INCOME)
+        .reduce((acc, t) => acc + t.amount, 0);
       
-    const investments = data.transactions
-      .filter(t => t.type === TransactionType.INVESTMENT)
-      .reduce((acc, t) => acc + t.amount, 0);
+      const expense = transactions
+        .filter(t => t.type === TransactionType.EXPENSE || t.type === TransactionType.LOAN)
+        .reduce((acc, t) => acc + t.amount, 0);
+        
+      const investments = transactions
+        .filter(t => t.type === TransactionType.INVESTMENT)
+        .reduce((acc, t) => acc + t.amount, 0);
 
-    const balance = income - expense - investments;
+      const balance = income - expense - investments;
 
-    return { income, expense, investments, balance };
+      return { income, expense, investments, balance };
+    };
+
+    return {
+      currentMonth: calculateSummary(currentMonthTransactions),
+      semester: calculateSummary(semesterTransactions),
+      currentYear: calculateSummary(yearTransactions),
+      overall: calculateSummary(data.transactions)
+    };
   }, [data.transactions]);
 
+  // FLUXO DE CAIXA CORRIGIDO
   const cashFlowData = useMemo(() => {
-    const last6Months: { month: string; income: number; expense: number }[] = [];
+    const last6Months: { month: string; income: number; expense: number; net: number }[] = [];
     
     for (let i = 5; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
-      const monthKey = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+      const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+      const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
       
-      const monthIncome = data.transactions
-        .filter(t => t.type === TransactionType.INCOME && 
-          new Date(t.date).getMonth() === date.getMonth() &&
-          new Date(t.date).getFullYear() === date.getFullYear())
+      const monthTransactions = data.transactions.filter(t => {
+        const transactionDate = new Date(t.date);
+        return transactionDate >= monthStart && transactionDate <= monthEnd;
+      });
+
+      const monthIncome = monthTransactions
+        .filter(t => t.type === TransactionType.INCOME)
         .reduce((acc, t) => acc + t.amount, 0);
         
-      const monthExpense = data.transactions
-        .filter(t => (t.type === TransactionType.EXPENSE || t.type === TransactionType.LOAN) && 
-          new Date(t.date).getMonth() === date.getMonth() &&
-          new Date(t.date).getFullYear() === date.getFullYear())
+      const monthExpense = monthTransactions
+        .filter(t => t.type === TransactionType.EXPENSE || t.type === TransactionType.LOAN)
         .reduce((acc, t) => acc + t.amount, 0);
 
       last6Months.push({
-        month: monthKey,
+        month: date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
         income: monthIncome,
-        expense: monthExpense
+        expense: monthExpense,
+        net: monthIncome - monthExpense
       });
     }
     
@@ -72,38 +113,61 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
       .slice(0, 5);
   }, [data.transactions]);
 
+  // STATS ATUALIZADOS COM OS NOVOS PERÍODOS
   const quickStats = [
     {
-      label: 'Saldo Atual',
-      value: summary.balance,
-      trend: summary.balance >= 0 ? 'up' : 'down',
+      label: 'Saldo Mês Atual',
+      value: periodSummary.currentMonth.balance,
+      trend: periodSummary.currentMonth.balance >= 0 ? 'up' : 'down',
       icon: Wallet,
-      color: summary.balance >= 0 ? 'text-green-600' : 'text-red-600',
-      bgColor: summary.balance >= 0 ? 'bg-green-100' : 'bg-red-100'
+      color: periodSummary.currentMonth.balance >= 0 ? 'text-green-600' : 'text-red-600',
+      bgColor: periodSummary.currentMonth.balance >= 0 ? 'bg-green-100' : 'bg-red-100'
     },
     {
-      label: 'Receitas',
-      value: summary.income,
+      label: 'Receitas Mês',
+      value: periodSummary.currentMonth.income,
       trend: 'up',
       icon: TrendingUp,
       color: 'text-green-600',
       bgColor: 'bg-green-100'
     },
     {
-      label: 'Despesas',
-      value: summary.expense,
+      label: 'Despesas Mês',
+      value: periodSummary.currentMonth.expense,
       trend: 'down',
       icon: TrendingDown,
       color: 'text-red-600',
       bgColor: 'bg-red-100'
     },
     {
-      label: 'Metas Ativas',
-      value: data.goals.length,
-      trend: 'neutral',
+      label: 'Fluxo Semestre',
+      value: periodSummary.semester.balance,
+      trend: periodSummary.semester.balance >= 0 ? 'up' : 'down',
       icon: Target,
-      color: 'text-brand-600',
-      bgColor: 'bg-brand-100'
+      color: periodSummary.semester.balance >= 0 ? 'text-brand-600' : 'text-red-600',
+      bgColor: periodSummary.semester.balance >= 0 ? 'bg-brand-100' : 'bg-red-100'
+    }
+  ];
+
+  // NOVA SEÇÃO: RESUMO POR PERÍODO
+  const periodStats = [
+    {
+      label: 'Mês Atual',
+      income: periodSummary.currentMonth.income,
+      expense: periodSummary.currentMonth.expense,
+      balance: periodSummary.currentMonth.balance
+    },
+    {
+      label: 'Últimos 6 Meses',
+      income: periodSummary.semester.income,
+      expense: periodSummary.semester.expense,
+      balance: periodSummary.semester.balance
+    },
+    {
+      label: 'Ano Atual',
+      income: periodSummary.currentYear.income,
+      expense: periodSummary.currentYear.expense,
+      balance: periodSummary.currentYear.balance
     }
   ];
 
@@ -152,7 +216,41 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
         ))}
       </div>
 
-      {/* Charts */}
+      {/* NOVA SEÇÃO: FLUXO POR PERÍODO */}
+      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+        <h3 className="font-bold text-lg text-slate-800 mb-6">Resumo do Fluxo de Caixa</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {periodStats.map((period, index) => (
+            <div key={index} className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-semibold text-slate-800 mb-3">{period.label}</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Receitas:</span>
+                  <span className="text-green-600 font-medium">
+                    R$ {period.income.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Despesas:</span>
+                  <span className="text-red-600 font-medium">
+                    R$ {period.expense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm border-t border-slate-100 pt-2">
+                  <span className="text-slate-800 font-medium">Saldo:</span>
+                  <span className={`font-bold ${
+                    period.balance >= 0 ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    R$ {period.balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Charts - Mantido igual mas agora funcionando */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cash Flow Chart */}
         <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
@@ -205,7 +303,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - Mantido igual */}
       <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
         <h3 className="font-bold text-lg text-slate-800 mb-4">Ações Rápidas</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
