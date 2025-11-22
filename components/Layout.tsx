@@ -28,11 +28,6 @@ const NavItem: React.FC<{
 );
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewChange, onLogout }) => {
-  // Corrigir o tipo ViewState para incluir 'BALANCE'
-  const handleViewChange = (view: ViewState | 'BALANCE') => {
-    onViewChange(view as ViewState);
-  };
-
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       {/* Sidebar */}
@@ -49,7 +44,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewCha
             active={currentView === 'DASHBOARD'} 
             onClick={() => onViewChange('DASHBOARD')} 
           />
-           <NavItem 
+          <NavItem 
             icon={<CalendarDays size={20} />} 
             label="Calendário" 
             active={currentView === 'CALENDAR'} 
@@ -88,8 +83,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewCha
           <NavItem 
             icon={<Scale size={20} />} 
             label="Balanço" 
-            active={currentView === 'BALANCE' as ViewState}
-            onClick={() => handleViewChange('BALANCE')} 
+            active={currentView === 'BALANCE'} 
+            onClick={() => onViewChange('BALANCE')} 
           />
           <NavItem 
             icon={<PieChart size={20} />} 
@@ -109,7 +104,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewCha
           />
           
           <div className="my-4 border-t border-slate-100"></div>
-           <NavItem 
+          <NavItem 
             icon={<Settings size={20} />} 
             label="Configurações" 
             active={currentView === 'SETTINGS'} 
@@ -118,27 +113,27 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewCha
         </nav>
 
         <div className="p-4 border-t border-slate-100">
-           <button 
+          <button 
             onClick={onLogout}
             className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
-           >
-             <LogOut size={20} className="mr-3" />
-             <span>Sair</span>
-           </button>
+          >
+            <LogOut size={20} className="mr-3" />
+            <span>Sair</span>
+          </button>
         </div>
       </aside>
 
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-20 flex items-center justify-between px-4">
-         <div className="flex items-center">
-           <div className="w-8 h-8 mr-2">
-                <Logo size="sm" showText={false} />
-           </div>
-           <span className="font-bold text-slate-800">Dois no Bolso</span>
-         </div>
-         <button onClick={onLogout} className="p-2 text-red-500" title="Sair">
-           <LogOut size={20} />
-         </button>
+        <div className="flex items-center">
+          <div className="w-8 h-8 mr-2">
+            <Logo size="sm" showText={false} />
+          </div>
+          <span className="font-bold text-slate-800">Dois no Bolso</span>
+        </div>
+        <button onClick={onLogout} className="p-2 text-red-500" title="Sair">
+          <LogOut size={20} />
+        </button>
       </div>
 
       {/* Main Content */}
@@ -158,7 +153,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewCha
         </button>
         <button onClick={() => onViewChange('CHAT')} className={`p-2 flex flex-col items-center ${currentView === 'CHAT' ? 'text-brand-600' : 'text-slate-400'}`}>
           <div className="bg-brand-500 text-white p-2 rounded-full -mt-8 shadow-lg">
-             <MessageSquare size={24} />
+            <MessageSquare size={24} />
           </div>
           <span className="text-[10px] mt-1 font-bold text-brand-600">IA</span>
         </button>
