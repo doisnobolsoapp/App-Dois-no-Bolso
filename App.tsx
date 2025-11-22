@@ -1,4 +1,3 @@
-// src/App.tsx
 import { useEffect, useState } from 'react';
 import { AppData, ViewState, Account, CreditCard } from './types';
 import { Layout } from './components/Layout';
@@ -17,7 +16,7 @@ import { Login } from './components/Login';
 import { authService } from './services/authService';
 import { loadData, saveData, addTransaction, addMultipleTransactions, deleteTransaction, addGoal, updateGoal, addAccount, deleteAccount, addCreditCard, deleteCreditCard, addInvestment, addInvestmentMovement, deleteInvestment, addProperty, deleteProperty, addDebt, deleteDebt, addCustomCategory } from './services/storageService';
 
-// Importações PWA
+// Importações PWA - VERSÃO CORRIGIDA
 import { OnlineStatus } from './components/OnlineStatus';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 import { usePWA } from './hooks/usePWA';
@@ -46,10 +45,12 @@ function App() {
     }
     setIsLoading(false);
 
-    // Registrar Service Worker
+    // Registrar Service Worker - VERSÃO CORRIGIDA (sem process.env)
     if ('serviceWorker' in navigator) {
-      // Verifica se está em produção (simplificado)
-      const isProduction = !window.location.href.includes('localhost') && !window.location.href.includes('127.0.0.1');
+      // Verifica se está em produção de forma simplificada
+      const isProduction = !window.location.href.includes('localhost') && 
+                          !window.location.href.includes('127.0.0.1') &&
+                          window.location.protocol === 'https:';
       
       if (isProduction) {
         navigator.serviceWorker.register('/service-worker.js')
@@ -59,6 +60,8 @@ function App() {
           .catch((error) => {
             console.log('❌ Erro no Service Worker:', error);
           });
+      } else {
+        console.log('🔧 Modo desenvolvimento - Service Worker não registrado');
       }
     }
   }, []);
@@ -317,7 +320,7 @@ function App() {
       <OnlineStatus />
       <PWAInstallPrompt />
       
-      {/* Layout Principal */}
+      {/* Layout Principal - VERSÃO CORRIGIDA (sem isOnline e isStandalone) */}
       <Layout 
         currentView={currentView} 
         onViewChange={setCurrentView}
