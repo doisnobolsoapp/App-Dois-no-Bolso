@@ -7,7 +7,7 @@ export interface PWAStatus {
   waitingWorker: ServiceWorker | null;
 }
 
-export const usePWA = () => {
+export const usePWA = (): PWAStatus & { updateApp: () => void } => {
   const [status, setStatus] = useState<PWAStatus>({
     isOnline: navigator.onLine,
     isStandalone: window.matchMedia('(display-mode: standalone)').matches,
@@ -55,6 +55,11 @@ export const usePWA = () => {
         clearInterval(updateInterval);
       };
     }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   const updateApp = () => {
