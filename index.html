@@ -3,7 +3,49 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dois no Bolso</title>
+    
+    <!-- Título e Descrição -->
+    <title>Dois no Bolso - Controle Financeiro Pessoal</title>
+    <meta name="description" content="Controle suas finanças de forma simples e eficiente. Gerencie gastos, investimentos e metas financeiras com o Dois no Bolso." />
+    
+    <!-- Meta Tags PWA Essenciais -->
+    <meta name="theme-color" content="#16a34a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Dois no Bolso" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="Dois no Bolso" />
+    
+    <!-- Meta Tags para SEO e Social -->
+    <meta name="keywords" content="finanças, controle financeiro, orçamento, gastos, investimentos, economia, dinheiro" />
+    <meta name="author" content="Dois no Bolso" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Dois no Bolso - Controle Financeiro Pessoal" />
+    <meta property="og:description" content="Controle suas finanças de forma simples e eficiente. Gerencie gastos, investimentos e metas financeiras." />
+    <meta property="og:image" content="/icons/icon-512x512.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="Dois no Bolso - Controle Financeiro Pessoal" />
+    <meta property="twitter:description" content="Controle suas finanças de forma simples e eficiente." />
+    <meta property="twitter:image" content="/icons/icon-512x512.png" />
+
+    <!-- Favicon e Ícones PWA -->
+    <link rel="icon" type="image/png" href="/icons/icon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/icons/icon-16x16.png" sizes="16x16" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Preconnects para Performance -->
+    <link rel="preconnect" href="https://aistudiocdn.com" />
+    <link rel="dns-prefetch" href="https://aistudiocdn.com" />
+    
+    <!-- CSS do Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -18,28 +60,195 @@
                 700: '#15803d',
                 900: '#14532d',
               }
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-in-out',
+              'slide-in-up': 'slideInUp 0.3s ease-out',
+              'pulse-soft': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              slideInUp: {
+                '0%': { transform: 'translateY(10px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              }
             }
           }
         }
       }
     </script>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
-    "recharts": "https://aistudiocdn.com/recharts@^3.4.1",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-    "vite": "https://aistudiocdn.com/vite@^7.2.4"
-  }
-}
-</script>
-</head>
+
+    <!-- Import Map para as dependências -->
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://aistudiocdn.com/react@^19.2.0",
+          "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+          "react/": "https://aistudiocdn.com/react@^19.2.0/",
+          "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+          "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+          "recharts": "https://aistudiocdn.com/recharts@^3.4.1",
+          "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+          "vite": "https://aistudiocdn.com/vite@^7.2.4"
+        }
+      }
+    </script>
+
+    <!-- Estilos CSS Customizados para PWA -->
+    <style>
+      /* Estilos para modo standalone (app instalado) */
+      @media all and (display-mode: standalone) {
+        body {
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+          -khtml-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+        }
+        
+        /* Adiciona padding seguro para notches */
+        .safe-area-padding {
+          padding-top: env(safe-area-inset-top);
+          padding-bottom: env(safe-area-inset-bottom);
+          padding-left: env(safe-area-inset-left);
+          padding-right: env(safe-area-inset-right);
+        }
+      }
+
+      /* Melhorias de acessibilidade e UX */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* Loading inicial do app */
+      .app-loading {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      }
+
+      /* Scrollbar customizada */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      /* Seleção de texto branda */
+      ::selection {
+        background-color: #dcfce7;
+        color: #15803d;
+      }
+    </style>
+  </head>
+  
   <body class="bg-slate-50 text-slate-900 antialiased">
+    <!-- Tela de Loading Inicial -->
+    <div id="app-loading" class="fixed inset-0 app-loading flex items-center justify-center z-50 transition-opacity duration-300">
+      <div class="text-center text-white">
+        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-white animate-pulse-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold mb-2">Dois no Bolso</h1>
+        <p class="text-white/80">Carregando seu controle financeiro...</p>
+      </div>
+    </div>
+
+    <!-- Container principal da aplicação -->
     <div id="root"></div>
+
+    <!-- Script para registrar Service Worker e gerenciar loading -->
+    <script>
+      // Remover tela de loading quando o app carregar
+      window.addEventListener('load', function() {
+        setTimeout(() => {
+          const loadingElement = document.getElementById('app-loading');
+          if (loadingElement) {
+            loadingElement.style.opacity = '0';
+            setTimeout(() => loadingElement.remove(), 300);
+          }
+        }, 1000);
+      });
+
+      // Registrar Service Worker para PWA
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          // Esperar um pouco para não competir com o carregamento do app
+          setTimeout(() => {
+            navigator.serviceWorker.register('/service-worker.js')
+              .then(function(registration) {
+                console.log('🚀 Dois no Bolso: Service Worker registrado com sucesso:', registration.scope);
+                
+                // Verificar atualizações periodicamente
+                setInterval(() => {
+                  registration.update();
+                }, 2 * 60 * 60 * 1000); // A cada 2 horas
+              })
+              .catch(function(error) {
+                console.log('❌ Dois no Bolso: Falha no registro do Service Worker:', error);
+              });
+          }, 2000);
+        });
+      }
+
+      // Detectar modo standalone (app instalado)
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        document.documentElement.classList.add('standalone-mode');
+        console.log('📱 Dois no Bolso: Executando em modo standalone');
+      }
+
+      // Detectar dispositivo iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS) {
+        document.documentElement.classList.add('ios-device');
+      }
+
+      // Detectar tema preferido do usuário
+      const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+      if (prefersDarkScheme.matches) {
+        document.documentElement.classList.add('dark');
+      }
+
+      // Prevenir zoom duplo em dispositivos móveis
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function (event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+          event.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, false);
+
+      // Feedback tátil para botões em dispositivos com suporte
+      if ('vibrate' in navigator) {
+        document.addEventListener('click', function(e) {
+          if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+            navigator.vibrate(5);
+          }
+        });
+      }
+    </script>
+
+    <!-- Script principal da aplicação -->
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
