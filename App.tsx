@@ -16,6 +16,11 @@ import { Login } from './components/Login';
 import { authService } from './services/authService';
 import { loadData, saveData, addTransaction, addMultipleTransactions, deleteTransaction, addGoal, updateGoal, addAccount, deleteAccount, addCreditCard, deleteCreditCard, addInvestment, addInvestmentMovement, deleteInvestment, addProperty, deleteProperty, addDebt, deleteDebt, addCustomCategory } from './services/storageService';
 
+// Importações PWA
+import { OnlineStatus } from './components/OnlineStatus';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
+import { usePWA } from './hooks/usePWA';
+
 interface User {
   id: string;
   name: string;
@@ -29,6 +34,9 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Hook PWA
+  const { isOnline, isStandalone } = usePWA();
+
   // Check if user is logged in on app start
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
@@ -36,12 +44,31 @@ function App() {
       setUser(currentUser as User);
     }
     setIsLoading(false);
+
+    // Registrar Service Worker se não estiver em desenvolvimento
+    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then((registration) => {
+          console.log('🚀 Service Worker registrado:', registration);
+        })
+        .catch((error) => {
+          console.log('❌ Erro no Service Worker:', error);
+        });
+    }
   }, []);
 
   // Save data when it changes
   useEffect(() => {
     saveData(data);
   }, [data]);
+
+  // Sincronização automática quando voltar a ficar online
+  useEffect(() => {
+    if (isOnline) {
+      console.log('🌐 Conexão restaurada - sincronizando dados...');
+      // Aqui você pode adicionar lógica de sincronização com backend
+    }
+  }, [isOnline]);
 
   // Login handler
   const handleLogin = (userData: User) => {
@@ -158,14 +185,25 @@ function App() {
 
   // Se não estiver logado, mostra login
   if (!user) {
-    return <Login onLogin={handleLogin} />;
+    return (
+      <>
+        <OnlineStatus />
+        <Login onLogin={handleLogin} />
+      </>
+    );
   }
 
   // Se estiver carregando, mostra loading
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+          <p className="text-slate-600">Carregando Dois no Bolso...</p>
+          {!isOnline && (
+            <p className="text-orange-600 text-sm mt-2">Modo offline</p>
+          )}
+        </div>
       </div>
     );
   }
@@ -269,13 +307,47 @@ function App() {
   };
 
   return (
-    <Layout 
-      currentView={currentView} 
-      onViewChange={setCurrentView}
-      onLogout={handleLogout}
-    >
-      {renderCurrentView()}
-    </Layout>
+    <>
+      {/* Componentes PWA */}
+      <OnlineStatus />
+      <PWAInstallPrompt />
+      
+      {/* Layout Principal */}
+      <Layout 
+        currentView={currentView} 
+        onViewChange={setCurrentView}
+        onLogout={handleLogout}
+        isOnline={isOnline}
+        isStandalone={isStandalone}
+      >
+        {renderCurrentView()}
+        
+        {/* Footer com Status PWA */}
+        <footer className="py-4 text-center text-slate-500 text-xs mt-8 border-t border-slate-200">
+          <div className="flex items-center justify-center space-x-4">
+            <p>Dois no Bolso {new Date().getFullYear()}</p>
+            <span className="flex items-center space-x-1">
+              {isOnline ? (
+                <>
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Online</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span>Offline</span>
+                </>
+              )}
+            </span>
+            {isStandalone && (
+              <span className="bg-brand-100 text-brand-700 px-2 py-1 rounded-full text-xs">
+                App
+              </span>
+            )}
+          </div>
+        </footer>
+      </Layout>
+    </>
   );
 }
 
