@@ -17,8 +17,15 @@ export const usePWA = (): PWAStatus & { updateApp: () => void } => {
 
   useEffect(() => {
     // Listeners de conectividade
-    const handleOnline = () => setStatus(prev => ({ ...prev, isOnline: true }));
-    const handleOffline = () => setStatus(prev => ({ ...prev, isOnline: false }));
+    const handleOnline = () => {
+      console.log('🌐 Conexão online');
+      setStatus(prev => ({ ...prev, isOnline: true }));
+    };
+    
+    const handleOffline = () => {
+      console.log('🔴 Conexão offline');
+      setStatus(prev => ({ ...prev, isOnline: false }));
+    };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -26,34 +33,26 @@ export const usePWA = (): PWAStatus & { updateApp: () => void } => {
     // Service Worker e updates
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then((registration) => {
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                setStatus(prev => ({ 
-                  ...prev, 
-                  showUpdatePrompt: true,
-                  waitingWorker: newWorker 
-                }));
-              }
-            });
-          }
-        });
+        if (registration) {
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('🔄 Nova versão disponível');
+                  setStatus(prev => ({ 
+                    ...prev, 
+                    showUpdatePrompt: true,
+                    waitingWorker: newWorker 
+                  }));
+                }
+              });
+            }
+          });
+        }
+      }).catch(error => {
+        console.log('❌ Service Worker não está pronto:', error);
       });
-
-      // Verificar updates periodicamente
-      const updateInterval = setInterval(() => {
-        navigator.serviceWorker.ready.then((registration) => {
-          registration.update();
-        });
-      }, 60 * 60 * 1000); // A cada hora
-
-      return () => {
-        window.removeEventListener('online', handleOnline);
-        window.removeEventListener('offline', handleOffline);
-        clearInterval(updateInterval);
-      };
     }
 
     return () => {
