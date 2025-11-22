@@ -1,3 +1,4 @@
+// src/App.tsx
 import { useEffect, useState } from 'react';
 import { AppData, ViewState, Account, CreditCard } from './types';
 import { Layout } from './components/Layout';
@@ -71,7 +72,6 @@ function App() {
   useEffect(() => {
     if (isOnline) {
       console.log('🌐 Conexão restaurada - sincronizando dados...');
-      // Aqui você pode adicionar lógica de sincronização com backend
     }
   }, [isOnline]);
 
@@ -90,62 +90,62 @@ function App() {
   // Transaction Handlers
   const handleAddTransaction = (t: any) => {
     const newT = addTransaction(t);
-    setData(prev => ({ ...prev, transactions: [...prev.transactions, newT] }));
+    setData((prev: AppData) => ({ ...prev, transactions: [...prev.transactions, newT] }));
   };
 
   const handleAddMultipleTransactions = (ts: any[]) => {
     const newTs = addMultipleTransactions(ts);
-    setData(prev => ({ ...prev, transactions: [...prev.transactions, ...newTs] }));
+    setData((prev: AppData) => ({ ...prev, transactions: [...prev.transactions, ...newTs] }));
   };
 
   const handleDeleteTransaction = (id: string) => {
     deleteTransaction(id);
-    setData(prev => ({ ...prev, transactions: prev.transactions.filter(t => t.id !== id) }));
+    setData((prev: AppData) => ({ ...prev, transactions: prev.transactions.filter(t => t.id !== id) }));
   };
 
   // Goal Handlers
   const handleAddGoal = (g: any) => {
     const newG = addGoal(g);
-    setData(prev => ({ ...prev, goals: [...prev.goals, newG] }));
+    setData((prev: AppData) => ({ ...prev, goals: [...prev.goals, newG] }));
   };
 
   const handleUpdateGoal = (g: any) => {
     updateGoal(g);
-    setData(prev => ({ ...prev, goals: prev.goals.map(goal => goal.id === g.id ? g : goal) }));
+    setData((prev: AppData) => ({ ...prev, goals: prev.goals.map(goal => goal.id === g.id ? g : goal) }));
   };
 
   // Account Handlers
   const handleAddAccount = (a: any) => {
     const newA = addAccount(a);
-    setData(prev => ({ ...prev, accounts: [...prev.accounts, newA] }));
+    setData((prev: AppData) => ({ ...prev, accounts: [...prev.accounts, newA] }));
   };
 
   const handleDeleteAccount = (id: string) => {
     deleteAccount(id);
-    setData(prev => ({ ...prev, accounts: prev.accounts.filter(a => a.id !== id) }));
+    setData((prev: AppData) => ({ ...prev, accounts: prev.accounts.filter(a => a.id !== id) }));
   };
 
   // Credit Card Handlers
   const handleAddCreditCard = (c: any) => {
     const newC = addCreditCard(c);
-    setData(prev => ({ ...prev, creditCards: [...prev.creditCards, newC] }));
+    setData((prev: AppData) => ({ ...prev, creditCards: [...prev.creditCards, newC] }));
   };
 
   const handleDeleteCreditCard = (id: string) => {
     deleteCreditCard(id);
-    setData(prev => ({ ...prev, creditCards: prev.creditCards.filter(c => c.id !== id) }));
+    setData((prev: AppData) => ({ ...prev, creditCards: prev.creditCards.filter(c => c.id !== id) }));
   };
 
   // Investment Handlers
   const handleAddInvestment = (i: any) => {
     const newI = addInvestment(i);
-    setData(prev => ({ ...prev, investments: [...prev.investments, newI] }));
+    setData((prev: AppData) => ({ ...prev, investments: [...prev.investments, newI] }));
   };
 
   const handleAddInvestmentMovement = (invId: string, type: 'BUY' | 'SELL' | 'UPDATE', qty: number, price: number, date: string, notes?: string) => {
     const updatedInv = addInvestmentMovement(invId, type, qty, price, date, notes);
     if (updatedInv) {
-      setData(prev => ({
+      setData((prev: AppData) => ({
         ...prev,
         investments: prev.investments.map(inv => inv.id === invId ? updatedInv : inv)
       }));
@@ -154,35 +154,35 @@ function App() {
 
   const handleDeleteInvestment = (id: string) => {
     deleteInvestment(id);
-    setData(prev => ({ ...prev, investments: prev.investments.filter(i => i.id !== id) }));
+    setData((prev: AppData) => ({ ...prev, investments: prev.investments.filter(i => i.id !== id) }));
   };
 
   // Property Handlers
   const handleAddProperty = (p: any) => {
     const newP = addProperty(p);
-    setData(prev => ({ ...prev, properties: [...prev.properties, newP] }));
+    setData((prev: AppData) => ({ ...prev, properties: [...prev.properties, newP] }));
   };
 
   const handleDeleteProperty = (id: string) => {
     deleteProperty(id);
-    setData(prev => ({ ...prev, properties: prev.properties.filter(p => p.id !== id) }));
+    setData((prev: AppData) => ({ ...prev, properties: prev.properties.filter(p => p.id !== id) }));
   };
 
   // Debt Handlers
   const handleAddDebt = (d: any) => {
     const newD = addDebt(d);
-    setData(prev => ({ ...prev, debts: [...prev.debts, newD] }));
+    setData((prev: AppData) => ({ ...prev, debts: [...prev.debts, newD] }));
   };
 
   const handleDeleteDebt = (id: string) => {
     deleteDebt(id);
-    setData(prev => ({ ...prev, debts: prev.debts.filter(d => d.id !== id) }));
+    setData((prev: AppData) => ({ ...prev, debts: prev.debts.filter(d => d.id !== id) }));
   };
 
   // Category Handler
   const handleAddCategory = (category: string) => {
     addCustomCategory(category);
-    setData(prev => ({ 
+    setData((prev: AppData) => ({ 
       ...prev, 
       customCategories: [...prev.customCategories, category] 
     }));
