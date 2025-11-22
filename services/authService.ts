@@ -4,7 +4,7 @@ export const authService = {
     return user ? JSON.parse(user) : null;
   },
   
-  login: (email: string, password: string) => {
+  login: (email: string, _password: string) => { // Use _password para indicar que não é usado
     // Simulação de login
     const user = {
       id: '1',
