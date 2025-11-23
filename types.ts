@@ -1,136 +1,15 @@
-// Mantenha apenas UMA definição da interface Account
-export interface Account {
+// types.ts
+export interface Message {
   id: string;
-  name: string;
-  initialBalance: number;
-  institution?: string;
-  type?: string; // Apenas esta linha para 'type'
-  color?: string;
+  content: string;
+  role: 'user' | 'assistant';
+  timestamp: Date;
 }
 
-// O resto do arquivo permanece igual...
-export interface Transaction {
-  id: string;
-  type: TransactionType;
-  description: string;
-  amount: number;
-  category: string;
-  date: string;
-  paid: boolean;
-  dueDate?: string;
-  notificationSent?: boolean;
-  paymentMethod: PaymentMethod;
-  accountId?: string;
-  cardId?: string;
-  installments?: { current: number; total: number };
-  investmentId?: string;
-  createdBy?: string;
-}
-
-export enum TransactionType {
-  INCOME = 'INCOME',
-  EXPENSE = 'EXPENSE', 
-  INVESTMENT = 'INVESTMENT',
-  LOAN = 'LOAN'
-}
-
-export enum PaymentMethod {
-  CASH = 'CASH',
-  CREDIT_CARD = 'CREDIT_CARD',
-  DEBIT_CARD = 'DEBIT_CARD',
-  BANK_TRANSFER = 'BANK_TRANSFER',
-  PIX = 'PIX'
-}
-
-export enum Category {
-  FOOD = 'Alimentação',
-  TRANSPORT = 'Transporte',
-  HOUSING = 'Moradia',
-  HEALTH = 'Saúde',
-  EDUCATION = 'Educação',
-  ENTERTAINMENT = 'Lazer',
-  SHOPPING = 'Compras',
-  SERVICES = 'Serviços',
-  TRAVEL = 'Viagens',
-  INVESTMENTS = 'Investimentos',
-  SALARY = 'Salário',
-  FREELANCE = 'Freelance',
-  OTHER = 'Outros'
-}
-
-export interface Goal {
-  id: string;
-  name: string;
-  targetAmount: number;
-  currentAmount: number;
-  deadline: string;
-}
-
-export interface CreditCard {
-  id: string;
-  name: string;
-  limit: number;
-  currentBalance?: number;
-}
-
-export interface Investment {
-  id: string;
-  name: string;
-  type: InvestmentType;
-  broker: string;
-  strategy: InvestmentStrategy;
-  quantity: number;
-  averagePrice: number;
-  currentPrice: number;
-  notes: string;
-  history: InvestmentHistory[];
-}
-
-export interface InvestmentHistory {
-  id: string;
-  date: string;
-  type: 'BUY' | 'SELL' | 'DIVIDEND' | 'UPDATE';
-  quantity: number;
-  pricePerUnit: number;
-  totalAmount: number;
-  notes?: string;
-}
-
-export enum InvestmentType {
-  FIXED_INCOME = 'FIXED_INCOME',
-  STOCK = 'STOCK', 
-  FII = 'FII',
-  CRYPTO = 'CRYPTO',
-  FUND = 'FUND',
-  PENSION = 'PENSION',
-  SAVINGS = 'SAVINGS',
-  INTERNATIONAL = 'INTERNATIONAL',
-  OTHER = 'OTHER'
-}
-
-export enum InvestmentStrategy {
-  RESERVE = 'RESERVE',
-  LONG_TERM = 'LONG_TERM',
-  SHORT_TERM = 'SHORT_TERM', 
-  SWING_TRADE = 'SWING_TRADE',
-  HOLD = 'HOLD'
-}
-
-export interface Property {
-  id: string;
-  name: string;
-  value: number;
-  currentValue?: number;
-}
-
-export interface Debt {
-  id: string;
-  name: string;
-  totalAmount: number;
-  remainingAmount: number;
-  interestRate: number;
-  dueDate: string;
-  institution: string;
+export interface LayoutProps {
+  children: React.ReactNode;
+  currentView: ViewState;
+  onViewChange: (view: ViewState) => void;
 }
 
 export interface AppData {
@@ -141,20 +20,76 @@ export interface AppData {
   investments: Investment[];
   properties: Property[];
   debts: Debt[];
-  customCategories: string[];
-  userMode: 'INDIVIDUAL' | 'COUPLE';
-  language: 'PT' | 'EN';
+  userPreferences?: {
+    currency: string;
+    language: string;
+    notifications: boolean;
+  };
 }
 
-export type ViewState = 
-  | 'DASHBOARD' 
-  | 'TRANSACTIONS' 
-  | 'GOALS' 
-  | 'REPORTS' 
-  | 'CALENDAR'
-  | 'BANKS'
-  | 'CARDS'
-  | 'INVESTMENTS'
-  | 'BALANCE'
-  | 'CHAT'
-  | 'SETTINGS';
+export interface Transaction {
+  id: string;
+  type: TransactionType;
+  category: string;
+  amount: number;
+  description: string;
+  date: string;
+  paid: boolean;
+  // remova createdAt se não existe na interface original
+}
+
+export interface Goal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: string;
+  // remova createdAt se não existe
+}
+
+export interface Account {
+  id: string;
+  name: string;
+  balance: number;
+  type: string;
+  // remova createdAt se não existe
+}
+
+export interface CreditCard {
+  id: string;
+  name: string;
+  limit: number;
+  currentBalance: number;
+  dueDate: string;
+  // remova createdAt se não existe
+}
+
+export interface Investment {
+  id: string;
+  name: string;
+  type: string;
+  initialValue: number;
+  currentValue?: number; // torne opcional se não é usado
+  purchaseDate: string;
+}
+
+export interface Property {
+  id: string;
+  name: string;
+  value: number;
+  purchaseDate: string;
+  // remova createdAt se não existe
+}
+
+export interface Debt {
+  id: string;
+  name: string;
+  totalAmount: number;
+  remainingAmount: number;
+  dueDate: string;
+  // remova createdAt se não existe
+}
+
+export type TransactionType = 'income' | 'expense';
+export type PaymentMethod = 'cash' | 'credit' | 'debit' | 'transfer';
+export type ViewState = 'dashboard' | 'transactions' | 'goals' | 'investments' | 'debts' | 'settings';
