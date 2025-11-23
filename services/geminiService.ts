@@ -59,7 +59,7 @@ export const TOOLS_CONFIG = [addTransactionTool, addGoalTool, addInvestmentTool]
 // ========== Criar cliente ==========
 export const createGeminiClient = () => {
   // Corrigir o acesso à variável de ambiente
-  const apiKey = process.env.VITE_GEMINI_API_KEY;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   if (!apiKey) {
     console.error("❌ ERRO: VITE_GEMINI_API_KEY não encontrada no .env");
