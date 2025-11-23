@@ -1,7 +1,7 @@
 // src/components/AIChat.tsx
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, Loader2 } from 'lucide-react';
-import { AppData, TransactionType, PaymentMethod } from '../../types'; // ajuste o caminho se necessário
+import { AppData, PaymentMethod } from '../../types'; // Removido TransactionType não utilizado
 import { callOpenAIWithTools } from '../services/openaiService';
 
 interface AIChatProps {
@@ -41,7 +41,7 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
           category: toolArgs.category || 'Outros',
           date: toolArgs.date || new Date().toISOString().split('T')[0],
           paid: toolArgs.paid === undefined ? true : Boolean(toolArgs.paid),
-          paymentMethod: toolArgs.paymentMethod || PaymentMethod.CASH,
+          paymentMethod: toolArgs.paymentMethod || 'cash' as PaymentMethod,
           accountId: toolArgs.accountId,
           cardId: toolArgs.cardId
         };
@@ -78,7 +78,12 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
     if (e) e.preventDefault();
     if (!inputMessage.trim() || isLoading) return;
 
-    const userMsg = { id: Date.now().toString(), content: inputMessage, role: 'user', timestamp: new Date() };
+    const userMsg: Message = { 
+      id: Date.now().toString(), 
+      content: inputMessage, 
+      role: 'user', 
+      timestamp: new Date() 
+    };
     setMessages(prev => [...prev, userMsg]);
     setInputMessage('');
     setIsLoading(true);
@@ -113,15 +118,33 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
         const toolResultText = handleToolCall(fc.name, args);
 
         // Adiciona mensagem de confirmação do assistant
-        setMessages(prev => [...prev, { id: Date.now().toString(), content: toolResultText, role: 'assistant', timestamp: new Date() }]);
+        const assistantMsg: Message = { 
+          id: Date.now().toString(), 
+          content: toolResultText, 
+          role: 'assistant', 
+          timestamp: new Date() 
+        };
+        setMessages(prev => [...prev, assistantMsg]);
       } else {
         // 2) Caso comum: resposta textual
         const text = (message && message.content) || choice.text || 'Não foi possível gerar resposta.';
-        setMessages(prev => [...prev, { id: Date.now().toString(), content: text, role: 'assistant', timestamp: new Date() }]);
+        const assistantMsg: Message = { 
+          id: Date.now().toString(), 
+          content: text, 
+          role: 'assistant', 
+          timestamp: new Date() 
+        };
+        setMessages(prev => [...prev, assistantMsg]);
       }
     } catch (err) {
       console.error(err);
-      setMessages(prev => [...prev, { id: Date.now().toString(), content: 'Erro ao contatar a IA. Tente novamente.', role: 'assistant', timestamp: new Date() }]);
+      const errorMsg: Message = { 
+        id: Date.now().toString(), 
+        content: 'Erro ao contatar a IA. Tente novamente.', 
+        role: 'assistant', 
+        timestamp: new Date() 
+      };
+      setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
     }
