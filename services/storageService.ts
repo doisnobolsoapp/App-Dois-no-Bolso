@@ -20,9 +20,8 @@ export const loadData = (): AppData => {
     creditCards: [],
     investments: [],
     properties: [],
-    debts: [],
-    customCategories: []
-    // Removido userPreferences que não existe na interface AppData
+    debts: []
+    // Removido customCategories que não existe em AppData
   };
 };
 
@@ -42,7 +41,6 @@ export const addTransaction = (transaction: Omit<Transaction, 'id'>): Transactio
   const newTransaction: Transaction = {
     ...transaction,
     id: generateId()
-    // Removido createdAt que não existe na interface Transaction
   };
   return newTransaction;
 };
@@ -66,7 +64,6 @@ export const addGoal = (goal: Omit<Goal, 'id'>): Goal => {
   const newGoal: Goal = {
     ...goal,
     id: generateId()
-    // Removido createdAt que não existe na interface Goal
   };
   return newGoal;
 };
@@ -86,7 +83,6 @@ export const addAccount = (account: Omit<Account, 'id'>): Account => {
   const newAccount: Account = {
     ...account,
     id: generateId()
-    // Removido createdAt que não existe na interface Account
   };
   return newAccount;
 };
@@ -106,7 +102,6 @@ export const addCreditCard = (card: Omit<CreditCard, 'id'>): CreditCard => {
   const newCard: CreditCard = {
     ...card,
     id: generateId()
-    // Removido createdAt que não existe na interface CreditCard
   };
   return newCard;
 };
@@ -126,7 +121,6 @@ export const addInvestment = (investment: Omit<Investment, 'id'>): Investment =>
   const newInvestment: Investment = {
     ...investment,
     id: generateId()
-    // Removido propriedades que não existem na interface Investment
   };
   return newInvestment;
 };
@@ -138,8 +132,8 @@ export const addInvestmentMovement = (invId: string, type: 'BUY' | 'SELL' | 'UPD
 
   // Atualizar o investimento conforme o movimento
   const updatedInvestment: Investment = {
-    ...investment,
-    // Adicionar lógica de atualização baseada no tipo de movimento
+    ...investment
+    // Implementação básica - você pode adicionar lógica específica aqui
   };
 
   const updatedInvestments = data.investments.map(inv => 
@@ -170,7 +164,6 @@ export const addProperty = (property: Omit<Property, 'id'>): Property => {
   const newProperty: Property = {
     ...property,
     id: generateId()
-    // Removido createdAt que não existe na interface Property
   };
   return newProperty;
 };
@@ -190,7 +183,6 @@ export const addDebt = (debt: Omit<Debt, 'id'>): Debt => {
   const newDebt: Debt = {
     ...debt,
     id: generateId()
-    // Removido createdAt que não existe na interface Debt
   };
   return newDebt;
 };
@@ -207,13 +199,15 @@ export const deleteDebt = (id: string) => {
 
 // Operações para Categories
 export const addCustomCategory = (category: string) => {
-  const data = loadData();
-  const updatedCategories = [...(data.customCategories || []), category];
-  const updatedData: AppData = {
-    ...data,
-    customCategories: updatedCategories
-  };
-  saveData(updatedData);
+  // Implementação básica - salvar categorias personalizadas separadamente
+  // Como customCategories não existe em AppData, vamos salvar em localStorage separadamente
+  try {
+    const existingCategories = JSON.parse(localStorage.getItem('customCategories') || '[]');
+    const updatedCategories = [...existingCategories, category];
+    localStorage.setItem('customCategories', JSON.stringify(updatedCategories));
+  } catch (error) {
+    console.error('Erro ao salvar categoria personalizada:', error);
+  }
 };
 
 // Funções auxiliares para buscar dados específicos
@@ -246,5 +240,10 @@ export const getDebts = (): Debt[] => {
 };
 
 export const getCustomCategories = (): string[] => {
-  return loadData().customCategories || [];
+  try {
+    return JSON.parse(localStorage.getItem('customCategories') || '[]');
+  } catch (error) {
+    console.error('Erro ao carregar categorias personalizadas:', error);
+    return [];
+  }
 };
