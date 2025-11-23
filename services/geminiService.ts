@@ -8,7 +8,7 @@ const addTransactionTool = {
   parameters: {
     type: "object",
     properties: {
-      type: { type: "string", enum: ["INCOME", "EXPENSE", "INVESTMENT", "LOAN"] },
+      type: { type: "string", enum: ["income", "expense", "investment", "loan"] },
       category: { type: "string" },
       amount: { type: "number" },
       description: { type: "string" },
@@ -58,7 +58,6 @@ export const TOOLS_CONFIG = [addTransactionTool, addGoalTool, addInvestmentTool]
 
 // ========== Criar cliente ==========
 export const createGeminiClient = () => {
-  // Corrigir o acesso à variável de ambiente
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   if (!apiKey) {
@@ -71,27 +70,13 @@ export const createGeminiClient = () => {
 
 // ========== Obter modelo ==========
 export const getGeminiModel = (client: GoogleGenerativeAI) => {
-  // Corrigir a estrutura das functionDeclarations
-  const functionDeclarations = TOOLS_CONFIG.map(tool => ({
-    name: tool.name,
-    description: tool.description,
-    parameters: {
-      ...tool.parameters,
-      type: 'OBJECT' as const
-    }
-  }));
-
+  // Usar a estrutura correta para functionDeclarations
   return client.getGenerativeModel({
-    model: "gemini-1.5-flash",  // ou gemini-1.5-pro
-    tools: [
-      {
-        functionDeclarations: functionDeclarations
-      }
-    ],
-    systemInstruction: {
-      role: "system",
-      parts: [{ text: DEFAULT_SYSTEM_INSTRUCTION }]
-    }
+    model: "gemini-1.5-flash",
+    tools: {
+      functionDeclarations: TOOLS_CONFIG
+    },
+    systemInstruction: DEFAULT_SYSTEM_INSTRUCTION
   });
 };
 
@@ -114,7 +99,6 @@ export const callGeminiWithTools = async (userMessage: string, systemInstruction
       choices: [{
         message: {
           content: response.text(),
-          // Adicionar estrutura para function calls se necessário
           function_call: null
         }
       }]
