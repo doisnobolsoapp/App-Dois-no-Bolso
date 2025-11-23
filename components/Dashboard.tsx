@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AppData, TransactionType, ViewState } from '../types';
+import { AppData, ViewState } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, TrendingDown, Wallet, Target, PieChart, Calendar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
@@ -40,15 +40,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
     // Cálculos para cada período
     const calculateSummary = (transactions: typeof data.transactions) => {
       const income = transactions
-        .filter(t => t.type === TransactionType.INCOME)
+        .filter(t => t.type === 'income')
         .reduce((acc, t) => acc + t.amount, 0);
       
       const expense = transactions
-        .filter(t => t.type === TransactionType.EXPENSE || t.type === TransactionType.LOAN)
+        .filter(t => t.type === 'expense' || t.type === 'loan')
         .reduce((acc, t) => acc + t.amount, 0);
         
       const investments = transactions
-        .filter(t => t.type === TransactionType.INVESTMENT)
+        .filter(t => t.type === 'investment')
         .reduce((acc, t) => acc + t.amount, 0);
 
       const balance = income - expense - investments;
@@ -80,11 +80,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
       });
 
       const monthIncome = monthTransactions
-        .filter(t => t.type === TransactionType.INCOME)
+        .filter(t => t.type === 'income')
         .reduce((acc, t) => acc + t.amount, 0);
         
       const monthExpense = monthTransactions
-        .filter(t => t.type === TransactionType.EXPENSE || t.type === TransactionType.LOAN)
+        .filter(t => t.type === 'expense' || t.type === 'loan')
         .reduce((acc, t) => acc + t.amount, 0);
 
       last6Months.push({
@@ -102,7 +102,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
     const categoryMap = new Map<string, number>();
     
     data.transactions
-      .filter(t => t.type === TransactionType.EXPENSE)
+      .filter(t => t.type === 'expense')
       .forEach(t => {
         categoryMap.set(t.category, (categoryMap.get(t.category) || 0) + t.amount);
       });
@@ -303,12 +303,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
         </div>
       </div>
 
-      {/* Quick Actions - Mantido igual */}
+      {/* Quick Actions - CORRIGIDO */}
       <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
         <h3 className="font-bold text-lg text-slate-800 mb-4">Ações Rápidas</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <button 
-            onClick={() => onViewChange('TRANSACTIONS')}
+            onClick={() => onViewChange('transactions')}
             className="p-4 bg-slate-50 hover:bg-slate-100 rounded-lg text-center transition-colors"
           >
             <div className="bg-brand-100 p-2 rounded-lg inline-block mb-2">
@@ -318,7 +318,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
           </button>
           
           <button 
-            onClick={() => onViewChange('GOALS')}
+            onClick={() => onViewChange('goals')}
             className="p-4 bg-slate-50 hover:bg-slate-100 rounded-lg text-center transition-colors"
           >
             <div className="bg-green-100 p-2 rounded-lg inline-block mb-2">
@@ -328,7 +328,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
           </button>
           
           <button 
-            onClick={() => onViewChange('REPORTS')}
+            onClick={() => onViewChange('reports')}
             className="p-4 bg-slate-50 hover:bg-slate-100 rounded-lg text-center transition-colors"
           >
             <div className="bg-blue-100 p-2 rounded-lg inline-block mb-2">
@@ -338,7 +338,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
           </button>
           
           <button 
-            onClick={() => onViewChange('CALENDAR')}
+            onClick={() => onViewChange('calendar')}
             className="p-4 bg-slate-50 hover:bg-slate-100 rounded-lg text-center transition-colors"
           >
             <div className="bg-purple-100 p-2 rounded-lg inline-block mb-2">
