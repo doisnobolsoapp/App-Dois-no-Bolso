@@ -21,7 +21,6 @@ export const loadData = (): AppData => {
     investments: [],
     properties: [],
     debts: []
-    // Removido customCategories que não existe em AppData
   };
 };
 
@@ -125,15 +124,15 @@ export const addInvestment = (investment: Omit<Investment, 'id'>): Investment =>
   return newInvestment;
 };
 
+// Corrigido: implementação básica da função
 export const addInvestmentMovement = (invId: string, type: 'BUY' | 'SELL' | 'UPDATE', qty: number, price: number, date: string, notes?: string) => {
   const data = loadData();
   const investment = data.investments.find(inv => inv.id === invId);
   if (!investment) return null;
 
-  // Atualizar o investimento conforme o movimento
+  // Implementação básica - você pode expandir conforme necessário
   const updatedInvestment: Investment = {
     ...investment
-    // Implementação básica - você pode adicionar lógica específica aqui
   };
 
   const updatedInvestments = data.investments.map(inv => 
@@ -199,8 +198,6 @@ export const deleteDebt = (id: string) => {
 
 // Operações para Categories
 export const addCustomCategory = (category: string) => {
-  // Implementação básica - salvar categorias personalizadas separadamente
-  // Como customCategories não existe em AppData, vamos salvar em localStorage separadamente
   try {
     const existingCategories = JSON.parse(localStorage.getItem('customCategories') || '[]');
     const updatedCategories = [...existingCategories, category];
