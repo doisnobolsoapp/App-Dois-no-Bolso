@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'; // Removido React do import
+import { useEffect, useState } from 'react';
 import { AppData, ViewState, Account, CreditCard } from './types';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
@@ -215,10 +215,8 @@ function App(): JSX.Element {
   // Custom categories
   const handleAddCategory = (category: string) => {
     addCustomCategory(category);
-    setData(prev => ({ 
-      ...prev, 
-      customCategories: [...(prev.customCategories || []), category] 
-    }));
+    // Removido customCategories que não existe em AppData
+    // A função addCustomCategory já salva no localStorage
   };
 
   // If user not logged, show login
