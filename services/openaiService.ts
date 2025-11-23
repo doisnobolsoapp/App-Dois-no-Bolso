@@ -60,24 +60,34 @@ export const TOOLS_SCHEMA = {
  * Retorna o JSON da resposta (raw) para ser processado pelo caller.
  */
 export async function callOpenAIWithTools(prompt: string, systemPrompt = '', userContext = '') {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  // Corrigir o acesso à variável de ambiente
+  const apiKey = process.env.VITE_OPENAI_API_KEY;
   if (!apiKey) throw new Error('VITE_OPENAI_API_KEY não configurada');
 
   const body = {
-    model: 'o1-mini', // leve/gratuito (mais barato). Substitua se preferir outro.
+    model: 'gpt-3.5-turbo', // Usando modelo mais compatível com function calling
     messages: [
       { role: 'system', content: systemPrompt || 'Você é um assistente financeiro que pode retornar chamadas de função quando apropriado.' },
       { role: 'user', content: `${userContext}\n\n${prompt}` }
     ],
     temperature: 0.2,
     max_tokens: 800,
-    // function calling similar: pass tools schema so model can choose to call them
-    functions: [
-      TOOLS_SCHEMA.addTransaction,
-      TOOLS_SCHEMA.addGoal,
-      TOOLS_SCHEMA.addInvestment
+    // function calling - usando tools em vez de functions (formato mais recente)
+    tools: [
+      {
+        type: 'function',
+        function: TOOLS_SCHEMA.addTransaction
+      },
+      {
+        type: 'function',
+        function: TOOLS_SCHEMA.addGoal
+      },
+      {
+        type: 'function',
+        function: TOOLS_SCHEMA.addInvestment
+      }
     ],
-    function_call: 'auto'
+    tool_choice: 'auto'
   };
 
   const res = await fetch(OPENAI_URL, {
@@ -97,3 +107,30 @@ export async function callOpenAIWithTools(prompt: string, systemPrompt = '', use
   const data = await res.json();
   return data;
 }
+
+// Função auxiliar para processar a resposta da OpenAI
+export const processOpenAIResponse = (response: any) => {
+  const choice = response.choices?.[0];
+  if (!choice) {
+    throw new Error('Resposta vazia da OpenAI');
+  }
+
+  const message = choice.message;
+  
+  // Verificar se há tool calls
+  if (message.tool_calls && message.tool_calls.length > 0) {
+    const toolCall = message.tool_calls[0];
+    return {
+      toolCall: {
+        name: toolCall.function.name,
+        arguments: JSON.parse(toolCall.function.arguments)
+      },
+      content: message.content
+    };
+  }
+
+  return {
+    toolCall: null,
+    content: message.content
+  };
+};
