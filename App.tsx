@@ -14,13 +14,22 @@ import { AIChat } from './components/AIChat';
 import { Settings } from './components/Settings';
 import { Login } from './components/Login';
 import { authService } from './services/authService';
-import { loadData, saveData, addTransaction, addMultipleTransactions, deleteTransaction, addGoal, updateGoal, addAccount, deleteAccount, addCreditCard, deleteCreditCard, addInvestment, addInvestmentMovement, deleteInvestment, addProperty, deleteProperty, addDebt, deleteDebt, addCustomCategory } from './services/storageService';
+import {
+  loadData, saveData, addTransaction, addMultipleTransactions, deleteTransaction,
+  addGoal, updateGoal,
+  addAccount, deleteAccount,
+  addCreditCard, deleteCreditCard,
+  addInvestment, addInvestmentMovement, deleteInvestment,
+  addProperty, deleteProperty,
+  addDebt, deleteDebt,
+  addCustomCategory
+} from './services/storageService';
 
 // Versão temporária para deploy
 const OnlineStatus = () => null;
 const PWAInstallPrompt = () => null;
-const usePWA = () => ({ 
-  isOnline: true, 
+const usePWA = () => ({
+  isOnline: true,
   isStandalone: false,
   showUpdatePrompt: false,
   updateApp: () => {}
@@ -43,23 +52,19 @@ function App() {
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser as User);
-    }
+    if (currentUser) setUser(currentUser as User);
     setIsLoading(false);
 
     if ('serviceWorker' in navigator) {
-      const isProduction = !window.location.href.includes('localhost') && 
-                          !window.location.href.includes('127.0.0.1');
-      
-      if (isProduction) {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then((registration) => {
-            console.log('Service Worker registrado:', registration);
-          })
-          .catch((error) => {
-            console.log('Erro no Service Worker:', error);
-          });
+      const isProd =
+        !window.location.href.includes('localhost') &&
+        !window.location.href.includes('127.0.0.1');
+
+      if (isProd) {
+        navigator.serviceWorker
+          .register('/service-worker.js')
+          .then(reg => console.log('Service Worker registrado:', reg))
+          .catch(err => console.log('Erro SW:', err));
       }
     }
   }, []);
@@ -68,10 +73,7 @@ function App() {
     saveData(data);
   }, [data]);
 
-  const handleLogin = (userData: User) => {
-    setUser(userData as User);
-  };
-
+  const handleLogin = (u: User) => setUser(u);
   const handleLogout = () => {
     authService.logout();
     setUser(null);
@@ -79,94 +81,124 @@ function App() {
 
   const handleAddTransaction = (t: any) => {
     const newT = addTransaction(t);
-    setData((prev: AppData) => ({ ...prev, transactions: [...prev.transactions, newT] }));
+    setData(prev => ({ ...prev, transactions: [...prev.transactions, newT] }));
   };
 
   const handleAddMultipleTransactions = (ts: any[]) => {
     const newTs = addMultipleTransactions(ts);
-    setData((prev: AppData) => ({ ...prev, transactions: [...prev.transactions, ...newTs] }));
+    setData(prev => ({ ...prev, transactions: [...prev.transactions, ...newTs] }));
   };
 
   const handleDeleteTransaction = (id: string) => {
     deleteTransaction(id);
-    setData((prev: AppData) => ({ ...prev, transactions: prev.transactions.filter(t => t.id !== id) }));
+    setData(prev => ({
+      ...prev,
+      transactions: prev.transactions.filter(t => t.id !== id)
+    }));
   };
 
   const handleAddGoal = (g: any) => {
     const newG = addGoal(g);
-    setData((prev: AppData) => ({ ...prev, goals: [...prev.goals, newG] }));
+    setData(prev => ({ ...prev, goals: [...prev.goals, newG] }));
   };
 
   const handleUpdateGoal = (g: any) => {
     updateGoal(g);
-    setData((prev: AppData) => ({ ...prev, goals: prev.goals.map(goal => goal.id === g.id ? g : goal) }));
+    setData(prev => ({
+      ...prev,
+      goals: prev.goals.map(goal => (goal.id === g.id ? g : goal))
+    }));
   };
 
   const handleAddAccount = (a: any) => {
     const newA = addAccount(a);
-    setData((prev: AppData) => ({ ...prev, accounts: [...prev.accounts, newA] }));
+    setData(prev => ({ ...prev, accounts: [...prev.accounts, newA] }));
   };
 
   const handleDeleteAccount = (id: string) => {
     deleteAccount(id);
-    setData((prev: AppData) => ({ ...prev, accounts: prev.accounts.filter(a => a.id !== id) }));
+    setData(prev => ({
+      ...prev,
+      accounts: prev.accounts.filter(a => a.id !== id)
+    }));
   };
 
   const handleAddCreditCard = (c: any) => {
     const newC = addCreditCard(c);
-    setData((prev: AppData) => ({ ...prev, creditCards: [...prev.creditCards, newC] }));
+    setData(prev => ({ ...prev, creditCards: [...prev.creditCards, newC] }));
   };
 
   const handleDeleteCreditCard = (id: string) => {
     deleteCreditCard(id);
-    setData((prev: AppData) => ({ ...prev, creditCards: prev.creditCards.filter(c => c.id !== id) }));
+    setData(prev => ({
+      ...prev,
+      creditCards: prev.creditCards.filter(cc => cc.id !== id)
+    }));
   };
 
   const handleAddInvestment = (i: any) => {
     const newI = addInvestment(i);
-    setData((prev: AppData) => ({ ...prev, investments: [...prev.investments, newI] }));
+    setData(prev => ({ ...prev, investments: [...prev.investments, newI] }));
   };
 
-  const handleAddInvestmentMovement = (invId: string, type: 'BUY' | 'SELL' | 'UPDATE', qty: number, price: number, date: string, notes?: string) => {
-    const updatedInv = addInvestmentMovement(invId, type, qty, price, date, notes);
-    if (updatedInv) {
-      setData((prev: AppData) => ({
+  const handleAddInvestmentMovement = (
+    invId: string,
+    type: 'BUY' | 'SELL' | 'UPDATE',
+    qty: number,
+    price: number,
+    date: string,
+    notes?: string
+  ) => {
+    const updated = addInvestmentMovement(invId, type, qty, price, date, notes);
+    if (updated) {
+      setData(prev => ({
         ...prev,
-        investments: prev.investments.map(inv => inv.id === invId ? updatedInv : inv)
+        investments: prev.investments.map(i =>
+          i.id === invId ? updated : i
+        )
       }));
     }
   };
 
   const handleDeleteInvestment = (id: string) => {
     deleteInvestment(id);
-    setData((prev: AppData) => ({ ...prev, investments: prev.investments.filter(i => i.id !== id) }));
+    setData(prev => ({
+      ...prev,
+      investments: prev.investments.filter(i => i.id !== id)
+    }));
   };
 
   const handleAddProperty = (p: any) => {
     const newP = addProperty(p);
-    setData((prev: AppData) => ({ ...prev, properties: [...prev.properties, newP] }));
+    setData(prev => ({ ...prev, properties: [...prev.properties, newP] }));
   };
 
   const handleDeleteProperty = (id: string) => {
     deleteProperty(id);
-    setData((prev: AppData) => ({ ...prev, properties: prev.properties.filter(p => p.id !== id) }));
+    setData(prev => ({
+      ...prev,
+      properties: prev.properties.filter(p => p.id !== id)
+    }));
   };
 
   const handleAddDebt = (d: any) => {
     const newD = addDebt(d);
-    setData((prev: AppData) => ({ ...prev, debts: [...prev.debts, newD] }));
+    setData(prev => ({ ...prev, debts: [...prev.debts, newD] }));
   };
 
   const handleDeleteDebt = (id: string) => {
     deleteDebt(id);
-    setData((prev: AppData) => ({ ...prev, debts: prev.debts.filter(d => d.id !== id) }));
+    setData(prev => ({
+      ...prev,
+      debts: prev.debts.filter(d => d.id !== id)
+    }));
   };
 
-  const handleAddCategory = (category: string) => {
-    addCustomCategory(category);
-    setData((prev: AppData) => ({ 
-      ...prev, 
-      customCategories: [...prev.customCategories, category] 
+  const handleAddCategory = (cat: string) => {
+    addCustomCategory(cat);
+    setData(prev => ({
+      ...prev,
+      customCategories: [...prev.customCategories, cat]
     }));
   };
 
@@ -183,149 +215,4 @@ function App() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
-          <p className="text-slate-600">Carregando Dois no Bolso...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const renderCurrentView = () => {
-    switch (currentView) {
-      case 'DASHBOARD':
-        return <Dashboard data={data} onViewChange={setCurrentView} />;
-      case 'TRANSACTIONS':
-        return (
-          <TransactionList 
-            data={data}
-            onAddTransaction={handleAddTransaction}
-            onAddMultipleTransactions={handleAddMultipleTransactions}
-            onDeleteTransaction={handleDeleteTransaction}
-            onAddCategory={handleAddCategory}
-          />
-        );
-      case 'GOALS':
-        return (
-          <Goals 
-            goals={data.goals}
-            onAddGoal={handleAddGoal}
-            onUpdateGoal={handleUpdateGoal}
-          />
-        );
-      case 'REPORTS':
-        return <Reports data={data} />;
-      case 'CALENDAR':
-        return (
-          <FinancialCalendar 
-            data={data}
-            onAddTransaction={handleAddTransaction}
-            onDeleteTransaction={handleDeleteTransaction}
-            currentUserId="user1"
-          />
-        );
-      case 'BANKS':
-        return (
-          <BankList 
-            accounts={data.accounts}
-            onAddAccount={handleAddAccount}
-            onDeleteAccount={handleDeleteAccount}
-            onUpdateAccount={(account: Account) => {
-              handleDeleteAccount(account.id);
-              handleAddAccount(account);
-            }}
-          />
-        );
-      case 'CARDS':
-        return (
-          <CreditCardList 
-            cards={data.creditCards}
-            onAddCreditCard={handleAddCreditCard}
-            onDeleteCreditCard={handleDeleteCreditCard}
-            onUpdateCreditCard={(card: CreditCard) => {
-              handleDeleteCreditCard(card.id);
-              handleAddCreditCard(card);
-            }}
-          />
-        );
-      case 'INVESTMENTS':
-        return (
-          <InvestmentDashboard 
-            data={data}
-            onAddInvestment={handleAddInvestment}
-            onAddMovement={handleAddInvestmentMovement}
-            onDeleteInvestment={handleDeleteInvestment}
-            onAddTransaction={handleAddTransaction}
-          />
-        );
-      case 'BALANCE':
-        return (
-          <BalanceSheet 
-            data={data}
-            onAddProperty={handleAddProperty}
-            onDeleteProperty={handleDeleteProperty}
-            onAddDebt={handleAddDebt}
-            onDeleteDebt={handleDeleteDebt}
-          />
-        );
-      case 'CHAT':
-        return (
-          <AIChat 
-            data={data}
-            onAddTransaction={handleAddTransaction}
-            onAddGoal={handleAddGoal}
-            onAddInvestment={handleAddInvestment}
-          />
-        );
-      case 'SETTINGS':
-        return (
-          <Settings 
-            data={data}
-            onDataUpdate={setData}
-          />
-        );
-      default:
-        return <Dashboard data={data} onViewChange={setCurrentView} />;
-    }
-  };
-
-  return (
-    <>
-      <OnlineStatus />
-      <PWAInstallPrompt />
-      
-      <Layout 
-        currentView={currentView} 
-        onViewChange={setCurrentView}
-        onLogout={handleLogout}
-      >
-        {renderCurrentView()}
-        
-        <footer className="py-4 text-center text-slate-500 text-xs mt-8 border-t border-slate-200">
-          <div className="flex items-center justify-center space-x-4">
-            <p>Dois no Bolso {new Date().getFullYear()}</p>
-            <span className="flex items-center space-x-1">
-              {isOnline ? (
-                <>
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>Online</span>
-                </>
-              ) : (
-                <>
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span>Offline</span>
-                </>
-              )}
-            </span>
-            {isStandalone && (
-              <span className="bg-brand-100 text-brand-700 px-2 py-1 rounded-full text-xs">
-                App
-              </span>
-            )}
-          </div>
-        </footer>
-      </Layout>
-    </>
-  );
-}
-
-export default App;
+          <div className="animate-spin h-12 w-12 border-b-2 border-brand-500 ro
