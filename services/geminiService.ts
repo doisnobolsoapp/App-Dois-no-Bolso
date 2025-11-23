@@ -70,12 +70,10 @@ export const createGeminiClient = () => {
 
 // ========== Obter modelo ==========
 export const getGeminiModel = (client: GoogleGenerativeAI) => {
-  // Usar a estrutura correta para functionDeclarations
   return client.getGenerativeModel({
     model: "gemini-1.5-flash",
-    tools: {
-      functionDeclarations: TOOLS_CONFIG
-    },
+    // Corrigido: usar a estrutura correta para functionDeclarations
+    tools: TOOLS_CONFIG,
     systemInstruction: DEFAULT_SYSTEM_INSTRUCTION
   });
 };
