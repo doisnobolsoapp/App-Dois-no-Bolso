@@ -1,4 +1,3 @@
-// src/App.tsx - VERSÃO CORRIGIDA PARA VERCEL
 import { useEffect, useState } from 'react';
 import { AppData, ViewState, Account, CreditCard } from './types';
 import { Layout } from './components/Layout';
@@ -17,12 +16,7 @@ import { Login } from './components/Login';
 import { authService } from './services/authService';
 import { loadData, saveData, addTransaction, addMultipleTransactions, deleteTransaction, addGoal, updateGoal, addAccount, deleteAccount, addCreditCard, deleteCreditCard, addInvestment, addInvestmentMovement, deleteInvestment, addProperty, deleteProperty, addDebt, deleteDebt, addCustomCategory } from './services/storageService';
 
-// COMENTE as importações PWA temporariamente para o deploy
-// import { OnlineStatus } from './components/OnlineStatus';
-// import { PWAInstallPrompt } from './components/PWAInstallPrompt';
-// import { usePWA } from './hooks/usePWA';
-
-// VERSÃO TEMPORÁRIA para o deploy funcionar
+// Versão temporária para deploy
 const OnlineStatus = () => null;
 const PWAInstallPrompt = () => null;
 const usePWA = () => ({ 
@@ -45,10 +39,8 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Hook PWA
   const { isOnline, isStandalone } = usePWA();
 
-  // Check if user is logged in on app start
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
     if (currentUser) {
@@ -56,42 +48,35 @@ function App() {
     }
     setIsLoading(false);
 
-    // Registrar Service Worker - VERSÃO SIMPLIFICADA
-    if ('serviceWorker' in navigator && typeof window !== 'undefined') {
-      // Verifica se está em produção de forma simplificada
+    if ('serviceWorker' in navigator) {
       const isProduction = !window.location.href.includes('localhost') && 
                           !window.location.href.includes('127.0.0.1');
       
       if (isProduction) {
         navigator.serviceWorker.register('/service-worker.js')
           .then((registration) => {
-            console.log('🚀 Service Worker registrado:', registration);
+            console.log('Service Worker registrado:', registration);
           })
           .catch((error) => {
-            console.log('❌ Erro no Service Worker:', error);
+            console.log('Erro no Service Worker:', error);
           });
       }
     }
   }, []);
 
-  // Save data when it changes
   useEffect(() => {
     saveData(data);
   }, [data]);
 
-  // Login handler
   const handleLogin = (userData: User) => {
     setUser(userData as User);
   };
 
-  // Logout handler
   const handleLogout = () => {
     authService.logout();
     setUser(null);
-    console.log('Logout realizado');
   };
 
-  // Transaction Handlers
   const handleAddTransaction = (t: any) => {
     const newT = addTransaction(t);
     setData((prev: AppData) => ({ ...prev, transactions: [...prev.transactions, newT] }));
@@ -107,7 +92,6 @@ function App() {
     setData((prev: AppData) => ({ ...prev, transactions: prev.transactions.filter(t => t.id !== id) }));
   };
 
-  // Goal Handlers
   const handleAddGoal = (g: any) => {
     const newG = addGoal(g);
     setData((prev: AppData) => ({ ...prev, goals: [...prev.goals, newG] }));
@@ -118,7 +102,6 @@ function App() {
     setData((prev: AppData) => ({ ...prev, goals: prev.goals.map(goal => goal.id === g.id ? g : goal) }));
   };
 
-  // Account Handlers
   const handleAddAccount = (a: any) => {
     const newA = addAccount(a);
     setData((prev: AppData) => ({ ...prev, accounts: [...prev.accounts, newA] }));
@@ -129,7 +112,6 @@ function App() {
     setData((prev: AppData) => ({ ...prev, accounts: prev.accounts.filter(a => a.id !== id) }));
   };
 
-  // Credit Card Handlers
   const handleAddCreditCard = (c: any) => {
     const newC = addCreditCard(c);
     setData((prev: AppData) => ({ ...prev, creditCards: [...prev.creditCards, newC] }));
@@ -140,7 +122,6 @@ function App() {
     setData((prev: AppData) => ({ ...prev, creditCards: prev.creditCards.filter(c => c.id !== id) }));
   };
 
-  // Investment Handlers
   const handleAddInvestment = (i: any) => {
     const newI = addInvestment(i);
     setData((prev: AppData) => ({ ...prev, investments: [...prev.investments, newI] }));
@@ -161,7 +142,6 @@ function App() {
     setData((prev: AppData) => ({ ...prev, investments: prev.investments.filter(i => i.id !== id) }));
   };
 
-  // Property Handlers
   const handleAddProperty = (p: any) => {
     const newP = addProperty(p);
     setData((prev: AppData) => ({ ...prev, properties: [...prev.properties, newP] }));
@@ -172,7 +152,6 @@ function App() {
     setData((prev: AppData) => ({ ...prev, properties: prev.properties.filter(p => p.id !== id) }));
   };
 
-  // Debt Handlers
   const handleAddDebt = (d: any) => {
     const newD = addDebt(d);
     setData((prev: AppData) => ({ ...prev, debts: [...prev.debts, newD] }));
@@ -183,7 +162,6 @@ function App() {
     setData((prev: AppData) => ({ ...prev, debts: prev.debts.filter(d => d.id !== id) }));
   };
 
-  // Category Handler
   const handleAddCategory = (category: string) => {
     addCustomCategory(category);
     setData((prev: AppData) => ({ 
@@ -192,7 +170,6 @@ function App() {
     }));
   };
 
-  // Se não estiver logado, mostra login
   if (!user) {
     return (
       <>
@@ -202,7 +179,6 @@ function App() {
     );
   }
 
-  // Se estiver carregando, mostra loading
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -314,11 +290,9 @@ function App() {
 
   return (
     <>
-      {/* Componentes PWA (comentados temporariamente) */}
       <OnlineStatus />
       <PWAInstallPrompt />
       
-      {/* Layout Principal */}
       <Layout 
         currentView={currentView} 
         onViewChange={setCurrentView}
@@ -326,9 +300,28 @@ function App() {
       >
         {renderCurrentView()}
         
-        {/* Footer simplificado */}
         <footer className="py-4 text-center text-slate-500 text-xs mt-8 border-t border-slate-200">
-          <p>Dois no Bolso {new Date().getFullYear()}</p>
+          <div className="flex items-center justify-center space-x-4">
+            <p>Dois no Bolso {new Date().getFullYear()}</p>
+            <span className="flex items-center space-x-1">
+              {isOnline ? (
+                <>
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Online</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span>Offline</span>
+                </>
+              )}
+            </span>
+            {isStandalone && (
+              <span className="bg-brand-100 text-brand-700 px-2 py-1 rounded-full text-xs">
+                App
+              </span>
+            )}
+          </div>
         </footer>
       </Layout>
     </>
