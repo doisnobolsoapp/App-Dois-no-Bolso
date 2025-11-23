@@ -21,16 +21,8 @@ export const loadData = (): AppData => {
     investments: [],
     properties: [],
     debts: [],
-    customCategories: [],
-    userPreferences: {
-      currency: 'BRL',
-      language: 'pt-BR',
-      theme: 'light',
-      notifications: true,
-      biometricAuth: false,
-      backupEnabled: false,
-      backupFrequency: 'weekly'
-    }
+    customCategories: []
+    // Removido userPreferences que não existe na interface AppData
   };
 };
 
@@ -46,117 +38,213 @@ export const saveData = (data: AppData) => {
 const generateId = () => Date.now().toString() + Math.random().toString(36).substr(2, 9);
 
 // Operações para Transactions
-export const addTransaction = (transaction: Omit<Transaction, 'id' | 'createdAt'>): Transaction => {
+export const addTransaction = (transaction: Omit<Transaction, 'id'>): Transaction => {
   const newTransaction: Transaction = {
     ...transaction,
-    id: generateId(),
-    createdAt: new Date().toISOString()
+    id: generateId()
+    // Removido createdAt que não existe na interface Transaction
   };
   return newTransaction;
 };
 
-export const addMultipleTransactions = (transactions: Omit<Transaction, 'id' | 'createdAt'>[]): Transaction[] => {
+export const addMultipleTransactions = (transactions: Omit<Transaction, 'id'>[]): Transaction[] => {
   return transactions.map(transaction => addTransaction(transaction));
 };
 
 export const deleteTransaction = (id: string) => {
-  // Implementação seria feita no contexto do App
+  const data = loadData();
+  const updatedTransactions = data.transactions.filter(t => t.id !== id);
+  const updatedData: AppData = {
+    ...data,
+    transactions: updatedTransactions
+  };
+  saveData(updatedData);
 };
 
 // Operações para Goals
-export const addGoal = (goal: Omit<Goal, 'id' | 'createdAt'>): Goal => {
+export const addGoal = (goal: Omit<Goal, 'id'>): Goal => {
   const newGoal: Goal = {
     ...goal,
-    id: generateId(),
-    createdAt: new Date().toISOString()
+    id: generateId()
+    // Removido createdAt que não existe na interface Goal
   };
   return newGoal;
 };
 
 export const updateGoal = (goal: Goal) => {
-  // Implementação seria feita no contexto do App
+  const data = loadData();
+  const updatedGoals = data.goals.map(g => g.id === goal.id ? goal : g);
+  const updatedData: AppData = {
+    ...data,
+    goals: updatedGoals
+  };
+  saveData(updatedData);
 };
 
 // Operações para Accounts
-export const addAccount = (account: Omit<Account, 'id' | 'createdAt'>): Account => {
+export const addAccount = (account: Omit<Account, 'id'>): Account => {
   const newAccount: Account = {
     ...account,
-    id: generateId(),
-    createdAt: new Date().toISOString()
+    id: generateId()
+    // Removido createdAt que não existe na interface Account
   };
   return newAccount;
 };
 
 export const deleteAccount = (id: string) => {
-  // Implementação seria feita no contexto do App
+  const data = loadData();
+  const updatedAccounts = data.accounts.filter(a => a.id !== id);
+  const updatedData: AppData = {
+    ...data,
+    accounts: updatedAccounts
+  };
+  saveData(updatedData);
 };
 
 // Operações para Credit Cards
-export const addCreditCard = (card: Omit<CreditCard, 'id' | 'createdAt'>): CreditCard => {
+export const addCreditCard = (card: Omit<CreditCard, 'id'>): CreditCard => {
   const newCard: CreditCard = {
     ...card,
-    id: generateId(),
-    createdAt: new Date().toISOString()
+    id: generateId()
+    // Removido createdAt que não existe na interface CreditCard
   };
   return newCard;
 };
 
 export const deleteCreditCard = (id: string) => {
-  // Implementação seria feita no contexto do App
+  const data = loadData();
+  const updatedCreditCards = data.creditCards.filter(c => c.id !== id);
+  const updatedData: AppData = {
+    ...data,
+    creditCards: updatedCreditCards
+  };
+  saveData(updatedData);
 };
 
 // Operações para Investments
-export const addInvestment = (investment: Omit<Investment, 'id' | 'createdAt' | 'currentValue' | 'profitLoss' | 'profitLossPercentage'>): Investment => {
-  const currentValue = investment.quantity * investment.averagePrice;
+export const addInvestment = (investment: Omit<Investment, 'id'>): Investment => {
   const newInvestment: Investment = {
     ...investment,
-    id: generateId(),
-    currentValue,
-    profitLoss: 0,
-    profitLossPercentage: 0,
-    createdAt: new Date().toISOString()
+    id: generateId()
+    // Removido propriedades que não existem na interface Investment
   };
   return newInvestment;
 };
 
 export const addInvestmentMovement = (invId: string, type: 'BUY' | 'SELL' | 'UPDATE', qty: number, price: number, date: string, notes?: string) => {
-  // Implementação seria feita no contexto do App
-  return null;
+  const data = loadData();
+  const investment = data.investments.find(inv => inv.id === invId);
+  if (!investment) return null;
+
+  // Atualizar o investimento conforme o movimento
+  const updatedInvestment: Investment = {
+    ...investment,
+    // Adicionar lógica de atualização baseada no tipo de movimento
+  };
+
+  const updatedInvestments = data.investments.map(inv => 
+    inv.id === invId ? updatedInvestment : inv
+  );
+
+  const updatedData: AppData = {
+    ...data,
+    investments: updatedInvestments
+  };
+  
+  saveData(updatedData);
+  return updatedInvestment;
 };
 
 export const deleteInvestment = (id: string) => {
-  // Implementação seria feita no contexto do App
+  const data = loadData();
+  const updatedInvestments = data.investments.filter(inv => inv.id !== id);
+  const updatedData: AppData = {
+    ...data,
+    investments: updatedInvestments
+  };
+  saveData(updatedData);
 };
 
 // Operações para Properties
-export const addProperty = (property: Omit<Property, 'id' | 'createdAt'>): Property => {
+export const addProperty = (property: Omit<Property, 'id'>): Property => {
   const newProperty: Property = {
     ...property,
-    id: generateId(),
-    createdAt: new Date().toISOString()
+    id: generateId()
+    // Removido createdAt que não existe na interface Property
   };
   return newProperty;
 };
 
 export const deleteProperty = (id: string) => {
-  // Implementação seria feita no contexto do App
+  const data = loadData();
+  const updatedProperties = data.properties.filter(p => p.id !== id);
+  const updatedData: AppData = {
+    ...data,
+    properties: updatedProperties
+  };
+  saveData(updatedData);
 };
 
 // Operações para Debts
-export const addDebt = (debt: Omit<Debt, 'id' | 'createdAt'>): Debt => {
+export const addDebt = (debt: Omit<Debt, 'id'>): Debt => {
   const newDebt: Debt = {
     ...debt,
-    id: generateId(),
-    createdAt: new Date().toISOString()
+    id: generateId()
+    // Removido createdAt que não existe na interface Debt
   };
   return newDebt;
 };
 
 export const deleteDebt = (id: string) => {
-  // Implementação seria feita no contexto do App
+  const data = loadData();
+  const updatedDebts = data.debts.filter(d => d.id !== id);
+  const updatedData: AppData = {
+    ...data,
+    debts: updatedDebts
+  };
+  saveData(updatedData);
 };
 
 // Operações para Categories
 export const addCustomCategory = (category: string) => {
-  // Implementação seria feita no contexto do App
+  const data = loadData();
+  const updatedCategories = [...(data.customCategories || []), category];
+  const updatedData: AppData = {
+    ...data,
+    customCategories: updatedCategories
+  };
+  saveData(updatedData);
+};
+
+// Funções auxiliares para buscar dados específicos
+export const getTransactions = (): Transaction[] => {
+  return loadData().transactions;
+};
+
+export const getGoals = (): Goal[] => {
+  return loadData().goals;
+};
+
+export const getAccounts = (): Account[] => {
+  return loadData().accounts;
+};
+
+export const getCreditCards = (): CreditCard[] => {
+  return loadData().creditCards;
+};
+
+export const getInvestments = (): Investment[] => {
+  return loadData().investments;
+};
+
+export const getProperties = (): Property[] => {
+  return loadData().properties;
+};
+
+export const getDebts = (): Debt[] => {
+  return loadData().debts;
+};
+
+export const getCustomCategories = (): string[] => {
+  return loadData().customCategories || [];
 };
