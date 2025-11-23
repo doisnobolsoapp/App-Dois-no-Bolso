@@ -1,3 +1,4 @@
+// src/App.tsx - VERSÃO CORRIGIDA PARA VERCEL
 import { useEffect, useState } from 'react';
 import { AppData, ViewState, Account, CreditCard } from './types';
 import { Layout } from './components/Layout';
@@ -16,10 +17,20 @@ import { Login } from './components/Login';
 import { authService } from './services/authService';
 import { loadData, saveData, addTransaction, addMultipleTransactions, deleteTransaction, addGoal, updateGoal, addAccount, deleteAccount, addCreditCard, deleteCreditCard, addInvestment, addInvestmentMovement, deleteInvestment, addProperty, deleteProperty, addDebt, deleteDebt, addCustomCategory } from './services/storageService';
 
-// Importações PWA - VERSÃO CORRIGIDA
-import { OnlineStatus } from './components/OnlineStatus';
-import { PWAInstallPrompt } from './components/PWAInstallPrompt';
-import { usePWA } from './hooks/usePWA';
+// COMENTE as importações PWA temporariamente para o deploy
+// import { OnlineStatus } from './components/OnlineStatus';
+// import { PWAInstallPrompt } from './components/PWAInstallPrompt';
+// import { usePWA } from './hooks/usePWA';
+
+// VERSÃO TEMPORÁRIA para o deploy funcionar
+const OnlineStatus = () => null;
+const PWAInstallPrompt = () => null;
+const usePWA = () => ({ 
+  isOnline: true, 
+  isStandalone: false,
+  showUpdatePrompt: false,
+  updateApp: () => {}
+});
 
 interface User {
   id: string;
@@ -45,12 +56,11 @@ function App() {
     }
     setIsLoading(false);
 
-    // Registrar Service Worker - VERSÃO CORRIGIDA (sem process.env)
-    if ('serviceWorker' in navigator) {
+    // Registrar Service Worker - VERSÃO SIMPLIFICADA
+    if ('serviceWorker' in navigator && typeof window !== 'undefined') {
       // Verifica se está em produção de forma simplificada
       const isProduction = !window.location.href.includes('localhost') && 
-                          !window.location.href.includes('127.0.0.1') &&
-                          window.location.protocol === 'https:';
+                          !window.location.href.includes('127.0.0.1');
       
       if (isProduction) {
         navigator.serviceWorker.register('/service-worker.js')
@@ -60,8 +70,6 @@ function App() {
           .catch((error) => {
             console.log('❌ Erro no Service Worker:', error);
           });
-      } else {
-        console.log('🔧 Modo desenvolvimento - Service Worker não registrado');
       }
     }
   }, []);
@@ -70,13 +78,6 @@ function App() {
   useEffect(() => {
     saveData(data);
   }, [data]);
-
-  // Sincronização automática quando voltar a ficar online
-  useEffect(() => {
-    if (isOnline) {
-      console.log('🌐 Conexão restaurada - sincronizando dados...');
-    }
-  }, [isOnline]);
 
   // Login handler
   const handleLogin = (userData: User) => {
@@ -208,9 +209,6 @@ function App() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
           <p className="text-slate-600">Carregando Dois no Bolso...</p>
-          {!isOnline && (
-            <p className="text-orange-600 text-sm mt-2">Modo offline</p>
-          )}
         </div>
       </div>
     );
@@ -316,11 +314,11 @@ function App() {
 
   return (
     <>
-      {/* Componentes PWA */}
+      {/* Componentes PWA (comentados temporariamente) */}
       <OnlineStatus />
       <PWAInstallPrompt />
       
-      {/* Layout Principal - VERSÃO CORRIGIDA (sem isOnline e isStandalone) */}
+      {/* Layout Principal */}
       <Layout 
         currentView={currentView} 
         onViewChange={setCurrentView}
@@ -328,29 +326,9 @@ function App() {
       >
         {renderCurrentView()}
         
-        {/* Footer com Status PWA */}
+        {/* Footer simplificado */}
         <footer className="py-4 text-center text-slate-500 text-xs mt-8 border-t border-slate-200">
-          <div className="flex items-center justify-center space-x-4">
-            <p>Dois no Bolso {new Date().getFullYear()}</p>
-            <span className="flex items-center space-x-1">
-              {isOnline ? (
-                <>
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>Online</span>
-                </>
-              ) : (
-                <>
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span>Offline</span>
-                </>
-              )}
-            </span>
-            {isStandalone && (
-              <span className="bg-brand-100 text-brand-700 px-2 py-1 rounded-full text-xs">
-                App
-              </span>
-            )}
-          </div>
+          <p>Dois no Bolso {new Date().getFullYear()}</p>
         </footer>
       </Layout>
     </>
