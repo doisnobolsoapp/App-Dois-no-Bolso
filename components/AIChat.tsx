@@ -1,7 +1,7 @@
 // src/components/AIChat.tsx
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, Loader2 } from 'lucide-react';
-import { AppData } from '../../types'; // Removido PaymentMethod não utilizado
+import { AppData } from '../types';
 import { callOpenAIWithTools } from '../services/openaiService';
 
 interface AIChatProps {
