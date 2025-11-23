@@ -1,113 +1,88 @@
-const CACHE_NAME = 'dois-no-bolso-v1.0.0';
-const STATIC_CACHE = 'static-cache-v1';
-const DYNAMIC_CACHE = 'dynamic-cache-v1';
+const CACHE_VERSION = 'v1.0.1';
+const STATIC_CACHE = `static-cache-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `dynamic-cache-${CACHE_VERSION}`;
 
-// Arquivos para cache estático
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
   '/manifest.json',
   '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/icons/icon-512x512.png',
 ];
 
-// Instalação - Cache dos arquivos estáticos
+// Instalação - Cache estático
 self.addEventListener('install', (event) => {
-  console.log('🟢 Service Worker: Instalado');
-  
+  console.log('🟢 SW: Instalando…');
+
   event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then((cache) => {
-        console.log('📦 Cacheando arquivos estáticos');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .then(() => self.skipWaiting())
+    caches.open(STATIC_CACHE).then((cache) => {
+      console.log('📦 Cacheando estáticos…');
+      return cache.addAll(STATIC_ASSETS);
+    })
   );
+
+  self.skipWaiting();
 });
 
-// Ativação - Limpeza de caches antigos
+// Ativação - Limpa caches antigos
 self.addEventListener('activate', (event) => {
-  console.log('🔵 Service Worker: Ativado');
-  
+  console.log('🔵 SW: Ativando…');
+
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== STATIC_CACHE && cache !== DYNAMIC_CACHE) {
-            console.log('🗑️ Limpando cache antigo:', cache);
-            return caches.delete(cache);
+        keys.map((key) => {
+          if (key !== STATIC_CACHE && key !== DYNAMIC_CACHE) {
+            console.log('🗑️ Removendo cache antigo:', key);
+            return caches.delete(key);
           }
         })
       );
-    }).then(() => self.clients.claim())
+    })
   );
+
+  self.clients.claim();
 });
 
-// Estratégia: Network First com fallback para Cache
+// Fetch - Network first + fallback
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
     fetch(event.request)
-      .then((fetchResponse) => {
-        // Cache de respostas válidas
-        if (fetchResponse && fetchResponse.status === 200) {
-          const responseToCache = fetchResponse.clone();
-          caches.open(DYNAMIC_CACHE)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-        }
-        return fetchResponse;
+      .then((response) => {
+        // Armazena dinamicamente
+        const cloned = response.clone();
+        caches.open(DYNAMIC_CACHE).then((cache) => {
+          cache.put(event.request, cloned);
+        });
+        return response;
       })
       .catch(() => {
-        // Fallback para cache
-        return caches.match(event.request)
-          .then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse;
-            }
-            
-            // Fallback para página offline para HTML
-            if (event.request.destination === 'document') {
-              return caches.match('/offline.html');
-            }
-            
-            // Fallback para ícone
-            if (event.request.url.includes('/icons/')) {
-              return caches.match('/icons/icon-192x192.png');
-            }
-          });
+        return caches.match(event.request).then((cached) => {
+          if (cached) return cached;
+
+          // Fallback HTML
+          if (event.request.destination === 'document') {
+            return caches.match('/index.html');
+          }
+        });
       })
   );
 });
 
-// Notificações Push
+// Push Notifications
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
   const data = event.data.json();
-  
+
   const options = {
-    body: data.body || 'Nova notificação do Dois no Bolso',
+    body: data.body || 'Nova atualização disponível',
     icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
+    badge: '/icons/icon-192x192.png',
     vibrate: [100, 50, 100],
-    data: {
-      url: data.url || '/'
-    },
-    actions: [
-      {
-        action: 'open',
-        title: 'Abrir App'
-      },
-      {
-        action: 'close',
-        title: 'Fechar'
-      }
-    ]
+    data: { url: data.url || '/' },
   };
 
   event.waitUntil(
@@ -118,18 +93,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  if (event.action === 'open') {
-    event.waitUntil(
-      clients.matchAll({ type: 'window' }).then((clientList) => {
-        for (const client of clientList) {
-          if (client.url === '/' && 'focus' in client) {
-            return client.focus();
-          }
-        }
-        if (clients.openWindow) {
-          return clients.openWindow('/');
-        }
-      })
-    );
-  }
+  event.waitUntil(
+    clients.openWindow(event.notification.data.url || '/')
+  );
 });
