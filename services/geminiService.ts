@@ -58,10 +58,12 @@ export const TOOLS_CONFIG = [addTransactionTool, addGoalTool, addInvestmentTool]
 
 // ========== Criar cliente ==========
 export const createGeminiClient = () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  // Corrigir o acesso à variável de ambiente
+  const apiKey = process.env.VITE_GEMINI_API_KEY;
 
   if (!apiKey) {
     console.error("❌ ERRO: VITE_GEMINI_API_KEY não encontrada no .env");
+    throw new Error("API key do Gemini não configurada");
   }
 
   return new GoogleGenerativeAI(apiKey);
@@ -69,16 +71,56 @@ export const createGeminiClient = () => {
 
 // ========== Obter modelo ==========
 export const getGeminiModel = (client: GoogleGenerativeAI) => {
+  // Corrigir a estrutura das functionDeclarations
+  const functionDeclarations = TOOLS_CONFIG.map(tool => ({
+    name: tool.name,
+    description: tool.description,
+    parameters: {
+      ...tool.parameters,
+      type: 'OBJECT' as const
+    }
+  }));
+
   return client.getGenerativeModel({
     model: "gemini-1.5-flash",  // ou gemini-1.5-pro
     tools: [
       {
-        type: "function",
-        functionDeclarations: TOOLS_CONFIG
+        functionDeclarations: functionDeclarations
       }
     ],
-    systemInstruction: DEFAULT_SYSTEM_INSTRUCTION
+    systemInstruction: {
+      role: "system",
+      parts: [{ text: DEFAULT_SYSTEM_INSTRUCTION }]
+    }
   });
 };
 
 export const SYSTEM_INSTRUCTION = DEFAULT_SYSTEM_INSTRUCTION;
+
+// ========== Função principal para chamar a IA ==========
+export const callGeminiWithTools = async (userMessage: string, systemInstruction?: string, context?: string) => {
+  try {
+    const client = createGeminiClient();
+    const model = getGeminiModel(client);
+    
+    const fullPrompt = context 
+      ? `${systemInstruction || DEFAULT_SYSTEM_INSTRUCTION}\n\nContexto atual:\n${context}\n\nUsuário: ${userMessage}`
+      : `${systemInstruction || DEFAULT_SYSTEM_INSTRUCTION}\n\nUsuário: ${userMessage}`;
+
+    const result = await model.generateContent(fullPrompt);
+    const response = await result.response;
+    
+    return {
+      choices: [{
+        message: {
+          content: response.text(),
+          // Adicionar estrutura para function calls se necessário
+          function_call: null
+        }
+      }]
+    };
+  } catch (error) {
+    console.error("Erro ao chamar Gemini:", error);
+    throw error;
+  }
+};
