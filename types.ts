@@ -10,6 +10,7 @@ export interface LayoutProps {
   children: React.ReactNode;
   currentView: ViewState;
   onViewChange: (view: ViewState) => void;
+  onLogout: () => void;
 }
 
 export interface AppData {
@@ -20,6 +21,9 @@ export interface AppData {
   investments: Investment[];
   properties: Property[];
   debts: Debt[];
+  customCategories?: string[];
+  userMode?: 'INDIVIDUAL' | 'COUPLE';
+  language?: string;
   userPreferences?: {
     currency: string;
     language: string;
@@ -35,7 +39,16 @@ export interface Transaction {
   description: string;
   date: string;
   paid: boolean;
-  // remova createdAt se não existe na interface original
+  paymentMethod?: PaymentMethod;
+  dueDate?: string;
+  accountId?: string;
+  cardId?: string;
+  installments?: {
+    current: number;
+    total: number;
+  };
+  notificationSent?: boolean;
+  createdBy?: string;
 }
 
 export interface Goal {
@@ -44,7 +57,6 @@ export interface Goal {
   targetAmount: number;
   currentAmount: number;
   deadline: string;
-  // remova createdAt se não existe
 }
 
 export interface Account {
@@ -52,7 +64,8 @@ export interface Account {
   name: string;
   balance: number;
   type: string;
-  // remova createdAt se não existe
+  initialBalance: number;
+  institution?: string;
 }
 
 export interface CreditCard {
@@ -61,7 +74,6 @@ export interface CreditCard {
   limit: number;
   currentBalance: number;
   dueDate: string;
-  // remova createdAt se não existe
 }
 
 export interface Investment {
@@ -69,8 +81,14 @@ export interface Investment {
   name: string;
   type: string;
   initialValue: number;
-  currentValue?: number; // torne opcional se não é usado
+  currentValue: number;
   purchaseDate: string;
+  quantity?: number;
+  averagePrice?: number;
+  currentPrice?: number;
+  broker?: string;
+  strategy?: string;
+  history?: any[];
 }
 
 export interface Property {
@@ -78,7 +96,7 @@ export interface Property {
   name: string;
   value: number;
   purchaseDate: string;
-  // remova createdAt se não existe
+  currentValue?: number;
 }
 
 export interface Debt {
@@ -87,9 +105,11 @@ export interface Debt {
   totalAmount: number;
   remainingAmount: number;
   dueDate: string;
-  // remova createdAt se não existe
 }
 
-export type TransactionType = 'income' | 'expense';
-export type PaymentMethod = 'cash' | 'credit' | 'debit' | 'transfer';
-export type ViewState = 'dashboard' | 'transactions' | 'goals' | 'investments' | 'debts' | 'settings';
+export type TransactionType = 'income' | 'expense' | 'investment' | 'loan';
+export type PaymentMethod = 'cash' | 'credit' | 'debit' | 'transfer' | 'pix';
+export type ViewState = 'dashboard' | 'transactions' | 'goals' | 'investments' | 'balance' | 'settings' | 'reports' | 'calendar' | 'banks' | 'cards' | 'chat';
+export type InvestmentType = 'FIXED_INCOME' | 'STOCK' | 'FII' | 'CRYPTO' | 'FUND' | 'PENSION' | 'SAVINGS' | 'INTERNATIONAL' | 'OTHER';
+export type InvestmentStrategy = 'RESERVE' | 'LONG_TERM' | 'SHORT_TERM' | 'SWING_TRADE' | 'HOLD';
+export type Category = string;
