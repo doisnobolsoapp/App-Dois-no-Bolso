@@ -191,12 +191,4 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
       </form>
     </div>
   );
-};```
-
-## Principais correções no `AIChat.tsx`:
-
-1. ✅ **Removido `PaymentMethod` do import** - não estava sendo usado
-2. ✅ **Simplificado o uso de `paymentMethod`** - usando string literal `'cash'` em vez de type assertion
-3. ✅ **Mantida a funcionalidade completa** do componente
-
-**Próximo passo:** Agora preciso que você envie o `components/Dashboard.tsx` para corrigir os erros relacionados ao uso de `TransactionType`.
+};
