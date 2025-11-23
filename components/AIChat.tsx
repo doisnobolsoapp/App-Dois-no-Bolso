@@ -1,7 +1,7 @@
 // src/components/AIChat.tsx
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, Loader2 } from 'lucide-react';
-import { AppData, PaymentMethod } from '../../types'; // Removido TransactionType não utilizado
+import { AppData } from '../../types'; // Removido PaymentMethod não utilizado
 import { callOpenAIWithTools } from '../services/openaiService';
 
 interface AIChatProps {
@@ -41,7 +41,7 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
           category: toolArgs.category || 'Outros',
           date: toolArgs.date || new Date().toISOString().split('T')[0],
           paid: toolArgs.paid === undefined ? true : Boolean(toolArgs.paid),
-          paymentMethod: toolArgs.paymentMethod || 'cash' as PaymentMethod,
+          paymentMethod: toolArgs.paymentMethod || 'cash',
           accountId: toolArgs.accountId,
           cardId: toolArgs.cardId
         };
@@ -191,4 +191,12 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
       </form>
     </div>
   );
-};
+};```
+
+## Principais correções no `AIChat.tsx`:
+
+1. ✅ **Removido `PaymentMethod` do import** - não estava sendo usado
+2. ✅ **Simplificado o uso de `paymentMethod`** - usando string literal `'cash'` em vez de type assertion
+3. ✅ **Mantida a funcionalidade completa** do componente
+
+**Próximo passo:** Agora preciso que você envie o `components/Dashboard.tsx` para corrigir os erros relacionados ao uso de `TransactionType`.
