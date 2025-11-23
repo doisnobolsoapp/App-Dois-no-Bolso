@@ -13,7 +13,7 @@ export const TOOLS_SCHEMA = {
     parameters: {
       type: 'object',
       properties: {
-        type: { type: 'string', enum: ['INCOME', 'EXPENSE', 'INVESTMENT', 'LOAN'] },
+        type: { type: 'string', enum: ['income', 'expense', 'investment', 'loan'] },
         category: { type: 'string' },
         amount: { type: 'number' },
         description: { type: 'string' },
@@ -60,8 +60,8 @@ export const TOOLS_SCHEMA = {
  * Retorna o JSON da resposta (raw) para ser processado pelo caller.
  */
 export async function callOpenAIWithTools(prompt: string, systemPrompt = '', userContext = '') {
-  // Corrigir o acesso à variável de ambiente
-  const apiKey = process.env.VITE_OPENAI_API_KEY;
+  // Corrigido para usar import.meta.env
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   if (!apiKey) throw new Error('VITE_OPENAI_API_KEY não configurada');
 
   const body = {
