@@ -1,43 +1,61 @@
-import { Category, TransactionType, PaymentMethod, InvestmentType, InvestmentStrategy } from './types';
+// constants.ts
 
 export const INITIAL_DATA_KEY = 'dois_no_bolso_data_v3'; // Bumped version
 
+// Usar strings literais em vez de enums
 export const TRANSACTION_TYPES_LABELS = {
-  [TransactionType.INCOME]: 'Receita',
-  [TransactionType.EXPENSE]: 'Despesa',
-  [TransactionType.INVESTMENT]: 'Investimento',
-  [TransactionType.LOAN]: 'Financiamento/Dívida'
+  'income': 'Receita',
+  'expense': 'Despesa',
+  'investment': 'Investimento',
+  'loan': 'Financiamento/Dívida'
 };
 
 export const PAYMENT_METHOD_LABELS = {
-  [PaymentMethod.CASH]: 'Dinheiro',
-  [PaymentMethod.BANK_TRANSFER]: 'Pix / Transferência',
-  [PaymentMethod.DEBIT_CARD]: 'Débito',
-  [PaymentMethod.CREDIT_CARD]: 'Crédito',
-  [PaymentMethod.PIX]: 'Pix'
+  'cash': 'Dinheiro',
+  'credit': 'Crédito',
+  'debit': 'Débito',
+  'transfer': 'Transferência',
+  'pix': 'Pix'
 };
 
 export const INVESTMENT_TYPE_LABELS = {
-  [InvestmentType.FIXED_INCOME]: 'Renda Fixa (CDB/LCI/Tesouro)',
-  [InvestmentType.STOCK]: 'Ações (Renda Variável)',
-  [InvestmentType.FII]: 'Fundos Imobiliários (FIIs)',
-  [InvestmentType.CRYPTO]: 'Criptomoedas',
-  [InvestmentType.FUND]: 'Fundos de Investimento',
-  [InvestmentType.PENSION]: 'Previdência Privada',
-  [InvestmentType.SAVINGS]: 'Poupança',
-  [InvestmentType.INTERNATIONAL]: 'Investimento Exterior',
-  [InvestmentType.OTHER]: 'Outros'
+  'FIXED_INCOME': 'Renda Fixa (CDB/LCI/Tesouro)',
+  'STOCK': 'Ações (Renda Variável)',
+  'FII': 'Fundos Imobiliários (FIIs)',
+  'CRYPTO': 'Criptomoedas',
+  'FUND': 'Fundos de Investimento',
+  'PENSION': 'Previdência Privada',
+  'SAVINGS': 'Poupança',
+  'INTERNATIONAL': 'Investimento Exterior',
+  'OTHER': 'Outros'
 };
 
 export const INVESTMENT_STRATEGY_LABELS = {
-  [InvestmentStrategy.RESERVE]: 'Reserva de Emergência',
-  [InvestmentStrategy.LONG_TERM]: 'Longo Prazo / Aposentadoria',
-  [InvestmentStrategy.SHORT_TERM]: 'Curto Prazo / Metas',
-  [InvestmentStrategy.SWING_TRADE]: 'Trade / Especulação',
-  [InvestmentStrategy.HOLD]: 'Buy & Hold'
+  'RESERVE': 'Reserva de Emergência',
+  'LONG_TERM': 'Longo Prazo / Aposentadoria',
+  'SHORT_TERM': 'Curto Prazo / Metas',
+  'SWING_TRADE': 'Trade / Especulação',
+  'HOLD': 'Buy & Hold'
 };
 
-export const CATEGORY_OPTIONS = Object.values(Category);
+// Categorias padrão
+export const CATEGORY_OPTIONS = [
+  'Alimentação',
+  'Transporte',
+  'Moradia',
+  'Saúde',
+  'Educação',
+  'Lazer',
+  'Vestuário',
+  'Serviços',
+  'Impostos',
+  'Outros',
+  'Salário',
+  'Freelance',
+  'Investimentos',
+  'Presentes',
+  'Reembolsos'
+];
 
 export const DEFAULT_SYSTEM_INSTRUCTION = `
 Você é a inteligência principal do aplicativo "Dois no Bolso".
