@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { AppData, Transaction, TransactionType, Category, PaymentMethod } from '../types';
+import { AppData, Transaction } from '../types';
 import { TRANSACTION_TYPES_LABELS, CATEGORY_OPTIONS, PAYMENT_METHOD_LABELS } from '../constants';
 import { Trash2, Plus, CreditCard, Landmark, Tag, X } from 'lucide-react';
 
@@ -16,10 +16,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
   const [filterType, setFilterType] = useState<string>('ALL');
   
   // Form State
-  const [formType, setFormType] = useState<TransactionType>(TransactionType.EXPENSE);
+  const [formType, setFormType] = useState<string>('expense');
   const [formDesc, setFormDesc] = useState('');
   const [formAmount, setFormAmount] = useState('');
-  const [formCategory, setFormCategory] = useState<string>(Category.FOOD);
+  const [formCategory, setFormCategory] = useState<string>('Alimentação');
   const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
   const [formPaid, setFormPaid] = useState(true);
   
@@ -28,7 +28,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
   const [newCategoryName, setNewCategoryName] = useState('');
 
   // New Form Fields
-  const [formPaymentMethod, setFormPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
+  const [formPaymentMethod, setFormPaymentMethod] = useState<string>('cash');
   const [formAccountId, setFormAccountId] = useState<string>('');
   const [formCardId, setFormCardId] = useState<string>('');
   const [formInstallments, setFormInstallments] = useState<string>('1');
@@ -53,7 +53,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
     const amount = parseFloat(formAmount);
     const installments = parseInt(formInstallments);
 
-    if (formPaymentMethod === PaymentMethod.CREDIT_CARD && installments > 1) {
+    if (formPaymentMethod === 'credit' && installments > 1) {
         // Generate multiple transactions
         const newTransactions: Omit<Transaction, 'id'>[] = [];
         const baseDate = new Date(formDate);
@@ -64,13 +64,13 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
             date.setMonth(date.getMonth() + i);
             
             newTransactions.push({
-                type: formType,
+                type: formType as any,
                 description: `${formDesc} (${i + 1}/${installments})`,
                 amount: parseFloat(installmentValue.toFixed(2)),
                 category: finalCategory,
                 date: date.toISOString().split('T')[0],
                 paid: false, // Future installments usually starts as unpaid
-                paymentMethod: formPaymentMethod,
+                paymentMethod: formPaymentMethod as any,
                 cardId: formCardId || undefined,
                 installments: { current: i + 1, total: installments }
             });
@@ -79,16 +79,16 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
     } else {
         // Single transaction
         onAddTransaction({
-            type: formType,
+            type: formType as any,
             description: formDesc,
             amount: amount,
             category: finalCategory,
             date: formDate,
             paid: formPaid,
             dueDate: !formPaid ? formDate : undefined,
-            paymentMethod: formPaymentMethod,
-            accountId: (formPaymentMethod === PaymentMethod.BANK_TRANSFER || formPaymentMethod === PaymentMethod.DEBIT_CARD) ? formAccountId : undefined,
-            cardId: formPaymentMethod === PaymentMethod.CREDIT_CARD ? formCardId : undefined
+            paymentMethod: formPaymentMethod as any,
+            accountId: (formPaymentMethod === 'transfer' || formPaymentMethod === 'debit') ? formAccountId : undefined,
+            cardId: formPaymentMethod === 'credit' ? formCardId : undefined
         });
     }
 
@@ -97,9 +97,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
     setFormDesc('');
     setFormAmount('');
     setFormDate(new Date().toISOString().split('T')[0]);
-    setFormPaymentMethod(PaymentMethod.CASH);
+    setFormPaymentMethod('cash');
     setFormInstallments('1');
-    setFormCategory(Category.FOOD);
+    setFormCategory('Alimentação');
     setIsCreatingCategory(false);
   };
 
@@ -164,7 +164,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
                 </td>
                 <td className="px-6 py-4">
                   <div className="font-medium text-slate-800">{t.description}</div>
-                  <div className="text-xs text-slate-400">{TRANSACTION_TYPES_LABELS[t.type]}</div>
+                  <div className="text-xs text-slate-400">{TRANSACTION_TYPES_LABELS[t.type as keyof typeof TRANSACTION_TYPES_LABELS]}</div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-col gap-1">
@@ -172,15 +172,15 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
                         {t.category}
                       </span>
                       <span className="text-[10px] text-slate-400 flex items-center">
-                        {t.paymentMethod === PaymentMethod.CREDIT_CARD && <CreditCard size={10} className="mr-1"/>}
-                        {t.paymentMethod === PaymentMethod.BANK_TRANSFER && <Landmark size={10} className="mr-1"/>}
-                        {PAYMENT_METHOD_LABELS[t.paymentMethod]}
+                        {t.paymentMethod === 'credit' && <CreditCard size={10} className="mr-1"/>}
+                        {t.paymentMethod === 'transfer' && <Landmark size={10} className="mr-1"/>}
+                        {PAYMENT_METHOD_LABELS[t.paymentMethod as keyof typeof PAYMENT_METHOD_LABELS]}
                         {t.installments && ` (${t.installments.current}/${t.installments.total})`}
                       </span>
                   </div>
                 </td>
-                <td className={`px-6 py-4 text-right font-bold whitespace-nowrap ${t.type === TransactionType.INCOME ? 'text-green-600' : 'text-slate-800'}`}>
-                  {t.type === TransactionType.INCOME ? '+' : '-'} R$ {t.amount.toFixed(2)}
+                <td className={`px-6 py-4 text-right font-bold whitespace-nowrap ${t.type === 'income' ? 'text-green-600' : 'text-slate-800'}`}>
+                  {t.type === 'income' ? '+' : '-'} R$ {t.amount.toFixed(2)}
                 </td>
                 <td className="px-6 py-4 text-center">
                   <button onClick={() => onDeleteTransaction(t.id)} className="text-red-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50">
@@ -205,14 +205,14 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Tipo</label>
                 <div className="grid grid-cols-2 gap-2">
-                   {(Object.keys(TRANSACTION_TYPES_LABELS) as TransactionType[]).map((type) => (
+                   {Object.keys(TRANSACTION_TYPES_LABELS).map((type) => (
                      <button
                        key={type}
                        type="button"
                        onClick={() => setFormType(type)}
                        className={`px-3 py-2 text-xs rounded-lg border ${formType === type ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
                      >
-                       {TRANSACTION_TYPES_LABELS[type]}
+                       {TRANSACTION_TYPES_LABELS[type as keyof typeof TRANSACTION_TYPES_LABELS]}
                      </button>
                    ))}
                 </div>
@@ -305,7 +305,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
                  <select 
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white"
                     value={formPaymentMethod}
-                    onChange={e => setFormPaymentMethod(e.target.value as PaymentMethod)}
+                    onChange={e => setFormPaymentMethod(e.target.value)}
                  >
                     {Object.entries(PAYMENT_METHOD_LABELS).map(([key, label]) => (
                         <option key={key} value={key}>{label}</option>
@@ -313,7 +313,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
                  </select>
               </div>
 
-              {(formPaymentMethod === PaymentMethod.BANK_TRANSFER || formPaymentMethod === PaymentMethod.DEBIT_CARD) && (
+              {(formPaymentMethod === 'transfer' || formPaymentMethod === 'debit') && (
                   <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Conta Bancária</label>
                       <select
@@ -324,14 +324,14 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
                       >
                         <option value="">Selecione a conta...</option>
                         {data.accounts.map(acc => (
-                            <option key={acc.id} value={acc.id}>{acc.name} (Saldo: R$ {acc.initialBalance})</option>
+                            <option key={acc.id} value={acc.id}>{acc.name} (Saldo: R$ {acc.balance})</option>
                         ))}
                       </select>
                       {data.accounts.length === 0 && <p className="text-xs text-red-500 mt-1">Cadastre uma conta no menu "Minhas Contas" primeiro.</p>}
                   </div>
               )}
 
-               {formPaymentMethod === PaymentMethod.CREDIT_CARD && (
+               {formPaymentMethod === 'credit' && (
                   <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Cartão de Crédito</label>
@@ -370,7 +370,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
               )}
               
               {/* Status Checkbox - Hidden for Credit Card (defaults to unpaid until bill payment) */}
-              {formPaymentMethod !== PaymentMethod.CREDIT_CARD && (
+              {formPaymentMethod !== 'credit' && (
                 <div className="flex items-center">
                     <input 
                     id="paid"
