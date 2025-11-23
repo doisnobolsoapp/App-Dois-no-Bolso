@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'; // Removido React do import
 import { AppData, ViewState, Account, CreditCard } from './types';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
@@ -64,7 +64,7 @@ interface User {
 function App(): JSX.Element {
   // carregar dados persistidos (storageService)
   const [data, setData] = useState<AppData>(() => loadData());
-  const [currentView, setCurrentView] = useState<ViewState>('DASHBOARD');
+  const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -215,7 +215,10 @@ function App(): JSX.Element {
   // Custom categories
   const handleAddCategory = (category: string) => {
     addCustomCategory(category);
-    setData(prev => ({ ...prev, customCategories: [...(prev.customCategories || []), category] }));
+    setData(prev => ({ 
+      ...prev, 
+      customCategories: [...(prev.customCategories || []), category] 
+    }));
   };
 
   // If user not logged, show login
@@ -243,9 +246,9 @@ function App(): JSX.Element {
   // Render views
   const renderCurrentView = () => {
     switch (currentView) {
-      case 'DASHBOARD':
+      case 'dashboard':
         return <Dashboard data={data} onViewChange={setCurrentView} />;
-      case 'TRANSACTIONS':
+      case 'transactions':
         return (
           <TransactionList
             data={data}
@@ -255,11 +258,11 @@ function App(): JSX.Element {
             onAddCategory={handleAddCategory}
           />
         );
-      case 'GOALS':
+      case 'goals':
         return <Goals goals={data.goals} onAddGoal={handleAddGoal} onUpdateGoal={handleUpdateGoal} />;
-      case 'REPORTS':
+      case 'reports':
         return <Reports data={data} />;
-      case 'CALENDAR':
+      case 'calendar':
         return (
           <FinancialCalendar
             data={data}
@@ -268,7 +271,7 @@ function App(): JSX.Element {
             currentUserId={user?.id || 'user1'}
           />
         );
-      case 'BANKS':
+      case 'banks':
         return (
           <BankList
             accounts={data.accounts}
@@ -282,7 +285,7 @@ function App(): JSX.Element {
             }}
           />
         );
-      case 'CARDS':
+      case 'cards':
         return (
           <CreditCardList
             cards={data.creditCards}
@@ -295,7 +298,7 @@ function App(): JSX.Element {
             }}
           />
         );
-      case 'INVESTMENTS':
+      case 'investments':
         return (
           <InvestmentDashboard
             data={data}
@@ -305,7 +308,7 @@ function App(): JSX.Element {
             onAddTransaction={handleAddTransaction}
           />
         );
-      case 'BALANCE':
+      case 'balance':
         return (
           <BalanceSheet
             data={data}
@@ -315,7 +318,7 @@ function App(): JSX.Element {
             onDeleteDebt={handleDeleteDebt}
           />
         );
-      case 'CHAT':
+      case 'chat':
         return (
           <AIChat
             data={data}
@@ -324,7 +327,7 @@ function App(): JSX.Element {
             onAddInvestment={handleAddInvestment}
           />
         );
-      case 'SETTINGS':
+      case 'settings':
         return <Settings data={data} onDataUpdate={setData} />;
       default:
         return <Dashboard data={data} onViewChange={setCurrentView} />;
