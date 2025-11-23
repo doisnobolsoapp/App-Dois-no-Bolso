@@ -1,6 +1,6 @@
 // src/components/Layout.tsx
 import React from 'react';
-import { ViewState, LayoutProps } from '../types';
+import { ViewState } from '../types';
 import { 
   Home, 
   CreditCard, 
@@ -15,6 +15,14 @@ import {
   MoreVertical
 } from 'lucide-react';
 
+// Definir a interface LayoutProps localmente
+interface LayoutProps {
+  currentView: ViewState;
+  onViewChange: (view: ViewState) => void;
+  onLogout: () => void;
+  children: React.ReactNode;
+}
+
 export const Layout: React.FC<LayoutProps> = ({ 
   currentView, 
   onViewChange, 
@@ -23,21 +31,21 @@ export const Layout: React.FC<LayoutProps> = ({
 }) => {
   // Itens PRINCIPAIS que sempre aparecem no bottom navigation
   const mainItems = [
-    { id: 'DASHBOARD' as ViewState, label: 'Visão Geral', icon: Home },
-    { id: 'TRANSACTIONS' as ViewState, label: 'Transações', icon: CreditCard },
-    { id: 'GOALS' as ViewState, label: 'Metas', icon: Target },
-    { id: 'INVESTMENTS' as ViewState, label: 'Investir', icon: BarChart3 },
+    { id: 'dashboard' as ViewState, label: 'Visão Geral', icon: Home },
+    { id: 'transactions' as ViewState, label: 'Transações', icon: CreditCard },
+    { id: 'goals' as ViewState, label: 'Metas', icon: Target },
+    { id: 'investments' as ViewState, label: 'Investir', icon: BarChart3 },
   ];
 
   // Outros itens que vão no menu "Mais"
   const otherItems = [
-    { id: 'BANKS' as ViewState, label: 'Bancos', icon: Landmark },
-    { id: 'CARDS' as ViewState, label: 'Cartões', icon: PieChart },
-    { id: 'BALANCE' as ViewState, label: 'Patrimônio', icon: Landmark },
-    { id: 'REPORTS' as ViewState, label: 'Relatórios', icon: BarChart3 },
-    { id: 'CALENDAR' as ViewState, label: 'Calendário', icon: Calendar },
-    { id: 'CHAT' as ViewState, label: 'Assistente', icon: MessageSquare },
-    { id: 'SETTINGS' as ViewState, label: 'Configurações', icon: Settings },
+    { id: 'banks' as ViewState, label: 'Bancos', icon: Landmark },
+    { id: 'cards' as ViewState, label: 'Cartões', icon: PieChart },
+    { id: 'balance' as ViewState, label: 'Patrimônio', icon: Landmark },
+    { id: 'reports' as ViewState, label: 'Relatórios', icon: BarChart3 },
+    { id: 'calendar' as ViewState, label: 'Calendário', icon: Calendar },
+    { id: 'chat' as ViewState, label: 'Assistente', icon: MessageSquare },
+    { id: 'settings' as ViewState, label: 'Configurações', icon: Settings },
   ];
 
   return (
@@ -63,9 +71,9 @@ export const Layout: React.FC<LayoutProps> = ({
               {/* Visão Geral sempre no topo */}
               <li>
                 <button
-                  onClick={() => onViewChange('DASHBOARD')}
+                  onClick={() => onViewChange('dashboard')}
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg ${
-                    currentView === 'DASHBOARD' 
+                    currentView === 'dashboard' 
                       ? 'bg-brand-50 text-brand-600' 
                       : 'text-slate-700 hover:bg-slate-100'
                   }`}
@@ -76,7 +84,7 @@ export const Layout: React.FC<LayoutProps> = ({
               </li>
 
               {/* Demais opções */}
-              {[...mainItems.filter(item => item.id !== 'DASHBOARD'), ...otherItems].map((item) => {
+              {[...mainItems.filter(item => item.id !== 'dashboard'), ...otherItems].map((item) => {
                 const Icon = item.icon;
                 return (
                   <li key={item.id}>
@@ -114,9 +122,9 @@ export const Layout: React.FC<LayoutProps> = ({
         <div className="flex justify-around items-center py-2">
           {/* VISÃO GERAL - SEMPRE PRIMEIRO ÍCONE */}
           <button
-            onClick={() => onViewChange('DASHBOARD')}
+            onClick={() => onViewChange('dashboard')}
             className={`flex flex-col items-center p-2 rounded-lg min-w-16 ${
-              currentView === 'DASHBOARD' 
+              currentView === 'dashboard' 
                 ? 'text-brand-600 bg-brand-50' 
                 : 'text-slate-500 hover:bg-slate-100'
             }`}
@@ -127,9 +135,9 @@ export const Layout: React.FC<LayoutProps> = ({
 
           {/* TRANSAÇÕES */}
           <button
-            onClick={() => onViewChange('TRANSACTIONS')}
+            onClick={() => onViewChange('transactions')}
             className={`flex flex-col items-center p-2 rounded-lg min-w-16 ${
-              currentView === 'TRANSACTIONS' 
+              currentView === 'transactions' 
                 ? 'text-brand-600 bg-brand-50' 
                 : 'text-slate-500 hover:bg-slate-100'
             }`}
@@ -140,9 +148,9 @@ export const Layout: React.FC<LayoutProps> = ({
 
           {/* METAS */}
           <button
-            onClick={() => onViewChange('GOALS')}
+            onClick={() => onViewChange('goals')}
             className={`flex flex-col items-center p-2 rounded-lg min-w-16 ${
-              currentView === 'GOALS' 
+              currentView === 'goals' 
                 ? 'text-brand-600 bg-brand-50' 
                 : 'text-slate-500 hover:bg-slate-100'
             }`}
@@ -153,9 +161,9 @@ export const Layout: React.FC<LayoutProps> = ({
 
           {/* INVESTIMENTOS */}
           <button
-            onClick={() => onViewChange('INVESTMENTS')}
+            onClick={() => onViewChange('investments')}
             className={`flex flex-col items-center p-2 rounded-lg min-w-16 ${
-              currentView === 'INVESTMENTS' 
+              currentView === 'investments' 
                 ? 'text-brand-600 bg-brand-50' 
                 : 'text-slate-500 hover:bg-slate-100'
             }`}
