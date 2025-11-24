@@ -25,6 +25,7 @@ export const BankList: React.FC<BankListProps> = ({ accounts, onAddAccount, onDe
         ...editingAccount,
         name: formName,
         initialBalance: balance,
+        balance: balance, // ← NECESSÁRIO
         institution: formInstitution,
         type: 'Corrente',
         color: '#3B82F6'
@@ -33,6 +34,7 @@ export const BankList: React.FC<BankListProps> = ({ accounts, onAddAccount, onDe
       onAddAccount({
         name: formName,
         initialBalance: balance,
+        balance: balance, // ← NECESSÁRIO
         institution: formInstitution,
         type: 'Corrente',
         color: '#3B82F6'
