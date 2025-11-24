@@ -37,7 +37,7 @@ import {
   addCustomCategory
 } from './services/storageService';
 
-// IMPORT AJUSTADO para corresponder ao arquivo onlinestatus.tsx (case-sensitive)
+// IMPORT AJUSTADO para corresponder ao arquivo OnlineStatus.tsx (case-sensitive)
 import { OnlineStatus } from './components/OnlineStatus';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 
