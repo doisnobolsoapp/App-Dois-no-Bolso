@@ -1,3 +1,4 @@
+// App.tsx
 import { useEffect, useState } from 'react';
 import { AppData, ViewState, Account, CreditCard } from './types';
 import { Layout } from './components/Layout';
@@ -36,12 +37,12 @@ import {
   addCustomCategory
 } from './services/storageService';
 
-// Minimal PWA helpers (local implementations to avoid missing imports)
-import { OnlineStatus } from './components/OnlineStatus';
+// IMPORT AJUSTADO para corresponder ao arquivo onlinestatus.tsx (case-sensitive)
+import { OnlineStatus } from './components/onlinestatus';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 
 const usePWA = () => {
-  // defensivo para SSR/ambientes sem window
+  // defensivo para SSR/ambientes sem window/navigator
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
   const isStandalone =
     typeof window !== 'undefined' &&
@@ -71,8 +72,8 @@ function App(): JSX.Element {
   const { isOnline, isStandalone } = usePWA();
 
   useEffect(() => {
-    // tenta pegar usuário logado
-    const currentUser = authService.getCurrentUser?.();
+    // tenta pegar usuário logado (authService pode ser undefined em alguns setups)
+    const currentUser = typeof authService !== 'undefined' && authService.getCurrentUser ? authService.getCurrentUser() : null;
     if (currentUser) {
       setUser(currentUser as User);
     }
@@ -96,6 +97,7 @@ function App(): JSX.Element {
           });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Salva automaticamente quando `data` muda
@@ -113,7 +115,7 @@ function App(): JSX.Element {
   };
 
   const handleLogout = () => {
-    authService.logout?.();
+    if (authService && typeof authService.logout === 'function') authService.logout();
     setUser(null);
   };
 
@@ -180,6 +182,8 @@ function App(): JSX.Element {
     date: string,
     notes?: string
   ) => {
+    // ATENÇÃO: se a assinatura de addInvestmentMovement no storageService for diferente,
+    // ajuste aqui para combinar (ex: se aceita só um objeto).
     const updatedInv = addInvestmentMovement(invId, type, qty, price, date, notes);
     if (updatedInv) {
       setData(prev => ({ ...prev, investments: prev.investments.map(inv => (inv.id === invId ? updatedInv : inv)) }));
@@ -215,8 +219,7 @@ function App(): JSX.Element {
   // Custom categories
   const handleAddCategory = (category: string) => {
     addCustomCategory(category);
-    // Removido customCategories que não existe em AppData
-    // A função addCustomCategory já salva no localStorage
+    // addCustomCategory já persiste no localStorage; se quiser refletir em `data`, adicione campo
   };
 
   // If user not logged, show login
