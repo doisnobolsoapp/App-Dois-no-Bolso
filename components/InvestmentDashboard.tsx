@@ -1,5 +1,5 @@
 // components/InvestmentDashboard.tsx
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, FormEvent } from 'react';
 import { AppData, Investment, InvestmentType, InvestmentStrategy } from '../types';
 import { INVESTMENT_TYPE_LABELS, INVESTMENT_STRATEGY_LABELS } from '../constants';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -10,18 +10,18 @@ interface InvestmentDashboardProps {
   onAddInvestment: (i: Omit<Investment, 'id' | 'history'>) => void;
   onAddMovement: (invId: string, type: 'BUY' | 'SELL' | 'UPDATE', qty: number, price: number, date: string, notes?: string) => void;
   onDeleteInvestment: (id: string) => void;
-  onAddTransaction: (t: any) => void; // Link to cash flow
+  onAddTransaction: (t: any) => void; // mantém flexibilidade para o shape do transaction em storageService
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#a4de6c'];
 
-export const InvestmentDashboard: React.FC<InvestmentDashboardProps> = ({
+export const InvestmentDashboard = ({
   data,
   onAddInvestment,
   onAddMovement,
   onDeleteInvestment,
   onAddTransaction
-}) => {
+}: InvestmentDashboardProps) => {
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [selectedInv, setSelectedInv] = useState<Investment | null>(null);
@@ -29,7 +29,6 @@ export const InvestmentDashboard: React.FC<InvestmentDashboardProps> = ({
 
   // New Investment Form
   const [newName, setNewName] = useState('');
-  // InvestmentType is a type (string union). Use a literal as default.
   const [newType, setNewType] = useState<InvestmentType>('FIXED_INCOME');
   const [newBroker, setNewBroker] = useState('');
   const [newStrategy, setNewStrategy] = useState<InvestmentStrategy>('LONG_TERM');
@@ -38,8 +37,9 @@ export const InvestmentDashboard: React.FC<InvestmentDashboardProps> = ({
   const [moveQty, setMoveQty] = useState('');
   const [movePrice, setMovePrice] = useState('');
   const [moveDate, setMoveDate] = useState(new Date().toISOString().split('T')[0]);
-  const [moveAccount, setMoveAccount] = useState(''); // To link with cash flow
+  const [moveAccount, setMoveAccount] = useState(''); // opcional: vincular a conta para fluxo de caixa
 
+  // Sumários defensivos (trata campos opcionais)
   const summary = useMemo(() => {
     let totalInvested = 0;
     let totalCurrent = 0;
@@ -72,14 +72,14 @@ export const InvestmentDashboard: React.FC<InvestmentDashboardProps> = ({
     }));
   }, [data.investments]);
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = (e: FormEvent) => {
     e.preventDefault();
+    // cria com defaults coerentes para evitar campos undefined
     onAddInvestment({
       name: newName,
       type: newType,
       broker: newBroker,
       strategy: newStrategy,
-      // Provide sensible numeric defaults
       initialValue: 0,
       currentValue: 0,
       purchaseDate: new Date().toISOString().split('T')[0],
@@ -93,29 +93,27 @@ export const InvestmentDashboard: React.FC<InvestmentDashboardProps> = ({
     setNewBroker('');
   };
 
-  const handleMoveSubmit = (e: React.FormEvent) => {
+  const handleMoveSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!selectedInv) return;
 
     const qty = parseFloat(moveQty) || 0;
     const price = parseFloat(movePrice) || 0;
 
-    // 1. Update Investment State (delegate to parent/storage)
+    // 1) delega atualização ao pai / storage
     onAddMovement(selectedInv.id, moveType, qty, price, moveDate);
 
-    // 2. Create Cash Flow Transaction (if Buying or Selling and account selected)
+    // 2) cria transação financeira se vincular conta e for compra/venda
     if (moveAccount && (moveType === 'BUY' || moveType === 'SELL')) {
       const total = qty * price;
       onAddTransaction({
-        // use literal strings that match your types.ts
-        type: moveType === 'BUY' ? 'investment' : 'income',
+        type: moveType === 'BUY' ? 'investment' : 'income', // coincide com seu types.ts
         description: `${moveType === 'BUY' ? 'Aporte' : 'Resgate'}: ${selectedInv.name}`,
         amount: total,
         category: 'Investimentos',
         date: moveDate,
         paid: true,
-        // paymentMethod: 'transfer' fits your PaymentMethod union
-        paymentMethod: 'transfer',
+        paymentMethod: 'transfer', // usar string do union PaymentMethod
         accountId: moveAccount,
         investmentId: selectedInv.id
       });
@@ -130,7 +128,7 @@ export const InvestmentDashboard: React.FC<InvestmentDashboardProps> = ({
   const openMoveModal = (inv: Investment, type: 'BUY' | 'SELL' | 'UPDATE') => {
     setSelectedInv(inv);
     setMoveType(type);
-    setMovePrice((inv.currentPrice ?? 0).toString()); // defensive
+    setMovePrice(((inv.currentPrice ?? 0)).toString());
     setIsMoveModalOpen(true);
   };
 
@@ -142,6 +140,7 @@ export const InvestmentDashboard: React.FC<InvestmentDashboardProps> = ({
           <h2 className="text-2xl font-bold text-slate-800">Carteira de Investimentos</h2>
           <p className="text-slate-500 text-sm">Gerencie seu patrimônio e acompanhe a rentabilidade.</p>
         </div>
+
         <button
           onClick={() => setIsNewModalOpen(true)}
           className="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg flex items-center shadow-sm transition-colors"
@@ -179,15 +178,7 @@ export const InvestmentDashboard: React.FC<InvestmentDashboardProps> = ({
           {allocationData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie
-                  data={allocationData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={30}
-                  outerRadius={50}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
+                <Pie data={allocationData} cx="50%" cy="50%" innerRadius={30} outerRadius={50} paddingAngle={5} dataKey="value">
                   {allocationData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
@@ -244,8 +235,8 @@ export const InvestmentDashboard: React.FC<InvestmentDashboardProps> = ({
                     </td>
 
                     <td className="px-6 py-3 text-right">{qty}</td>
-                    <td className="px-6 py-3 text-right">R$ {(avg).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                    <td className="px-6 py-3 text-right text-slate-600">R$ {(cur).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td className="px-6 py-3 text-right">R$ {avg.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td className="px-6 py-3 text-right text-slate-600">R$ {cur.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                     <td className="px-6 py-3 text-right font-medium text-slate-800">R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
 
                     <td className={`px-6 py-3 text-right font-medium ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
