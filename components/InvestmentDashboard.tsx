@@ -10,7 +10,7 @@ interface InvestmentDashboardProps {
   onAddInvestment: (i: Omit<Investment, 'id' | 'history'>) => void;
   onAddMovement: (invId: string, type: 'BUY' | 'SELL' | 'UPDATE', qty: number, price: number, date: string, notes?: string) => void;
   onDeleteInvestment: (id: string) => void;
-  onAddTransaction: (t: any) => void; // mantém flexibilidade para o shape do transaction em storageService
+  onAddTransaction: (t: any) => void;
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#a4de6c'];
@@ -22,24 +22,28 @@ export const InvestmentDashboard = ({
   onDeleteInvestment,
   onAddTransaction
 }: InvestmentDashboardProps) => {
+
+  // -----------------------
+  // State
+  // -----------------------
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [selectedInv, setSelectedInv] = useState<Investment | null>(null);
   const [moveType, setMoveType] = useState<'BUY' | 'SELL' | 'UPDATE'>('UPDATE');
 
-  // New Investment Form
   const [newName, setNewName] = useState('');
   const [newType, setNewType] = useState<InvestmentType>('FIXED_INCOME');
   const [newBroker, setNewBroker] = useState('');
   const [newStrategy, setNewStrategy] = useState<InvestmentStrategy>('LONG_TERM');
 
-  // Movement Form
   const [moveQty, setMoveQty] = useState('');
   const [movePrice, setMovePrice] = useState('');
   const [moveDate, setMoveDate] = useState(new Date().toISOString().split('T')[0]);
-  const [moveAccount, setMoveAccount] = useState(''); // opcional: vincular a conta para fluxo de caixa
+  const [moveAccount, setMoveAccount] = useState('');
 
-  // Sumários defensivos (trata campos opcionais)
+  // -----------------------
+  // Summary
+  // -----------------------
   const summary = useMemo(() => {
     let totalInvested = 0;
     let totalCurrent = 0;
@@ -48,6 +52,7 @@ export const InvestmentDashboard = ({
       const qty = i.quantity ?? 0;
       const avg = i.averagePrice ?? 0;
       const cur = i.currentPrice ?? 0;
+
       totalInvested += qty * avg;
       totalCurrent += qty * cur;
     });
@@ -58,6 +63,9 @@ export const InvestmentDashboard = ({
     return { totalInvested, totalCurrent, profit, profitPercent };
   }, [data.investments]);
 
+  // -----------------------
+  // Allocation
+  // -----------------------
   const allocationData = useMemo(() => {
     const map = new Map<string, number>();
     data.investments.forEach(i => {
@@ -72,27 +80,31 @@ export const InvestmentDashboard = ({
     }));
   }, [data.investments]);
 
+  // -----------------------
+  // Create Investment
+  // -----------------------
   const handleCreate = (e: FormEvent) => {
     e.preventDefault();
-    // cria com defaults coerentes para evitar campos undefined
+
     onAddInvestment({
       name: newName,
       type: newType,
       broker: newBroker,
       strategy: newStrategy,
-      initialValue: 0,
-      currentValue: 0,
-      purchaseDate: new Date().toISOString().split('T')[0],
       quantity: 0,
       averagePrice: 0,
       currentPrice: 0,
-      history: []
+      purchaseDate: new Date().toISOString().split('T')[0]
     });
+
     setIsNewModalOpen(false);
     setNewName('');
     setNewBroker('');
   };
 
+  // -----------------------
+  // Movements
+  // -----------------------
   const handleMoveSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!selectedInv) return;
@@ -100,20 +112,19 @@ export const InvestmentDashboard = ({
     const qty = parseFloat(moveQty) || 0;
     const price = parseFloat(movePrice) || 0;
 
-    // 1) delega atualização ao pai / storage
     onAddMovement(selectedInv.id, moveType, qty, price, moveDate);
 
-    // 2) cria transação financeira se vincular conta e for compra/venda
     if (moveAccount && (moveType === 'BUY' || moveType === 'SELL')) {
       const total = qty * price;
+
       onAddTransaction({
-        type: moveType === 'BUY' ? 'investment' : 'income', // coincide com seu types.ts
+        type: moveType === 'BUY' ? 'investment' : 'income',
         description: `${moveType === 'BUY' ? 'Aporte' : 'Resgate'}: ${selectedInv.name}`,
         amount: total,
         category: 'Investimentos',
         date: moveDate,
         paid: true,
-        paymentMethod: 'transfer', // usar string do union PaymentMethod
+        paymentMethod: 'transfer',
         accountId: moveAccount,
         investmentId: selectedInv.id
       });
@@ -128,10 +139,13 @@ export const InvestmentDashboard = ({
   const openMoveModal = (inv: Investment, type: 'BUY' | 'SELL' | 'UPDATE') => {
     setSelectedInv(inv);
     setMoveType(type);
-    setMovePrice(((inv.currentPrice ?? 0)).toString());
+    setMovePrice((inv.currentPrice ?? 0).toString());
     setIsMoveModalOpen(true);
   };
 
+  // -----------------------
+  // Component
+  // -----------------------
   return (
     <div className="pb-20 space-y-6">
       {/* Header */}
@@ -173,6 +187,7 @@ export const InvestmentDashboard = ({
           </p>
         </div>
 
+        {/* Allocation */}
         <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex flex-col justify-center h-40 md:h-auto">
           <p className="text-slate-500 text-sm mb-2">Alocação</p>
           {allocationData.length > 0 ? (
@@ -231,7 +246,9 @@ export const InvestmentDashboard = ({
                   <tr key={inv.id} className="hover:bg-slate-50">
                     <td className="px-6 py-3">
                       <div className="font-bold text-slate-800">{inv.name}</div>
-                      <div className="text-xs text-slate-400">{(INVESTMENT_TYPE_LABELS as Record<string, string>)[inv.type]} • {inv.broker}</div>
+                      <div className="text-xs text-slate-400">
+                        {(INVESTMENT_TYPE_LABELS as Record<string, string>)[inv.type]} • {inv.broker}
+                      </div>
                     </td>
 
                     <td className="px-6 py-3 text-right">{qty}</td>
@@ -244,10 +261,25 @@ export const InvestmentDashboard = ({
                     </td>
 
                     <td className="px-6 py-3 flex justify-center gap-2">
-                      <button onClick={() => openMoveModal(inv, 'UPDATE')} title="Atualizar Cotação" className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"><RefreshCw size={16} /></button>
-                      <button onClick={() => openMoveModal(inv, 'BUY')} title="Registrar Aporte" className="p-1.5 text-green-600 hover:bg-green-50 rounded"><Plus size={16} /></button>
-                      <button onClick={() => openMoveModal(inv, 'SELL')} title="Registrar Venda" className="p-1.5 text-amber-600 hover:bg-amber-50 rounded"><DollarSign size={16} /></button>
-                      <button onClick={() => { if (confirm('Excluir este ativo e todo histórico?')) onDeleteInvestment(inv.id) }} title="Excluir" className="p-1.5 text-red-400 hover:bg-red-50 rounded"><Trash2 size={16} /></button>
+                      <button onClick={() => openMoveModal(inv, 'UPDATE')} title="Atualizar Cotação" className="p-1.5 text-blue-600 hover:bg-blue-50 rounded">
+                        <RefreshCw size={16} />
+                      </button>
+
+                      <button onClick={() => openMoveModal(inv, 'BUY')} title="Registrar Aporte" className="p-1.5 text-green-600 hover:bg-green-50 rounded">
+                        <Plus size={16} />
+                      </button>
+
+                      <button onClick={() => openMoveModal(inv, 'SELL')} title="Registrar Venda" className="p-1.5 text-amber-600 hover:bg-amber-50 rounded">
+                        <DollarSign size={16} />
+                      </button>
+
+                      <button
+                        onClick={() => { if (confirm('Excluir este ativo e todo histórico?')) onDeleteInvestment(inv.id) }}
+                        title="Excluir"
+                        className="p-1.5 text-red-400 hover:bg-red-50 rounded"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </td>
                   </tr>
                 );
@@ -257,7 +289,7 @@ export const InvestmentDashboard = ({
         </div>
       </div>
 
-      {/* New Investment Modal */}
+      {/* Modal de novo ativo */}
       {isNewModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
@@ -269,44 +301,55 @@ export const InvestmentDashboard = ({
             <form onSubmit={handleCreate} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Nome do Ativo / Ticker</label>
-                <input required className="w-full input-std px-3 py-2 border rounded-lg" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ex: PETR4, CDB Nubank 100% CDI" />
+                <input required className="w-full input-std px-3 py-2 border rounded-lg" value={newName}
+                  onChange={e => setNewName(e.target.value)} placeholder="Ex: PETR4, CDB 100% CDI" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Tipo</label>
-                  <select className="w-full px-3 py-2 border rounded-lg bg-white" value={newType} onChange={e => setNewType(e.target.value as InvestmentType)}>
-                    {Object.entries(INVESTMENT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  <select className="w-full px-3 py-2 border rounded-lg bg-white" value={newType}
+                    onChange={e => setNewType(e.target.value as InvestmentType)}>
+                    {Object.entries(INVESTMENT_TYPE_LABELS).map(([k, v]) => (
+                      <option key={k} value={k}>{v}</option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Estratégia</label>
-                  <select className="w-full px-3 py-2 border rounded-lg bg-white" value={newStrategy} onChange={e => setNewStrategy(e.target.value as InvestmentStrategy)}>
-                    {Object.entries(INVESTMENT_STRATEGY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  <select className="w-full px-3 py-2 border rounded-lg bg-white" value={newStrategy}
+                    onChange={e => setNewStrategy(e.target.value as InvestmentStrategy)}>
+                    {Object.entries(INVESTMENT_STRATEGY_LABELS).map(([k, v]) => (
+                      <option key={k} value={k}>{v}</option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Corretora / Instituição</label>
-                <input className="w-full input-std px-3 py-2 border rounded-lg" value={newBroker} onChange={e => setNewBroker(e.target.value)} placeholder="Ex: XP, Binance, Banco Inter" />
+                <label className="block text-sm font-medium text-slate-700 mb-1">Corretora / Banco</label>
+                <input className="w-full input-std px-3 py-2 border rounded-lg" value={newBroker}
+                  onChange={e => setNewBroker(e.target.value)} placeholder="Ex: XP, Inter, Binance" />
               </div>
 
-              <button type="submit" className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700">Cadastrar</button>
+              <button type="submit" className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700">
+                Cadastrar
+              </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Movement Modal */}
+      {/* Modal movimentação */}
       {isMoveModalOpen && selectedInv && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-xl">
               <div>
                 <h3 className="font-bold text-lg text-slate-800">
-                  {moveType === 'BUY' ? 'Novo Aporte' : moveType === 'SELL' ? 'Realizar Venda' : 'Atualizar Preço'}
+                  {moveType === 'BUY' ? 'Novo Aporte' :
+                   moveType === 'SELL' ? 'Realizar Venda' : 'Atualizar Preço'}
                 </h3>
                 <p className="text-xs text-slate-500">{selectedInv.name}</p>
               </div>
@@ -318,52 +361,59 @@ export const InvestmentDashboard = ({
               {moveType !== 'UPDATE' && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Quantidade</label>
-                  <input required type="number" step="any" className="w-full px-3 py-2 border rounded-lg" value={moveQty} onChange={e => setMoveQty(e.target.value)} />
+                  <input required type="number" step="any" className="w-full px-3 py-2 border rounded-lg"
+                    value={moveQty} onChange={e => setMoveQty(e.target.value)} />
                 </div>
               )}
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {moveType === 'UPDATE' ? 'Preço de Mercado Atual (Unitário)' : 'Preço Unitário da Operação'}
+                  {moveType === 'UPDATE' ? 'Preço Atual' : 'Preço Unitário'}
                 </label>
-                <input required type="number" step="any" className="w-full px-3 py-2 border rounded-lg" value={movePrice} onChange={e => setMovePrice(e.target.value)} />
+                <input required type="number" step="any" className="w-full px-3 py-2 border rounded-lg"
+                  value={movePrice} onChange={e => setMovePrice(e.target.value)} />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Data</label>
-                <input required type="date" className="w-full px-3 py-2 border rounded-lg" value={moveDate} onChange={e => setMoveDate(e.target.value)} />
+                <input required type="date" className="w-full px-3 py-2 border rounded-lg"
+                  value={moveDate} onChange={e => setMoveDate(e.target.value)} />
               </div>
 
               {(moveType === 'BUY' || moveType === 'SELL') && (
                 <div className="bg-brand-50 p-3 rounded-lg border border-brand-100">
                   <label className="block text-xs font-bold text-brand-800 mb-1">
-                    {moveType === 'BUY' ? 'Debitar da Conta:' : 'Creditar na Conta:'}
+                    {moveType === 'BUY' ? 'Debitar da conta:' : 'Creditar na conta:'}
                   </label>
                   <select
-                    className="w-full px-3 py-2 border border-brand-200 rounded-lg bg-white text-sm"
-                    value={moveAccount}
-                    onChange={e => setMoveAccount(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg bg-white"
+                    value={moveAccount} onChange={e => setMoveAccount(e.target.value)}
                   >
                     <option value="">Não vincular financeiro</option>
                     {data.accounts.map(acc => (
                       <option key={acc.id} value={acc.id}>{acc.name}</option>
                     ))}
                   </select>
-                  <p className="text-[10px] text-brand-600 mt-1">Se selecionado, criará uma transação no seu extrato.</p>
                 </div>
               )}
 
-              <button type="submit" className={`w-full py-3 rounded-lg font-bold text-white transition-colors ${
-                moveType === 'BUY' ? 'bg-green-600 hover:bg-green-700' :
-                moveType === 'SELL' ? 'bg-amber-600 hover:bg-amber-700' :
-                'bg-blue-600 hover:bg-blue-700'
-              }`}>
+              <button
+                type="submit"
+                className={`w-full py-3 rounded-lg font-bold text-white transition-colors 
+                  ${moveType === 'BUY'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : moveType === 'SELL'
+                    ? 'bg-amber-600 hover:bg-amber-700'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
                 Confirmar
               </button>
             </form>
           </div>
         </div>
       )}
+
     </div>
   );
 };
