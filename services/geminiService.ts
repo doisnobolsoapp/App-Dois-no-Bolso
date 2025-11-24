@@ -1,9 +1,8 @@
-// geminiService.ts
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { DEFAULT_SYSTEM_INSTRUCTION } from "../constants";
 
 // =============================================================
-// DEFINIÇÃO DOS TOOLS (AGORA NO FORMATO CORRETO PARA GEMINI 1.5)
+// DEFINIÇÃO DOS TOOLS – formato correto para Gemini 1.5
 // =============================================================
 
 const addTransactionTool = {
@@ -68,14 +67,10 @@ const addInvestmentTool = {
   }
 };
 
-// 👇 CONFIG FINAL E CORRETA (FORMATO EXIGIDO PELO GEMINI)
+// 🚀 OBJETO FINAL – ESTE É O FORMATO CERTO
 export const TOOLS_CONFIG = [
   {
-    functionDeclarations: [
-      addTransactionTool,
-      addGoalTool,
-      addInvestmentTool
-    ]
+    functionDeclarations: [addTransactionTool, addGoalTool, addInvestmentTool]
   }
 ];
 
@@ -94,20 +89,18 @@ export const createGeminiClient = () => {
 };
 
 // =============================================================
-// OBTER MODELO
+// MODELO
 // =============================================================
 export const getGeminiModel = (client: GoogleGenerativeAI) => {
   return client.getGenerativeModel({
     model: "gemini-1.5-flash",
-    tools: TOOLS_CONFIG, // AGORA NO FORMATO CERTO
+    tools: TOOLS_CONFIG,
     systemInstruction: DEFAULT_SYSTEM_INSTRUCTION
   });
 };
 
-export const SYSTEM_INSTRUCTION = DEFAULT_SYSTEM_INSTRUCTION;
-
 // =============================================================
-// CHAMADA PRINCIPAL À IA
+// CHAMADA PRINCIPAL
 // =============================================================
 export const callGeminiWithTools = async (
   userMessage: string,
@@ -118,11 +111,11 @@ export const callGeminiWithTools = async (
     const client = createGeminiClient();
     const model = getGeminiModel(client);
 
-    const fullPrompt = context
-      ? `${systemInstruction || DEFAULT_SYSTEM_INSTRUCTION}\n\nContexto atual:\n${context}\n\nUsuário: ${userMessage}`
+    const finalPrompt = context
+      ? `${systemInstruction || DEFAULT_SYSTEM_INSTRUCTION}\n\nContexto:\n${context}\n\nUsuário: ${userMessage}`
       : `${systemInstruction || DEFAULT_SYSTEM_INSTRUCTION}\n\nUsuário: ${userMessage}`;
 
-    const result = await model.generateContent(fullPrompt);
+    const result = await model.generateContent(finalPrompt);
     const response = result.response;
 
     return {
@@ -140,3 +133,5 @@ export const callGeminiWithTools = async (
     throw error;
   }
 };
+
+export const SYSTEM_INSTRUCTION = DEFAULT_SYSTEM_INSTRUCTION;
