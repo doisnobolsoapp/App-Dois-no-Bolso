@@ -89,6 +89,7 @@ export interface Account {
   type: string;
   initialBalance: number;
   institution?: string;
+  color?: string;
 }
 
 // ------------------------------------
