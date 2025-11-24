@@ -12,7 +12,7 @@ export const Reports: React.FC<ReportsProps> = ({ data }) => {
   const categoryData = React.useMemo(() => {
     const map = new Map<string, number>();
     data.transactions
-      .filter(t => t.type === TransactionType.EXPENSE)
+      .filter(t => t.type === "expense")
       .forEach(t => {
         map.set(t.category, (map.get(t.category) || 0) + t.amount);
       });
