@@ -38,7 +38,7 @@ import {
 } from './services/storageService';
 
 // IMPORT AJUSTADO para corresponder ao arquivo onlinestatus.tsx (case-sensitive)
-import { OnlineStatus } from './components/onlinestatus';
+import { OnlineStatus } from './components/OnlineStatus';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 
 const usePWA = () => {
