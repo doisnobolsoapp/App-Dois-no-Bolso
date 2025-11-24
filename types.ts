@@ -1,11 +1,18 @@
 // types.ts
+
+// ------------------------------------
+// CHAT MESSAGES
+// ------------------------------------
 export interface Message {
   id: string;
   content: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   timestamp: Date;
 }
 
+// ------------------------------------
+// LAYOUT
+// ------------------------------------
 export interface LayoutProps {
   children: React.ReactNode;
   currentView: ViewState;
@@ -13,6 +20,9 @@ export interface LayoutProps {
   onLogout: () => void;
 }
 
+// ------------------------------------
+// APP DATA
+// ------------------------------------
 export interface AppData {
   transactions: Transaction[];
   goals: Goal[];
@@ -22,7 +32,7 @@ export interface AppData {
   properties: Property[];
   debts: Debt[];
   customCategories?: string[];
-  userMode?: 'INDIVIDUAL' | 'COUPLE';
+  userMode?: "INDIVIDUAL" | "COUPLE";
   language?: string;
   userPreferences?: {
     currency: string;
@@ -30,6 +40,12 @@ export interface AppData {
     notifications: boolean;
   };
 }
+
+// ------------------------------------
+// TRANSACTIONS
+// ------------------------------------
+export type TransactionType = "income" | "expense" | "investment" | "loan";
+export type PaymentMethod = "cash" | "credit" | "debit" | "transfer" | "pix";
 
 export interface Transaction {
   id: string;
@@ -47,10 +63,14 @@ export interface Transaction {
     current: number;
     total: number;
   };
-  notificationSent?: boolean;
   createdBy?: string;
+  notificationSent?: boolean;
+  investmentId?: string;
 }
 
+// ------------------------------------
+// GOALS
+// ------------------------------------
 export interface Goal {
   id: string;
   name: string;
@@ -59,6 +79,9 @@ export interface Goal {
   deadline: string;
 }
 
+// ------------------------------------
+// ACCOUNTS
+// ------------------------------------
 export interface Account {
   id: string;
   name: string;
@@ -68,6 +91,9 @@ export interface Account {
   institution?: string;
 }
 
+// ------------------------------------
+// CREDIT CARDS
+// ------------------------------------
 export interface CreditCard {
   id: string;
   name: string;
@@ -76,21 +102,62 @@ export interface CreditCard {
   dueDate: string;
 }
 
+// ------------------------------------
+// INVESTMENTS
+// ------------------------------------
+export type InvestmentType =
+  | "FIXED_INCOME"
+  | "STOCK"
+  | "FII"
+  | "CRYPTO"
+  | "FUND"
+  | "PENSION"
+  | "SAVINGS"
+  | "INTERNATIONAL"
+  | "OTHER";
+
+export type InvestmentStrategy =
+  | "RESERVE"
+  | "LONG_TERM"
+  | "SHORT_TERM"
+  | "SWING_TRADE"
+  | "HOLD";
+
+export interface InvestmentMovement {
+  type: "BUY" | "SELL" | "UPDATE";
+  quantity: number;
+  price: number;
+  date: string;
+  notes?: string;
+
+  before: {
+    quantity: number;
+    averagePrice: number;
+  };
+
+  after: {
+    quantity: number;
+    averagePrice: number;
+  };
+}
+
 export interface Investment {
   id: string;
   name: string;
-  type: string;
-  initialValue: number;
-  currentValue: number;
-  purchaseDate: string;
-  quantity?: number;
-  averagePrice?: number;
-  currentPrice?: number;
+  type: InvestmentType;
   broker?: string;
-  strategy?: string;
-  history?: any[];
+  strategy?: InvestmentStrategy;
+
+  quantity: number;
+  averagePrice: number;
+  currentPrice: number;
+
+  history?: InvestmentMovement[];
 }
 
+// ------------------------------------
+// PROPERTIES
+// ------------------------------------
 export interface Property {
   id: string;
   name: string;
@@ -99,6 +166,9 @@ export interface Property {
   currentValue?: number;
 }
 
+// ------------------------------------
+// DEBTS
+// ------------------------------------
 export interface Debt {
   id: string;
   name: string;
@@ -107,9 +177,20 @@ export interface Debt {
   dueDate: string;
 }
 
-export type TransactionType = 'income' | 'expense' | 'investment' | 'loan';
-export type PaymentMethod = 'cash' | 'credit' | 'debit' | 'transfer' | 'pix';
-export type ViewState = 'dashboard' | 'transactions' | 'goals' | 'investments' | 'balance' | 'settings' | 'reports' | 'calendar' | 'banks' | 'cards' | 'chat';
-export type InvestmentType = 'FIXED_INCOME' | 'STOCK' | 'FII' | 'CRYPTO' | 'FUND' | 'PENSION' | 'SAVINGS' | 'INTERNATIONAL' | 'OTHER';
-export type InvestmentStrategy = 'RESERVE' | 'LONG_TERM' | 'SHORT_TERM' | 'SWING_TRADE' | 'HOLD';
+// ------------------------------------
+// VIEW STATE
+// ------------------------------------
+export type ViewState =
+  | "dashboard"
+  | "transactions"
+  | "goals"
+  | "investments"
+  | "balance"
+  | "settings"
+  | "reports"
+  | "calendar"
+  | "banks"
+  | "cards"
+  | "chat";
+
 export type Category = string;
