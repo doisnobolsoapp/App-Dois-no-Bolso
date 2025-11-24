@@ -9,7 +9,12 @@ interface CreditCardListProps {
   onUpdateCreditCard: (c: CreditCard) => void;
 }
 
-export const CreditCardList: React.FC<CreditCardListProps> = ({ cards, onAddCreditCard, onDeleteCreditCard, onUpdateCreditCard }) => {
+export const CreditCardList: React.FC<CreditCardListProps> = ({
+  cards,
+  onAddCreditCard,
+  onDeleteCreditCard,
+  onUpdateCreditCard
+}) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<CreditCard | null>(null);
   const [formName, setFormName] = useState('');
@@ -23,14 +28,16 @@ export const CreditCardList: React.FC<CreditCardListProps> = ({ cards, onAddCred
       onUpdateCreditCard({
         ...editingCard,
         name: formName,
-        limit: limit
+        limit: limit,
+        dueDate: editingCard.dueDate || "2025-01-01",
+        currentBalance: editingCard.currentBalance ?? 0
       });
     } else {
       onAddCreditCard({
         name: formName,
-        limit: limit
-        dueDate: "2025-01-01",      // ou outra data padrão
-  currentBalance: 0
+        limit: limit,
+        dueDate: "2025-01-01",
+        currentBalance: 0
       });
     }
 
@@ -58,7 +65,7 @@ export const CreditCardList: React.FC<CreditCardListProps> = ({ cards, onAddCred
           <h2 className="text-2xl font-bold text-slate-800">Cartões de Crédito</h2>
           <p className="text-slate-500 text-sm">Gerencie seus cartões</p>
         </div>
-        <button 
+        <button
           onClick={() => setIsModalOpen(true)}
           className="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg flex items-center shadow-sm transition-colors"
         >
@@ -67,7 +74,7 @@ export const CreditCardList: React.FC<CreditCardListProps> = ({ cards, onAddCred
         </button>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
           <p className="text-slate-500 text-sm mb-1">Limite Total</p>
@@ -89,11 +96,13 @@ export const CreditCardList: React.FC<CreditCardListProps> = ({ cards, onAddCred
         </div>
       </div>
 
-      {/* Cards List */}
+      {/* List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {cards.map(card => {
-          const usedPercentage = card.currentBalance ? (card.currentBalance / card.limit) * 100 : 0;
-          
+          const usedPercentage = card.currentBalance
+            ? (card.currentBalance / card.limit) * 100
+            : 0;
+
           return (
             <div key={card.id} className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-4">
@@ -101,14 +110,14 @@ export const CreditCardList: React.FC<CreditCardListProps> = ({ cards, onAddCred
                   <CreditCardIcon size={24} />
                 </div>
                 <div className="flex gap-2">
-                  <button 
+                  <button
                     onClick={() => openEditModal(card)}
                     className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
                     title="Editar"
                   >
                     <Edit3 size={16} />
                   </button>
-                  <button 
+                  <button
                     onClick={() => onDeleteCreditCard(card.id)}
                     className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Excluir"
@@ -117,9 +126,9 @@ export const CreditCardList: React.FC<CreditCardListProps> = ({ cards, onAddCred
                   </button>
                 </div>
               </div>
-              
+
               <h3 className="font-bold text-lg text-slate-800 mb-1">{card.name}</h3>
-              
+
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-slate-500">Limite</p>
@@ -127,34 +136,29 @@ export const CreditCardList: React.FC<CreditCardListProps> = ({ cards, onAddCred
                     R$ {card.limit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-                
-                {card.currentBalance !== undefined && (
-                  <div>
-                    <p className="text-sm text-slate-500">Utilizado</p>
-                    <p className="font-bold text-red-600">
-                      R$ {card.currentBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </p>
-                    <div className="w-full bg-slate-100 rounded-full h-2 mt-1">
-                      <div 
-                        className="bg-red-500 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(usedPercentage, 100)}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {usedPercentage.toFixed(1)}% utilizado
-                    </p>
+
+                <div>
+                  <p className="text-sm text-slate-500">Utilizado</p>
+                  <p className="font-bold text-red-600">
+                    R$ {(card.currentBalance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                  <div className="w-full bg-slate-100 rounded-full h-2 mt-1">
+                    <div
+                      className="bg-red-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(usedPercentage, 100)}%` }}
+                    ></div>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           );
         })}
-        
+
         {cards.length === 0 && (
           <div className="col-span-full flex flex-col items-center justify-center p-10 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300">
             <CreditCardIcon size={48} className="mb-4 opacity-50" />
             <p className="text-center">Você ainda não cadastrou nenhum cartão de crédito.</p>
-            <button 
+            <button
               onClick={() => setIsModalOpen(true)}
               className="mt-4 text-brand-600 hover:text-brand-700 font-medium"
             >
@@ -172,30 +176,37 @@ export const CreditCardList: React.FC<CreditCardListProps> = ({ cards, onAddCred
               <h3 className="font-bold text-lg text-slate-800">
                 {editingCard ? 'Editar Cartão' : 'Novo Cartão'}
               </h3>
-              <button onClick={() => {
-                setIsModalOpen(false);
-                setEditingCard(null);
-                setFormName('');
-                setFormLimit('');
-              }} className="text-slate-400 hover:text-slate-600">✕</button>
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingCard(null);
+                  setFormName('');
+                  setFormLimit('');
+                }}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                ✕
+              </button>
             </div>
+
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Nome do Cartão</label>
-                <input 
+                <input
                   required
-                  type="text" 
+                  type="text"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
                   value={formName}
                   onChange={e => setFormName(e.target.value)}
-                  placeholder="Ex: Nubank Visa Platinum"
+                  placeholder="Ex: Nubank Visa"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Limite (R$)</label>
-                <input 
+                <input
                   required
-                  type="number" 
+                  type="number"
                   step="0.01"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
                   value={formLimit}
@@ -203,8 +214,12 @@ export const CreditCardList: React.FC<CreditCardListProps> = ({ cards, onAddCred
                   placeholder="0,00"
                 />
               </div>
-              <button type="submit" className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 transition-colors">
-                {editingCard ? 'Atualizar' : 'Cadastrar'}
+
+              <button
+                type="submit"
+                className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 transition-colors"
+              >
+                {editingCard ? "Atualizar" : "Cadastrar"}
               </button>
             </form>
           </div>
