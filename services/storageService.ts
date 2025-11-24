@@ -1,4 +1,4 @@
-// services/storageService.ts
+// storageService.ts
 import {
   AppData,
   Transaction,
@@ -8,14 +8,9 @@ import {
   Investment,
   Property,
   Debt
-} from '../types';
+} from "../types";
 
-const STORAGE_KEY = 'dois-no-bolso-data';
-
-const nowIso = () => new Date().toISOString();
-
-const generateId = () =>
-  Date.now().toString() + Math.random().toString(36).substring(2, 9);
+const STORAGE_KEY = "dois-no-bolso-data";
 
 // -------------------------
 // LOAD & SAVE
@@ -23,22 +18,9 @@ const generateId = () =>
 export const loadData = (): AppData => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored) as AppData;
-      // Optional: ensure arrays exist to avoid runtime undefined
-      return {
-        transactions: parsed.transactions || [],
-        goals: parsed.goals || [],
-        accounts: parsed.accounts || [],
-        creditCards: parsed.creditCards || [],
-        investments: parsed.investments || [],
-        properties: parsed.properties || [],
-        debts: parsed.debts || [],
-        customCategories: parsed.customCategories || []
-      };
-    }
+    if (stored) return JSON.parse(stored);
   } catch (e) {
-    console.error('Erro ao carregar dados:', e);
+    console.error("Erro ao carregar:", e);
   }
 
   return {
@@ -57,19 +39,24 @@ export const saveData = (data: AppData) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
-    console.error('Erro ao salvar dados:', e);
+    console.error("Erro ao salvar:", e);
   }
 };
+
+const generateId = () =>
+  Date.now().toString() + Math.random().toString(36).substring(2, 9);
 
 // -------------------------
 // TRANSACTIONS
 // -------------------------
-export const addTransaction = (trans: Omit<Transaction, 'id'>): Transaction => {
+export const addTransaction = (
+  trans: Omit<Transaction, "id">
+): Transaction => {
   return { ...trans, id: generateId() };
 };
 
 export const addMultipleTransactions = (
-  transactions: Omit<Transaction, 'id'>[]
+  transactions: Omit<Transaction, "id">[]
 ): Transaction[] => {
   return transactions.map((t) => addTransaction(t));
 };
@@ -83,7 +70,7 @@ export const deleteTransaction = (id: string) => {
 // -------------------------
 // GOALS
 // -------------------------
-export const addGoal = (goal: Omit<Goal, 'id'>): Goal => {
+export const addGoal = (goal: Omit<Goal, "id">): Goal => {
   return { ...goal, id: generateId() };
 };
 
@@ -96,7 +83,7 @@ export const updateGoal = (goal: Goal) => {
 // -------------------------
 // ACCOUNTS
 // -------------------------
-export const addAccount = (acc: Omit<Account, 'id'>): Account => {
+export const addAccount = (acc: Omit<Account, "id">): Account => {
   return { ...acc, id: generateId() };
 };
 
@@ -109,7 +96,9 @@ export const deleteAccount = (id: string) => {
 // -------------------------
 // CREDIT CARDS
 // -------------------------
-export const addCreditCard = (card: Omit<CreditCard, 'id'>): CreditCard => {
+export const addCreditCard = (
+  card: Omit<CreditCard, "id">
+): CreditCard => {
   return { ...card, id: generateId() };
 };
 
@@ -120,95 +109,72 @@ export const deleteCreditCard = (id: string) => {
 };
 
 // -------------------------
-// INVESTMENTS (com movimentos)
+// INVESTMENTS
 // -------------------------
-export const addInvestment = (investment: Omit<Investment, 'id'>): Investment => {
-  // garante campos opcionais default
-  const inv: Investment = {
+export const addInvestment = (
+  investment: Omit<Investment, "id">
+): Investment => {
+  return {
     ...investment,
     id: generateId(),
-    quantity: investment.quantity ?? 0,
-    averagePrice: investment.averagePrice ?? 0,
-    currentPrice: investment.currentPrice ?? investment.averagePrice ?? 0,
     history: investment.history ?? []
   };
-  return inv;
 };
 
-/**
- * addInvestmentMovement
- * - invId: id do investimento
- * - type: 'BUY' | 'SELL' | 'UPDATE'
- * - qty: quantidade (aplicável para BUY/SELL)
- * - price: preço por unidade (aplicável para BUY/SELL/UPDATE)
- * - date: ISO date string
- * - notes: observações
- *
- * Retorna o investimento atualizado ou null se não encontrado.
- */
 export const addInvestmentMovement = (
   invId: string,
-  type: 'BUY' | 'SELL' | 'UPDATE',
+  type: "BUY" | "SELL" | "UPDATE",
   qty: number,
   price: number,
   date: string,
   notes?: string
 ): Investment | null => {
   const data = loadData();
-  const invIndex = data.investments.findIndex((i) => i.id === invId);
-  if (invIndex === -1) return null;
+  const inv = data.investments.find((i) => i.id === invId);
+  if (!inv) return null;
 
-  const inv = { ...data.investments[invIndex] };
+  if (!inv.history) inv.history = [];
 
-  // Normaliza campos opcionais
-  inv.quantity = inv.quantity ?? 0;
-  inv.averagePrice = inv.averagePrice ?? 0;
-  inv.currentPrice = inv.currentPrice ?? inv.averagePrice ?? 0;
-  inv.history = inv.history ?? [];
+  const oldQty = inv.quantity ?? 0;
+  const oldAvg = inv.averagePrice ?? 0;
 
-  const entryBase = {
-    id: generateId(),
-    date: date || nowIso(),
-    price,
-    qty,
-    notes: notes || ''
-  };
+  // BUY
+  if (type === "BUY") {
+    const newQty = oldQty + qty;
+    const newAvg =
+      newQty > 0
+        ? (oldAvg * oldQty + price * qty) / newQty
+        : price;
 
-  if (type === 'BUY') {
-    // recalcula preço médio
-    const totalExistingCost = (inv.averagePrice || 0) * (inv.quantity || 0);
-    const totalBuyCost = price * qty;
-    const newQuantity = (inv.quantity || 0) + qty;
-    const newAvg = newQuantity > 0 ? (totalExistingCost + totalBuyCost) / newQuantity : 0;
-
-    inv.quantity = newQuantity;
-    inv.averagePrice = Number(newAvg.toFixed(6)); // manter precisão
+    inv.quantity = newQty;
+    inv.averagePrice = newAvg;
     inv.currentPrice = price;
-
-    inv.history.push({ ...entryBase, type: 'BUY', total: totalBuyCost });
-  } else if (type === 'SELL') {
-    const sellQty = qty;
-    const available = inv.quantity || 0;
-    const actualSell = Math.min(sellQty, available);
-
-    // atualiza quantidade (não permitimos negativa)
-    inv.quantity = Math.max(0, available - actualSell);
-    inv.currentPrice = price;
-
-    // Opcional: registrar efeito (não calculamos lucro realizado detalhado aqui,
-    // porque Investment não tem campo para realizedProfit; pode ser estendido)
-    inv.history.push({ ...entryBase, type: 'SELL', total: price * actualSell, soldQuantity: actualSell });
-  } else if (type === 'UPDATE') {
-    // Atualiza somente o preço atual (mark-to-market)
-    inv.currentPrice = price;
-    inv.history.push({ ...entryBase, type: 'UPDATE' });
-  } else {
-    // tipo desconhecido: não altera
-    return null;
   }
 
-  // grava no array e salva
-  data.investments[invIndex] = inv;
+  // SELL
+  if (type === "SELL") {
+    const newQty = Math.max(oldQty - qty, 0);
+    inv.quantity = newQty;
+
+    inv.currentPrice = price;
+  }
+
+  // UPDATE PRICE
+  if (type === "UPDATE") {
+    inv.currentPrice = price;
+  }
+
+  // HISTÓRICO DO MOVIMENTO
+  inv.history.push({
+    type,
+    quantity: qty,
+    price,
+    date,
+    notes: notes || "",
+    before: { quantity: oldQty, averagePrice: oldAvg },
+    after: { quantity: inv.quantity!, averagePrice: inv.averagePrice! }
+  });
+
   saveData(data);
   return inv;
 };
@@ -222,7 +188,9 @@ export const deleteInvestment = (id: string) => {
 // -------------------------
 // PROPERTIES
 // -------------------------
-export const addProperty = (property: Omit<Property, 'id'>): Property => {
+export const addProperty = (
+  property: Omit<Property, "id">
+): Property => {
   return { ...property, id: generateId() };
 };
 
@@ -235,7 +203,7 @@ export const deleteProperty = (id: string) => {
 // -------------------------
 // DEBTS
 // -------------------------
-export const addDebt = (debt: Omit<Debt, 'id'>): Debt => {
+export const addDebt = (debt: Omit<Debt, "id">): Debt => {
   return { ...debt, id: generateId() };
 };
 
@@ -250,11 +218,16 @@ export const deleteDebt = (id: string) => {
 // -------------------------
 export const addCustomCategory = (category: string) => {
   try {
-    const list = JSON.parse(localStorage.getItem('customCategories') || '[]') as string[];
+    const list = JSON.parse(
+      localStorage.getItem("customCategories") || "[]"
+    );
     list.push(category);
-    localStorage.setItem('customCategories', JSON.stringify(list));
+    localStorage.setItem(
+      "customCategories",
+      JSON.stringify(list)
+    );
   } catch (e) {
-    console.error('Erro ao salvar categoria:', e);
+    console.error("Erro ao salvar categoria:", e);
   }
 };
 
@@ -268,9 +241,12 @@ export const getCreditCards = () => loadData().creditCards;
 export const getInvestments = () => loadData().investments;
 export const getProperties = () => loadData().properties;
 export const getDebts = () => loadData().debts;
+
 export const getCustomCategories = (): string[] => {
   try {
-    return JSON.parse(localStorage.getItem('customCategories') || '[]');
+    return JSON.parse(
+      localStorage.getItem("customCategories") || "[]"
+    );
   } catch {
     return [];
   }
