@@ -112,12 +112,12 @@ export const deleteCreditCard = (id: string) => {
 // INVESTMENTS
 // -------------------------
 export const addInvestment = (
-  investment: Omit<Investment, "id">
+  investment: Omit<Investment, "id" | "history">
 ): Investment => {
   return {
     ...investment,
     id: generateId(),
-    history: investment.history ?? []
+    history: [] // agora sempre cria o histórico corretamente
   };
 };
 
@@ -155,7 +155,6 @@ export const addInvestmentMovement = (
   if (type === "SELL") {
     const newQty = Math.max(oldQty - qty, 0);
     inv.quantity = newQty;
-
     inv.currentPrice = price;
   }
 
@@ -164,7 +163,7 @@ export const addInvestmentMovement = (
     inv.currentPrice = price;
   }
 
-  // HISTÓRICO DO MOVIMENTO
+  // HISTÓRICO
   inv.history.push({
     type,
     quantity: qty,
