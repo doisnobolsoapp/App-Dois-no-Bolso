@@ -89,7 +89,7 @@ export interface Account {
   type: string;
   initialBalance: number;
   institution?: string;
-  color?: string; // <- NECESSÁRIO PARA A BankList
+  color?: string;
 }
 
 // ------------------------------------
@@ -152,6 +152,8 @@ export interface Investment {
   quantity: number;
   averagePrice: number;
   currentPrice: number;
+
+  purchaseDate: string; // <- ADICIONADO (necessário no InvestmentDashboard)
 
   history?: InvestmentMovement[];
 }
