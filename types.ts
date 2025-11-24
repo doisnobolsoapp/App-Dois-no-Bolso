@@ -89,7 +89,7 @@ export interface Account {
   type: string;
   initialBalance: number;
   institution?: string;
-  color?: string;
+  color?: string; // <- NECESSÁRIO PARA A BankList
 }
 
 // ------------------------------------
