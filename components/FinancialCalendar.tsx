@@ -42,7 +42,7 @@ export const FinancialCalendar: React.FC<FinancialCalendarProps> = ({ data, onAd
   const monthTransactions = useMemo(() => {
     return data.transactions.filter(t => {
       // Only expenses/loans show as bills
-      if (t.type !== "expense" && t.type !== TransactionType.LOAN) return false;
+      if (t.type !== "expense" && t.type !== "loan") return false;
       
       // Date check (Use Due Date if available, otherwise Transaction Date)
       const dateStr = t.dueDate || t.date;
@@ -131,7 +131,7 @@ export const FinancialCalendar: React.FC<FinancialCalendarProps> = ({ data, onAd
 
   const selectedDateTransactions = useMemo(() => {
       if (!selectedDate) return [];
-      return data.transactions.filter(t => (t.dueDate || t.date) === selectedDate && (t.type === "expense" || t.type === TransactionType.LOAN));
+      return data.transactions.filter(t => (t.dueDate || t.date) === selectedDate && (t.type === "expense" || t.type === "loan"));
   }, [selectedDate, data.transactions]);
 
   return (
