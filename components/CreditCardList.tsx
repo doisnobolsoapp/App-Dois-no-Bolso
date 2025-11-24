@@ -29,6 +29,8 @@ export const CreditCardList: React.FC<CreditCardListProps> = ({ cards, onAddCred
       onAddCreditCard({
         name: formName,
         limit: limit
+        dueDate: "2025-01-01",      // ou outra data padrão
+  currentBalance: 0
       });
     }
 
