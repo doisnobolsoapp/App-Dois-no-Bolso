@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { AppData, Transaction } from '../types';
 import { TRANSACTION_TYPES_LABELS, CATEGORY_OPTIONS, PAYMENT_METHOD_LABELS } from '../constants';
-import { Trash2, Plus, CreditCard, Landmark, Tag, X } from 'lucide-react';
+import { Trash2, Plus, CreditCard, Landmark, Tag, X, Filter, Calendar } from 'lucide-react';
 
 interface TransactionListProps {
   data: AppData;
@@ -14,6 +14,9 @@ interface TransactionListProps {
 export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTransaction, onAddMultipleTransactions, onDeleteTransaction, onAddCategory }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filterType, setFilterType] = useState<string>('ALL');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [filterCategory, setFilterCategory] = useState<string>('all');
   
   // Form State
   const [formType, setFormType] = useState<string>('expense');
@@ -36,6 +39,106 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
   const allCategories = useMemo(() => {
       return [...CATEGORY_OPTIONS, ...(data.customCategories || [])];
   }, [data.customCategories]);
+
+  // Gera lista de meses disponíveis
+  const availableMonths = useMemo(() => {
+    const months = data.transactions.map(t => {
+      const date = new Date(t.date);
+      return {
+        year: date.getFullYear(),
+        month: date.getMonth()
+      };
+    });
+
+    const uniqueMonths = Array.from(new Set(months.map(m => `${m.year}-${m.month}`)))
+      .map(str => {
+        const [year, month] = str.split('-').map(Number);
+        return { year, month };
+      })
+      .sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year;
+        return b.month - a.month;
+      });
+
+    return uniqueMonths;
+  }, [data.transactions]);
+
+  // Filtra e organiza transações
+  const filteredTransactions = useMemo(() => {
+    let filtered = data.transactions;
+
+    // Filtro por tipo
+    if (filterType !== 'ALL') {
+      filtered = filtered.filter(t => t.type === filterType);
+    }
+
+    // Filtro por mês/ano
+    if (selectedMonth && selectedYear) {
+      filtered = filtered.filter(t => {
+        const date = new Date(t.date);
+        return date.getMonth() === parseInt(selectedMonth) && 
+               date.getFullYear() === parseInt(selectedYear);
+      });
+    }
+
+    // Filtro por categoria
+    if (filterCategory !== 'all') {
+      filtered = filtered.filter(t => t.category === filterCategory);
+    }
+
+    // Ordena por data (mais recente primeiro)
+    return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [data.transactions, filterType, selectedMonth, selectedYear, filterCategory]);
+
+  // Calcula totais
+  const totals = useMemo(() => {
+    return filteredTransactions.reduce(
+      (acc, t) => {
+        if (t.type === 'income') {
+          acc.income += t.amount;
+        } else {
+          acc.expense += t.amount;
+        }
+        acc.balance = acc.income - acc.expense;
+        return acc;
+      },
+      { income: 0, expense: 0, balance: 0 }
+    );
+  }, [filteredTransactions]);
+
+  // Categorias únicas para filtro
+  const categoriesForFilter = useMemo(() => {
+    const cats = Array.from(new Set(data.transactions.map(t => t.category)));
+    return cats.sort();
+  }, [data.transactions]);
+
+  // Anos disponíveis
+  const availableYears = useMemo(() => {
+    const years = Array.from(new Set(data.transactions.map(t => new Date(t.date).getFullYear())));
+    return years.sort((a, b) => b - a);
+  }, [data.transactions]);
+
+  const getMonthName = (monthIndex: number) => {
+    const months = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return months[monthIndex];
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  const clearFilters = () => {
+    setFilterType('ALL');
+    setSelectedMonth('');
+    setSelectedYear(new Date().getFullYear().toString());
+    setFilterCategory('all');
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,10 +206,6 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
     setIsCreatingCategory(false);
   };
 
-  const filteredTransactions = data.transactions
-    .filter(t => filterType === 'ALL' ? true : t.type === filterType)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
   return (
     <div className="h-full flex flex-col pb-20">
       <div className="flex justify-between items-center mb-6">
@@ -120,23 +219,133 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        <button 
-          onClick={() => setFilterType('ALL')}
-          className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap ${filterType === 'ALL' ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}
-        >
-          Todas
-        </button>
-        {Object.entries(TRANSACTION_TYPES_LABELS).map(([key, label]) => (
-          <button 
-            key={key}
-            onClick={() => setFilterType(key)}
-            className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap ${filterType === key ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}
+      {/* Filtros Avançados */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6">
+        <div className="flex items-center gap-4 mb-4">
+          <Filter size={20} className="text-slate-600" />
+          <h3 className="text-lg font-semibold text-slate-800">Filtros</h3>
+          <button
+            onClick={clearFilters}
+            className="ml-auto text-sm text-slate-500 hover:text-slate-700"
           >
-            {label}
+            Limpar filtros
           </button>
-        ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Filtro por Mês/Ano */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Período
+            </label>
+            <div className="flex gap-2">
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500"
+              >
+                <option value="">Todos os anos</option>
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500"
+                disabled={!selectedYear}
+              >
+                <option value="">Todos os meses</option>
+                {availableMonths
+                  .filter(m => m.year === parseInt(selectedYear))
+                  .map(({ month }) => (
+                    <option key={month} value={month}>
+                      {getMonthName(month)}
+                    </option>
+                  ))
+                }
+              </select>
+            </div>
+          </div>
+
+          {/* Filtro por Tipo */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Tipo
+            </label>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500"
+            >
+              <option value="ALL">Todos os tipos</option>
+              {Object.entries(TRANSACTION_TYPES_LABELS).map(([key, label]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Filtro por Categoria */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Categoria
+            </label>
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500"
+            >
+              <option value="all">Todas as categorias</option>
+              {categoriesForFilter.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Resumo */}
+          <div className="bg-slate-50 rounded-lg p-3">
+            <div className="text-sm text-slate-600">
+              {filteredTransactions.length} transações
+            </div>
+            <div className={`text-lg font-semibold ${
+              totals.balance >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {formatCurrency(totals.balance)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Cards de Resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+          <div className="text-sm text-green-600 font-medium">Receitas</div>
+          <div className="text-2xl font-bold text-green-700">
+            {formatCurrency(totals.income)}
+          </div>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="text-sm text-red-600 font-medium">Despesas</div>
+          <div className="text-2xl font-bold text-red-700">
+            {formatCurrency(totals.expense)}
+          </div>
+        </div>
+        <div className={`border rounded-xl p-4 ${
+          totals.balance >= 0 
+            ? 'bg-blue-50 border-blue-200' 
+            : 'bg-orange-50 border-orange-200'
+        }`}>
+          <div className={`text-sm font-medium ${
+            totals.balance >= 0 ? 'text-blue-600' : 'text-orange-600'
+          }`}>
+            Saldo do Período
+          </div>
+          <div className={`text-2xl font-bold ${
+            totals.balance >= 0 ? 'text-blue-700' : 'text-orange-700'
+          }`}>
+            {formatCurrency(totals.balance)}
+          </div>
+        </div>
       </div>
 
       {/* List */}
@@ -154,7 +363,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
           <tbody className="divide-y divide-slate-50">
             {filteredTransactions.length === 0 && (
                <tr>
-                 <td colSpan={5} className="px-6 py-10 text-center text-slate-400">Nenhuma transação encontrada.</td>
+                 <td colSpan={5} className="px-6 py-10 text-center text-slate-400">
+                   <Calendar size={48} className="mx-auto mb-4 text-slate-300" />
+                   <p>Nenhuma transação encontrada</p>
+                   <p className="text-sm mt-1">Tente ajustar os filtros ou adicionar uma nova transação</p>
+                 </td>
                </tr>
             )}
             {filteredTransactions.map(t => (
@@ -180,7 +393,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
                   </div>
                 </td>
                 <td className={`px-6 py-4 text-right font-bold whitespace-nowrap ${t.type === 'income' ? 'text-green-600' : 'text-slate-800'}`}>
-                  {t.type === 'income' ? '+' : '-'} R$ {t.amount.toFixed(2)}
+                  {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
                 </td>
                 <td className="px-6 py-4 text-center">
                   <button onClick={() => onDeleteTransaction(t.id)} className="text-red-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50">
@@ -193,7 +406,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ data, onAddTra
         </table>
       </div>
 
-      {/* Add Modal */}
+      {/* Add Modal - Mantido igual ao seu código original */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
