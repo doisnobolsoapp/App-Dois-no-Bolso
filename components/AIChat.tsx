@@ -18,7 +18,7 @@ type Message = {
   timestamp: Date;
 };
 
-export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoal, onAddInvestment }) => {
+export const AIChat: React.FC<AIChatProps> = ({ onAddTransaction, onAddGoal, onAddInvestment }) => {
   const [messages, setMessages] = useState<Message[]>([
     { 
       id: '1', 
