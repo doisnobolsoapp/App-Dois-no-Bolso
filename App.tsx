@@ -253,7 +253,7 @@ function App(): JSX.Element {
     }
   };
 
-  // Investments
+  // Investments - CORRIGIDO: apenas 1 argumento
   const handleAddInvestment = (investmentData: any) => {
     try {
       const newInvestment = addInvestment(investmentData);
@@ -267,9 +267,9 @@ function App(): JSX.Element {
     }
   };
 
-  const handleAddInvestmentMovement = (invId: string, movementData?: any) => {
+  const handleAddInvestmentMovement = (invId: string) => {
     try {
-      const updatedInv = addInvestmentMovement(invId, movementData);
+      const updatedInv = addInvestmentMovement(invId); // APENAS 1 ARGUMENTO
       if (updatedInv) {
         setData(prev => ({ 
           ...prev, 
@@ -480,11 +480,11 @@ function App(): JSX.Element {
       <OnlineStatus />
       <PWAInstallPrompt />
 
+      {/* CORRIGIDO: Removida a prop user */}
       <Layout 
         currentView={currentView} 
         onViewChange={setCurrentView} 
         onLogout={handleLogout}
-        user={user}
       >
         {renderCurrentView()}
 
