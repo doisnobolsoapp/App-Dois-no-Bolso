@@ -12,8 +12,7 @@ import {
   X,
   LogOut,
   Wallet,
-  Banknote,
-  Building
+  Banknote
 } from 'lucide-react';
 import { ViewState } from '../types';
 
@@ -70,9 +69,9 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onViewChange, onLogout, ch
         { 
           id: 'mortgages' as ViewState, 
           label: 'Hipotecas', 
-          icon: Building,
+          icon: Landmark,
           subItems: [
-            { id: 'houseMortgage' as ViewState, label: 'Hipoteca da Casa', icon: Building }
+            { id: 'houseMortgage' as ViewState, label: 'Hipoteca da Casa', icon: Home }
           ]
         }
       ]
