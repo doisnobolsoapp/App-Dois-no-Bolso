@@ -1,350 +1,437 @@
-import React, { useMemo } from 'react';
-import { AppData, ViewState } from '../types';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, TrendingDown, Wallet, Target, PieChart, Calendar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+// src/components/Dashboard.tsx
+import { useState, useMemo } from 'react';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  CreditCard, 
+  Calendar,
+  ArrowUpRight,
+  ArrowDownRight,
+  PieChart,
+  BarChart3
+} from 'lucide-react';
+import { AppData, ViewState, Transaction } from '../types';
 
 interface DashboardProps {
   data: AppData;
   onViewChange: (view: ViewState) => void;
 }
 
+interface CashFlowData {
+  period: string;
+  income: number;
+  expenses: number;
+  balance: number;
+}
+
 export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
-  // CÁLCULOS CORRIGIDOS PARA PERÍODOS ESPECÍFICOS
-  const periodSummary = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    
-    // Mês atual
-    const currentMonthTransactions = data.transactions.filter(t => {
-      const transactionDate = new Date(t.date);
+  const [cashFlowRange, setCashFlowRange] = useState<'last6' | 'next3' | 'next6' | 'next12'>('last6');
+
+  // Calcular totais
+  const totals = useMemo(() => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    const currentMonthTransactions = data.transactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
       return transactionDate.getMonth() === currentMonth && 
              transactionDate.getFullYear() === currentYear;
     });
 
-    // Semestre atual (últimos 6 meses)
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(now.getMonth() - 5);
-    
-    const semesterTransactions = data.transactions.filter(t => {
-      const transactionDate = new Date(t.date);
-      return transactionDate >= sixMonthsAgo && transactionDate <= now;
-    });
+    const income = currentMonthTransactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
 
-    // Ano atual
-    const yearTransactions = data.transactions.filter(t => {
-      const transactionDate = new Date(t.date);
-      return transactionDate.getFullYear() === currentYear;
-    });
+    const expenses = currentMonthTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
 
-    // Cálculos para cada período
-    const calculateSummary = (transactions: typeof data.transactions) => {
-      const income = transactions
-        .filter(t => t.type === 'income')
-        .reduce((acc, t) => acc + t.amount, 0);
-      
-      const expense = transactions
-        .filter(t => t.type === 'expense' || t.type === 'loan')
-        .reduce((acc, t) => acc + t.amount, 0);
-        
-      const investments = transactions
-        .filter(t => t.type === 'investment')
-        .reduce((acc, t) => acc + t.amount, 0);
-
-      const balance = income - expense - investments;
-
-      return { income, expense, investments, balance };
-    };
+    const totalBalance = data.accounts.reduce((sum, acc) => sum + acc.balance, 0);
+    const creditCardBalance = data.creditCards.reduce((sum, card) => sum + card.balance, 0);
 
     return {
-      currentMonth: calculateSummary(currentMonthTransactions),
-      semester: calculateSummary(semesterTransactions),
-      currentYear: calculateSummary(yearTransactions),
-      overall: calculateSummary(data.transactions)
+      income,
+      expenses,
+      balance: totalBalance,
+      creditCardBalance: Math.abs(creditCardBalance),
+      netWorth: totalBalance + creditCardBalance
     };
-  }, [data.transactions]);
+  }, [data.transactions, data.accounts, data.creditCards]);
 
-  // FLUXO DE CAIXA CORRIGIDO
-  const cashFlowData = useMemo(() => {
-    const last6Months: { month: string; income: number; expense: number; net: number }[] = [];
-    
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date();
-      date.setMonth(date.getMonth() - i);
-      const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
-      const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  // Calcular fluxo de caixa baseado no período selecionado
+  const cashFlowData = useMemo((): CashFlowData[] => {
+    const today = new Date();
+    const months: CashFlowData[] = [];
+
+    if (cashFlowRange === 'last6') {
+      // Últimos 6 meses
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const monthTransactions = data.transactions.filter(transaction => {
+          const transactionDate = new Date(transaction.date);
+          return transactionDate.getMonth() === date.getMonth() && 
+                 transactionDate.getFullYear() === date.getFullYear();
+        });
+
+        const income = monthTransactions
+          .filter(t => t.type === 'income')
+          .reduce((sum, t) => sum + t.amount, 0);
+
+        const expenses = monthTransactions
+          .filter(t => t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0);
+
+        months.push({
+          period: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
+          income,
+          expenses,
+          balance: income - expenses
+        });
+      }
+    } else {
+      // Próximos meses (previsão)
+      const monthCount = cashFlowRange === 'next3' ? 3 : cashFlowRange === 'next6' ? 6 : 12;
       
-      const monthTransactions = data.transactions.filter(t => {
-        const transactionDate = new Date(t.date);
-        return transactionDate >= monthStart && transactionDate <= monthEnd;
+      // Calcular média de receitas e despesas dos últimos 3 meses para previsão
+      const last3Months = data.transactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+        return transactionDate >= threeMonthsAgo;
       });
 
-      const monthIncome = monthTransactions
+      const avgIncome = last3Months
         .filter(t => t.type === 'income')
-        .reduce((acc, t) => acc + t.amount, 0);
+        .reduce((sum, t) => sum + t.amount, 0) / 3;
+
+      const avgExpenses = last3Months
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0) / 3;
+
+      for (let i = 1; i <= monthCount; i++) {
+        const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
         
-      const monthExpense = monthTransactions
-        .filter(t => t.type === 'expense' || t.type === 'loan')
-        .reduce((acc, t) => acc + t.amount, 0);
-
-      last6Months.push({
-        month: date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
-        income: monthIncome,
-        expense: monthExpense,
-        net: monthIncome - monthExpense
-      });
+        // Aplicar uma variação aleatória de ±10% para simular previsão mais realista
+        const variation = 0.9 + Math.random() * 0.2;
+        
+        months.push({
+          period: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
+          income: avgIncome * variation,
+          expenses: avgExpenses * variation,
+          balance: (avgIncome - avgExpenses) * variation
+        });
+      }
     }
-    
-    return last6Months;
-  }, [data.transactions]);
 
-  const categoryData = useMemo(() => {
-    const categoryMap = new Map<string, number>();
-    
-    data.transactions
-      .filter(t => t.type === 'expense')
-      .forEach(t => {
-        categoryMap.set(t.category, (categoryMap.get(t.category) || 0) + t.amount);
-      });
-    
-    return Array.from(categoryMap.entries())
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
+    return months;
+  }, [data.transactions, cashFlowRange]);
+
+  // Calcular categorias de despesas
+  const expenseCategories = useMemo(() => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    const currentMonthExpenses = data.transactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
+      return transactionDate.getMonth() === currentMonth && 
+             transactionDate.getFullYear() === currentYear &&
+             transaction.type === 'expense';
+    });
+
+    const categories: { [key: string]: number } = {};
+    currentMonthExpenses.forEach(transaction => {
+      const category = transaction.category || 'Outros';
+      categories[category] = (categories[category] || 0) + transaction.amount;
+    });
+
+    return Object.entries(categories)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)
       .slice(0, 5);
   }, [data.transactions]);
 
-  // STATS ATUALIZADOS COM OS NOVOS PERÍODOS
-  const quickStats = [
-    {
-      label: 'Saldo Mês Atual',
-      value: periodSummary.currentMonth.balance,
-      trend: periodSummary.currentMonth.balance >= 0 ? 'up' : 'down',
-      icon: Wallet,
-      color: periodSummary.currentMonth.balance >= 0 ? 'text-green-600' : 'text-red-600',
-      bgColor: periodSummary.currentMonth.balance >= 0 ? 'bg-green-100' : 'bg-red-100'
-    },
-    {
-      label: 'Receitas Mês',
-      value: periodSummary.currentMonth.income,
-      trend: 'up',
-      icon: TrendingUp,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
-    },
-    {
-      label: 'Despesas Mês',
-      value: periodSummary.currentMonth.expense,
-      trend: 'down',
-      icon: TrendingDown,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100'
-    },
-    {
-      label: 'Fluxo Semestre',
-      value: periodSummary.semester.balance,
-      trend: periodSummary.semester.balance >= 0 ? 'up' : 'down',
-      icon: Target,
-      color: periodSummary.semester.balance >= 0 ? 'text-brand-600' : 'text-red-600',
-      bgColor: periodSummary.semester.balance >= 0 ? 'bg-brand-100' : 'bg-red-100'
-    }
-  ];
+  const StatCard = ({ 
+    title, 
+    value, 
+    subtitle, 
+    icon: Icon, 
+    trend, 
+    onClick 
+  }: { 
+    title: string;
+    value: string;
+    subtitle?: string;
+    icon: any;
+    trend?: 'up' | 'down' | 'neutral';
+    onClick?: () => void;
+  }) => (
+    <div 
+      className={`bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow ${
+        onClick ? 'cursor-pointer hover:border-blue-200' : ''
+      }`}
+      onClick={onClick}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className={`p-2 rounded-lg ${
+          trend === 'up' ? 'bg-green-100 text-green-600' :
+          trend === 'down' ? 'bg-red-100 text-red-600' :
+          'bg-blue-100 text-blue-600'
+        }`}>
+          <Icon size={20} />
+        </div>
+        {trend && (
+          <div className={`flex items-center text-sm font-medium ${
+            trend === 'up' ? 'text-green-600' : 'text-red-600'
+          }`}>
+            {trend === 'up' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+          </div>
+        )}
+      </div>
+      <h3 className="text-2xl font-bold text-slate-800 mb-1">{value}</h3>
+      <p className="text-slate-600 font-medium text-sm">{title}</p>
+      {subtitle && (
+        <p className="text-slate-500 text-xs mt-1">{subtitle}</p>
+      )}
+    </div>
+  );
 
-  // NOVA SEÇÃO: RESUMO POR PERÍODO
-  const periodStats = [
-    {
-      label: 'Mês Atual',
-      income: periodSummary.currentMonth.income,
-      expense: periodSummary.currentMonth.expense,
-      balance: periodSummary.currentMonth.balance
-    },
-    {
-      label: 'Últimos 6 Meses',
-      income: periodSummary.semester.income,
-      expense: periodSummary.semester.expense,
-      balance: periodSummary.semester.balance
-    },
-    {
-      label: 'Ano Atual',
-      income: periodSummary.currentYear.income,
-      expense: periodSummary.currentYear.expense,
-      balance: periodSummary.currentYear.balance
-    }
-  ];
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
 
   return (
-    <div className="pb-20 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Dashboard Financeiro</h2>
-          <p className="text-slate-500 text-sm">Visão geral da sua situação financeira</p>
+          <h1 className="text-2xl font-bold text-slate-800">Visão Geral</h1>
+          <p className="text-slate-600">Resumo financeiro do seu mês atual</p>
         </div>
-        <div className="text-sm text-slate-500">
-          Atualizado em {new Date().toLocaleDateString('pt-BR')}
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => onViewChange('transactions')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            Nova Transação
+          </button>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {quickStats.map((stat, index) => (
-          <div key={index} className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-            <div className="flex items-center justify-between">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Receitas do Mês"
+          value={formatCurrency(totals.income)}
+          icon={TrendingUp}
+          trend="up"
+          onClick={() => onViewChange('transactions')}
+        />
+        <StatCard
+          title="Despesas do Mês"
+          value={formatCurrency(totals.expenses)}
+          icon={TrendingDown}
+          trend="down"
+          onClick={() => onViewChange('transactions')}
+        />
+        <StatCard
+          title="Saldo Total"
+          value={formatCurrency(totals.balance)}
+          subtitle="Contas bancárias"
+          icon={DollarSign}
+          trend={totals.balance >= 0 ? 'up' : 'down'}
+          onClick={() => onViewChange('accountSettings')}
+        />
+        <StatCard
+          title="Cartões de Crédito"
+          value={formatCurrency(totals.creditCardBalance)}
+          subtitle="Fatura em aberto"
+          icon={CreditCard}
+          trend="down"
+          onClick={() => onViewChange('cards')}
+        />
+      </div>
+
+      {/* Cash Flow Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
               <div>
-                <p className="text-slate-500 text-sm">{stat.label}</p>
-                <p className={`text-2xl font-bold ${stat.color}`}>
-                  {typeof stat.value === 'number' 
-                    ? `R$ ${Math.abs(stat.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                    : stat.value
-                  }
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <BarChart3 size={20} />
+                  Fluxo de Caixa
+                </h2>
+                <p className="text-slate-600 text-sm">
+                  {cashFlowRange === 'last6' ? 'Últimos 6 meses' : 
+                   cashFlowRange === 'next3' ? 'Previsão próximos 3 meses' :
+                   cashFlowRange === 'next6' ? 'Previsão próximos 6 meses' : 
+                   'Previsão próximos 12 meses'}
                 </p>
               </div>
-              <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                <stat.icon className={stat.color} size={24} />
+              <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+                <button
+                  onClick={() => setCashFlowRange('last6')}
+                  className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                    cashFlowRange === 'last6'
+                      ? 'bg-white text-slate-800 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-800'
+                  }`}
+                >
+                  Últimos 6M
+                </button>
+                <button
+                  onClick={() => setCashFlowRange('next3')}
+                  className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                    cashFlowRange === 'next3'
+                      ? 'bg-white text-slate-800 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-800'
+                  }`}
+                >
+                  Próximos 3M
+                </button>
+                <button
+                  onClick={() => setCashFlowRange('next6')}
+                  className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                    cashFlowRange === 'next6'
+                      ? 'bg-white text-slate-800 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-800'
+                  }`}
+                >
+                  Próximos 6M
+                </button>
+                <button
+                  onClick={() => setCashFlowRange('next12')}
+                  className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                    cashFlowRange === 'next12'
+                      ? 'bg-white text-slate-800 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-800'
+                  }`}
+                >
+                  Próximos 12M
+                </button>
               </div>
             </div>
-            {stat.trend !== 'neutral' && (
-              <div className={`flex items-center mt-2 text-xs ${
-                stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {stat.trend === 'up' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                <span className="ml-1">
-                  {stat.trend === 'up' ? 'Positivo' : 'Negativo'}
-                </span>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
 
-      {/* NOVA SEÇÃO: FLUXO POR PERÍODO */}
-      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-        <h3 className="font-bold text-lg text-slate-800 mb-6">Resumo do Fluxo de Caixa</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {periodStats.map((period, index) => (
-            <div key={index} className="border border-slate-200 rounded-lg p-4">
-              <h4 className="font-semibold text-slate-800 mb-3">{period.label}</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Receitas:</span>
-                  <span className="text-green-600 font-medium">
-                    R$ {period.income.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Despesas:</span>
-                  <span className="text-red-600 font-medium">
-                    R$ {period.expense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm border-t border-slate-100 pt-2">
-                  <span className="text-slate-800 font-medium">Saldo:</span>
-                  <span className={`font-bold ${
-                    period.balance >= 0 ? 'text-green-600' : 'text-red-600'
+            <div className="space-y-4">
+              {cashFlowData.map((month, index) => (
+                <div key={index} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg transition-colors">
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-16 text-sm font-medium text-slate-600">
+                      {month.period}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1 text-green-600">
+                          <ArrowUpRight size={14} />
+                          <span>{formatCurrency(month.income)}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-red-600">
+                          <ArrowDownRight size={14} />
+                          <span>{formatCurrency(month.expenses)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`text-sm font-bold ${
+                    month.balance >= 0 ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    R$ {period.balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    {formatCurrency(month.balance)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Expense Categories */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-6">
+            <PieChart size={20} />
+            Top Despesas do Mês
+          </h2>
+          
+          <div className="space-y-4">
+            {expenseCategories.length > 0 ? (
+              expenseCategories.map((category, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-3 h-3 rounded-full"
+                      style={{
+                        backgroundColor: [
+                          '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6'
+                        ][index % 5]
+                      }}
+                    />
+                    <span className="text-sm font-medium text-slate-700">
+                      {category.name}
+                    </span>
+                  </div>
+                  <span className="text-sm font-bold text-slate-800">
+                    {formatCurrency(category.amount)}
                   </span>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Charts - Mantido igual mas agora funcionando */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Cash Flow Chart */}
-        <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-lg text-slate-800">Fluxo de Caixa (Últimos 6 meses)</h3>
-            <Calendar className="text-slate-400" size={20} />
-          </div>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={cashFlowData}>
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR')}`, '']}
-                  labelFormatter={(label) => `Mês: ${label}`}
-                />
-                <Bar dataKey="income" fill="#10b981" name="Receitas" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expense" fill="#ef4444" name="Despesas" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Categories Chart */}
-        <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-lg text-slate-800">Top Categorias de Despesas</h3>
-            <PieChart className="text-slate-400" size={20} />
-          </div>
-          <div className="h-80">
-            {categoryData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={categoryData}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR')}`, '']}
-                  />
-                  <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              ))
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400">
-                Sem dados de despesas para exibir
+              <div className="text-center py-8 text-slate-500">
+                <PieChart size={32} className="mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Nenhuma despesa este mês</p>
               </div>
             )}
           </div>
+
+          {expenseCategories.length > 0 && (
+            <button 
+              onClick={() => onViewChange('reports')}
+              className="w-full mt-6 py-2 text-sm text-blue-600 font-medium hover:bg-blue-50 rounded-lg transition-colors"
+            >
+              Ver relatório completo
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Quick Actions - CORRIGIDO */}
-      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-        <h3 className="font-bold text-lg text-slate-800 mb-4">Ações Rápidas</h3>
+      {/* Quick Actions */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <h2 className="text-lg font-bold text-slate-800 mb-4">Ações Rápidas</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <button 
             onClick={() => onViewChange('transactions')}
-            className="p-4 bg-slate-50 hover:bg-slate-100 rounded-lg text-center transition-colors"
+            className="p-4 text-left border border-slate-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
           >
-            <div className="bg-brand-100 p-2 rounded-lg inline-block mb-2">
-              <TrendingUp className="text-brand-600" size={20} />
-            </div>
-            <p className="font-medium text-slate-800">Nova Transação</p>
+            <DollarSign size={20} className="text-blue-600 mb-2" />
+            <div className="font-medium text-slate-800">Nova Transação</div>
+            <div className="text-sm text-slate-600">Registrar entrada/saída</div>
           </button>
           
           <button 
             onClick={() => onViewChange('goals')}
-            className="p-4 bg-slate-50 hover:bg-slate-100 rounded-lg text-center transition-colors"
+            className="p-4 text-left border border-slate-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors"
           >
-            <div className="bg-green-100 p-2 rounded-lg inline-block mb-2">
-              <Target className="text-green-600" size={20} />
-            </div>
-            <p className="font-medium text-slate-800">Ver Metas</p>
-          </button>
-          
-          <button 
-            onClick={() => onViewChange('reports')}
-            className="p-4 bg-slate-50 hover:bg-slate-100 rounded-lg text-center transition-colors"
-          >
-            <div className="bg-blue-100 p-2 rounded-lg inline-block mb-2">
-              <PieChart className="text-blue-600" size={20} />
-            </div>
-            <p className="font-medium text-slate-800">Relatórios</p>
+            <TrendingUp size={20} className="text-green-600 mb-2" />
+            <div className="font-medium text-slate-800">Metas</div>
+            <div className="text-sm text-slate-600">Acompanhar objetivos</div>
           </button>
           
           <button 
             onClick={() => onViewChange('calendar')}
-            className="p-4 bg-slate-50 hover:bg-slate-100 rounded-lg text-center transition-colors"
+            className="p-4 text-left border border-slate-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors"
           >
-            <div className="bg-purple-100 p-2 rounded-lg inline-block mb-2">
-              <Calendar className="text-purple-600" size={20} />
-            </div>
-            <p className="font-medium text-slate-800">Calendário</p>
+            <Calendar size={20} className="text-purple-600 mb-2" />
+            <div className="font-medium text-slate-800">Calendário</div>
+            <div className="text-sm text-slate-600">Agendar pagamentos</div>
+          </button>
+          
+          <button 
+            onClick={() => onViewChange('accountSettings')}
+            className="p-4 text-left border border-slate-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-colors"
+          >
+            <CreditCard size={20} className="text-orange-600 mb-2" />
+            <div className="font-medium text-slate-800">Contas</div>
+            <div className="text-sm text-slate-600">Gerenciar contas</div>
           </button>
         </div>
       </div>
