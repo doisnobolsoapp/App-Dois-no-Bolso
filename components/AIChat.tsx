@@ -112,22 +112,23 @@ Use as funções disponíveis para adicionar transações, metas ou investimento
 Responda em português brasileiro. 
 Use as funções disponíveis quando o usuário pedir para adicionar transações, metas ou investimentos.`;
 
+      console.log('🟡 Iniciando chamada da IA...');
+      
       // Chama a API da OpenAI
       const result = await callOpenAIWithTools(inputMessage, systemPrompt, userContext);
       
-      console.log('Resposta completa da OpenAI:', result); // Para debug
+      console.log('🟢 Resposta recebida:', result);
 
       // Processa a resposta usando a função auxiliar
       const processedResponse = processOpenAIResponse(result);
+      console.log('🟢 Resposta processada:', processedResponse);
       
       if (processedResponse.toolCall) {
-        // Caso 1: A IA quer chamar uma função
-        const { name, arguments: args } = processedResponse.toolCall;
+        console.log('🛠️ Executando tool call:', processedResponse.toolCall);
         
-        // Executa a função localmente
+        const { name, arguments: args } = processedResponse.toolCall;
         const toolResultText = handleToolCall(name, args);
         
-        // Adiciona mensagem de confirmação do assistant
         const assistantMsg: Message = { 
           id: (Date.now() + 1).toString(), 
           content: toolResultText, 
@@ -137,7 +138,6 @@ Use as funções disponíveis quando o usuário pedir para adicionar transaçõe
         setMessages(prev => [...prev, assistantMsg]);
         
       } else if (processedResponse.content) {
-        // Caso 2: Resposta textual normal
         const assistantMsg: Message = { 
           id: (Date.now() + 1).toString(), 
           content: processedResponse.content, 
@@ -146,14 +146,14 @@ Use as funções disponíveis quando o usuário pedir para adicionar transaçõe
         };
         setMessages(prev => [...prev, assistantMsg]);
       } else {
-        throw new Error('Resposta da OpenAI sem conteúdo válido');
+        throw new Error('Resposta da IA sem conteúdo válido');
       }
       
     } catch (err) {
-      console.error('Erro no handleSend:', err);
+      console.error('🔴 Erro no handleSend:', err);
       const errorMsg: Message = { 
         id: (Date.now() + 1).toString(), 
-        content: '❌ Erro ao contatar a IA. Verifique sua conexão e a chave da API OpenAI.', 
+        content: '❌ Erro ao processar sua solicitação. Tente novamente.', 
         role: 'assistant', 
         timestamp: new Date() 
       };
