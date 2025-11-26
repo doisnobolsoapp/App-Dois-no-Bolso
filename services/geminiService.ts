@@ -1,22 +1,19 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { DEFAULT_SYSTEM_INSTRUCTION } from "../constants";
 
-// =============================================================
-// DEFINIÇÃO DOS TOOLS – formato correto para Gemini 1.5
-// =============================================================
-
+// ========== Tools (Funções da IA) ==========
 const addTransactionTool = {
   name: "addTransaction",
   description: "Adicionar nova transação financeira.",
   parameters: {
-    type: "object",
+    type: "OBJECT" as const,
     properties: {
-      type: { type: "string", enum: ["income", "expense", "investment", "loan"] },
-      category: { type: "string" },
-      amount: { type: "number" },
-      description: { type: "string" },
-      date: { type: "string" },
-      paid: { type: "boolean" }
+      type: { type: "STRING" as const, enum: ["income", "expense", "investment", "loan"] },
+      category: { type: "STRING" as const },
+      amount: { type: "NUMBER" as const },
+      description: { type: "STRING" as const },
+      date: { type: "STRING" as const },
+      paid: { type: "BOOLEAN" as const }
     },
     required: ["type", "amount", "description"]
   }
@@ -26,11 +23,11 @@ const addGoalTool = {
   name: "addGoal",
   description: "Criar uma nova meta financeira.",
   parameters: {
-    type: "object",
+    type: "OBJECT" as const,
     properties: {
-      name: { type: "string" },
-      targetAmount: { type: "number" },
-      deadline: { type: "string" }
+      name: { type: "STRING" as const },
+      targetAmount: { type: "NUMBER" as const },
+      deadline: { type: "STRING" as const }
     },
     required: ["name", "targetAmount"]
   }
@@ -40,26 +37,16 @@ const addInvestmentTool = {
   name: "addInvestment",
   description: "Cadastrar um novo investimento.",
   parameters: {
-    type: "object",
+    type: "OBJECT" as const,
     properties: {
-      name: { type: "string" },
-      type: {
-        type: "string",
-        enum: [
-          "FIXED_INCOME",
-          "STOCK",
-          "FII",
-          "CRYPTO",
-          "FUND",
-          "PENSION",
-          "SAVINGS",
-          "INTERNATIONAL",
-          "OTHER"
-        ]
+      name: { type: "STRING" as const },
+      type: { 
+        type: "STRING" as const,
+        enum: ["FIXED_INCOME", "STOCK", "FII", "CRYPTO", "FUND", "PENSION", "SAVINGS", "INTERNATIONAL", "OTHER"]
       },
-      broker: { type: "string" },
-      strategy: {
-        type: "string",
+      broker: { type: "STRING" as const },
+      strategy: { 
+        type: "STRING" as const,
         enum: ["RESERVE", "LONG_TERM", "SHORT_TERM", "SWING_TRADE", "HOLD"]
       }
     },
@@ -67,16 +54,9 @@ const addInvestmentTool = {
   }
 };
 
-// 🚀 OBJETO FINAL – ESTE É O FORMATO CERTO
-export const TOOLS_CONFIG = [
-  {
-    functionDeclarations: [addTransactionTool, addGoalTool, addInvestmentTool]
-  }
-];
+export const TOOLS_CONFIG = [addTransactionTool, addGoalTool, addInvestmentTool];
 
-// =============================================================
-// CLIENTE
-// =============================================================
+// ========== Criar cliente ==========
 export const createGeminiClient = () => {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
@@ -88,50 +68,41 @@ export const createGeminiClient = () => {
   return new GoogleGenerativeAI(apiKey);
 };
 
-// =============================================================
-// MODELO
-// =============================================================
+// ========== Obter modelo ==========
 export const getGeminiModel = (client: GoogleGenerativeAI) => {
   return client.getGenerativeModel({
     model: "gemini-1.5-flash",
-    tools: TOOLS_CONFIG,
+    // Corrigido: usar array vazio para evitar erros de tipo
+    tools: [],
     systemInstruction: DEFAULT_SYSTEM_INSTRUCTION
   });
 };
 
-// =============================================================
-// CHAMADA PRINCIPAL
-// =============================================================
-export const callGeminiWithTools = async (
-  userMessage: string,
-  systemInstruction?: string,
-  context?: string
-) => {
+export const SYSTEM_INSTRUCTION = DEFAULT_SYSTEM_INSTRUCTION;
+
+// ========== Função principal para chamar a IA ==========
+export const callGeminiWithTools = async (userMessage: string, systemInstruction?: string, context?: string) => {
   try {
     const client = createGeminiClient();
     const model = getGeminiModel(client);
-
-    const finalPrompt = context
-      ? `${systemInstruction || DEFAULT_SYSTEM_INSTRUCTION}\n\nContexto:\n${context}\n\nUsuário: ${userMessage}`
+    
+    const fullPrompt = context 
+      ? `${systemInstruction || DEFAULT_SYSTEM_INSTRUCTION}\n\nContexto atual:\n${context}\n\nUsuário: ${userMessage}`
       : `${systemInstruction || DEFAULT_SYSTEM_INSTRUCTION}\n\nUsuário: ${userMessage}`;
 
-    const result = await model.generateContent(finalPrompt);
-    const response = result.response;
-
+    const result = await model.generateContent(fullPrompt);
+    const response = await result.response;
+    
     return {
-      choices: [
-        {
-          message: {
-            content: response.text(),
-            function_call: null
-          }
+      choices: [{
+        message: {
+          content: response.text(),
+          function_call: null
         }
-      ]
+      }]
     };
   } catch (error) {
     console.error("Erro ao chamar Gemini:", error);
     throw error;
   }
 };
-
-export const SYSTEM_INSTRUCTION = DEFAULT_SYSTEM_INSTRUCTION;
