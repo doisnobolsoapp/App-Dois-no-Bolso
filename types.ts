@@ -183,17 +183,18 @@ export interface Debt {
 // ------------------------------------
 // VIEW STATE
 // ------------------------------------
-export type ViewState =
-  | "dashboard"
-  | "transactions"
-  | "goals"
-  | "investments"
-  | "balance"
-  | "settings"
-  | "reports"
-  | "calendar"
-  | "banks"
-  | "cards"
-  | "chat";
+export type ViewState = 
+  | 'dashboard'
+  | 'transactions'
+  | 'goals'
+  | 'reports'
+  | 'calendar'
+  | 'banks'
+  | 'cards'
+  | 'investments'
+  | 'balance'
+  | 'chat'
+  | 'settings'
+  | 'accountSettings';
 
 export type Category = string;
