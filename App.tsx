@@ -39,7 +39,7 @@ import {
 
 import { OnlineStatus } from './components/OnlineStatus';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
-import AccountSettings from './components/AccountSettings'; // ADICIONEI AQUI
+import AccountSettings from './components/AccountSettings';
 
 const usePWA = () => {
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
@@ -227,6 +227,25 @@ function App(): JSX.Element {
     }
   };
 
+  // NOVA FUNÇÃO: Atualizar conta
+  const handleUpdateAccount = (accountData: any) => {
+    try {
+      // Primeiro deleta a conta antiga
+      deleteAccount(accountData.id);
+      // Depois adiciona a conta atualizada
+      const updatedAccount = addAccount(accountData);
+      setData(prev => ({
+        ...prev,
+        accounts: prev.accounts.map(acc => 
+          acc.id === accountData.id ? updatedAccount : acc
+        )
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao atualizar conta:', error);
+      throw error;
+    }
+  };
+
   // Credit cards
   const handleAddCreditCard = (cardData: any) => {
     try {
@@ -386,24 +405,22 @@ function App(): JSX.Element {
     );
   }
 
-  // ADICIONEI A FUNÇÃO PARA LIDAR COM ADIÇÃO DE CONTAS NO AccountSettings
+  // FUNÇÃO PARA LIDAR COM ADIÇÃO DE CONTAS NO AccountSettings
   const handleAddAccountFromSettings = (accountData: any) => {
     try {
-      const newAccount = {
-        ...accountData,
-        // Garantir que o saldo seja negativo para passivos
-        balance: accountData.type === 'asset' 
-          ? Math.abs(accountData.balance) 
-          : -Math.abs(accountData.balance)
-      };
-      return handleAddAccount(newAccount);
+      // A função addAccount já deve lidar com a criação do ID e estrutura completa
+      const newAccount = addAccount(accountData);
+      setData(prev => ({ 
+        ...prev, 
+        accounts: [...prev.accounts, newAccount] 
+      }));
     } catch (error) {
       console.error('❌ Erro ao adicionar conta do AccountSettings:', error);
       throw error;
     }
   };
 
-  // Render views - ADICIONEI O accountSettings AQUI
+  // Render views
   const renderCurrentView = () => {
     const viewProps = {
       dashboard: <Dashboard data={data} onViewChange={setCurrentView} />,
@@ -489,15 +506,15 @@ function App(): JSX.Element {
         />
       ),
       settings: <Settings data={data} onDataUpdate={setData} />,
-      // ADICIONEI O AccountSettings AQUI
+      // AccountSettings com todas as props necessárias
       accountSettings: (
         <AccountSettings 
-    accounts={data.accounts}
-    onAddAccount={handleAddAccountFromSettings}
-    onDeleteAccount={handleDeleteAccount}
-    onUpdateAccount={handleUpdateAccount} 
-  />
-)
+          accounts={data.accounts}
+          onAddAccount={handleAddAccountFromSettings}
+          onDeleteAccount={handleDeleteAccount}
+          onUpdateAccount={handleUpdateAccount}
+        />
+      )
     };
 
     return viewProps[currentView] || viewProps.dashboard;
@@ -508,7 +525,6 @@ function App(): JSX.Element {
       <OnlineStatus />
       <PWAInstallPrompt />
 
-      {/* CORREÇÃO: Removida a prop 'user' que não existe no Layout */}
       <Layout 
         currentView={currentView} 
         onViewChange={setCurrentView} 
