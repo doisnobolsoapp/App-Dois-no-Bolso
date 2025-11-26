@@ -39,6 +39,7 @@ import {
 
 import { OnlineStatus } from './components/OnlineStatus';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
+import AccountSettings from './components/AccountSettings'; // ADICIONEI AQUI
 
 const usePWA = () => {
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
@@ -385,7 +386,24 @@ function App(): JSX.Element {
     );
   }
 
-  // Render views
+  // ADICIONEI A FUNÇÃO PARA LIDAR COM ADIÇÃO DE CONTAS NO AccountSettings
+  const handleAddAccountFromSettings = (accountData: any) => {
+    try {
+      const newAccount = {
+        ...accountData,
+        // Garantir que o saldo seja negativo para passivos
+        balance: accountData.type === 'asset' 
+          ? Math.abs(accountData.balance) 
+          : -Math.abs(accountData.balance)
+      };
+      return handleAddAccount(newAccount);
+    } catch (error) {
+      console.error('❌ Erro ao adicionar conta do AccountSettings:', error);
+      throw error;
+    }
+  };
+
+  // Render views - ADICIONEI O accountSettings AQUI
   const renderCurrentView = () => {
     const viewProps = {
       dashboard: <Dashboard data={data} onViewChange={setCurrentView} />,
@@ -470,7 +488,15 @@ function App(): JSX.Element {
           onAddInvestment={handleAddInvestment}
         />
       ),
-      settings: <Settings data={data} onDataUpdate={setData} />
+      settings: <Settings data={data} onDataUpdate={setData} />,
+      // ADICIONEI O AccountSettings AQUI
+      accountSettings: (
+        <AccountSettings 
+          accounts={data.accounts}
+          onAddAccount={handleAddAccountFromSettings}
+          onDeleteAccount={handleDeleteAccount}
+        />
+      )
     };
 
     return viewProps[currentView] || viewProps.dashboard;
