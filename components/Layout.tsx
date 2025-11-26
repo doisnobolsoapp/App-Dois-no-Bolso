@@ -32,15 +32,22 @@ export const Layout: React.FC<LayoutProps> = ({
   const menuItems = [
     { id: 'dashboard' as ViewState, label: 'Visão Geral', icon: Home },
     { id: 'transactions' as ViewState, label: 'Transações', icon: CreditCard },
-    { id: 'goals' as ViewState, label: 'Metas', icon: Target },
-    { id: 'investments' as ViewState, label: 'Investimentos', icon: BarChart3 },
-    { id: 'banks' as ViewState, label: 'Bancos', icon: Landmark },
-    { id: 'cards' as ViewState, label: 'Cartões', icon: PieChart },
-    { id: 'balance' as ViewState, label: 'Patrimônio', icon: Landmark },
-    { id: 'reports' as ViewState, label: 'Relatórios', icon: BarChart3 },
     { id: 'calendar' as ViewState, label: 'Calendário', icon: Calendar },
-    { id: 'chat' as ViewState, label: 'Assistente', icon: MessageSquare },
-    { id: 'settings' as ViewState, label: 'Configurações', icon: Settings },
+
+    // Novo item agrupando Bancos + Carteiras + Cartões
+    { 
+      id: 'accountSettings' as ViewState, 
+      label: 'Configurações de Contas',
+      icon: Landmark,
+      subItems: [
+        { id: 'banks' as ViewState, label: 'Bancos', icon: Landmark },
+        { id: 'wallets' as ViewState, label: 'Carteira', icon: CreditCard },
+        { id: 'cards' as ViewState, label: 'Cartões', icon: PieChart }
+      ]
+    },
+
+    { id: 'chat' as ViewState, label: 'Assistente IA', icon: MessageSquare },
+    { id: 'settings' as ViewState, label: 'Configurações do App', icon: Settings },
   ];
 
   return (
