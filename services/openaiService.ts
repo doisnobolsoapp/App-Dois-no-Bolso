@@ -4,7 +4,7 @@ export type ToolCall =
   | { name: 'addGoal'; arguments: any }
   | { name: 'addInvestment'; arguments: any };
 
-export async function callOpenAIWithTools(prompt: string, _systemPrompt = '', _userContext = '') {
+export async function callOpenAIWithTools(prompt: string) {
   console.log('🤖 Modo IA Simulada - Processando:', prompt);
   
   // Simula delay de processamento
