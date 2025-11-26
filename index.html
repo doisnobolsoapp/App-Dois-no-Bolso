@@ -320,68 +320,82 @@
 
       // CORREÇÃO DEFINITIVA: Função para instalar o PWA com tratamento completo de erros
       window.installPWA = async function() {
-        console.log('🚀 Iniciando instalação do PWA...');
-        
-        if (!deferredPrompt) {
-          console.log('❌ deferredPrompt não disponível');
-          showManualInstallInstructions();
-          return;
-        }
-
+    console.log('🚀 Iniciando instalação do PWA...');
+    
+    // VERIFICAÇÃO ROBUSTA: deferredPrompt deve existir E ter o método prompt
+    if (window.deferredPrompt && typeof window.deferredPrompt.prompt === 'function') {
+        console.log('✅ deferredPrompt válido, mostrando prompt de instalação...');
         try {
-          console.log('✅ deferredPrompt disponível, mostrando prompt...');
-          deferredPrompt.prompt();
-          
-          const choiceResult = await deferredPrompt.userChoice;
-          console.log('🎯 Resultado da instalação:', choiceResult.outcome);
-          
-          if (choiceResult.outcome === 'accepted') {
-            console.log('🎉 Dois no Bolso instalado com sucesso!');
-            // Remover prompt
-            const prompt = document.querySelector('.pwa-prompt');
-            if (prompt) prompt.remove();
-          } else {
-            console.log('❌ Instalação recusada pelo usuário');
-          }
-          
-          deferredPrompt = null;
+            // Mostrar o prompt de instalação nativo do navegador
+            await window.deferredPrompt.prompt();
+            
+            // Aguardar a decisão do usuário
+            const choiceResult = await window.deferredPrompt.userChoice;
+            console.log('🎯 Usuário escolheu:', choiceResult.outcome);
+            
+            if (choiceResult.outcome === 'accepted') {
+                console.log('🎉 Dois no Bolso instalado com sucesso!');
+                // Remover prompt personalizado se existir
+                const prompt = document.querySelector('.pwa-prompt');
+                if (prompt) prompt.remove();
+            } else {
+                console.log('❌ Instalação recusada pelo usuário');
+            }
+            
+            // Limpar deferredPrompt
+            window.deferredPrompt = null;
+            
         } catch (error) {
-          console.log('💥 Erro durante a instalação:', error);
-          showManualInstallInstructions();
+            console.log('💥 Erro durante a instalação:', error);
+            // Fallback: mostrar instruções manuais
+            showManualInstallInstructions();
         }
-      };
+    } else {
+        console.log('❌ deferredPrompt não disponível para instalação automática');
+        console.log('💡 Mostrando instruções manuais...');
+        showManualInstallInstructions();
+    }
+};
 
-      // CORREÇÃO: Função para mostrar instruções manuais de instalação
-      function showManualInstallInstructions() {
-        const instructionsHTML = `
-          <div class="pwa-prompt safe-area-bottom" style="background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);">
+// Função auxiliar para mostrar instruções manuais
+function showManualInstallInstructions() {
+    const instructionsHTML = `
+        <div class="pwa-prompt safe-area-bottom" style="background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);">
             <div class="max-w-md mx-auto">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  <span class="font-semibold">Como Instalar</span>
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span class="font-semibold">Como Instalar Manualmente</span>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-white/80 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
-                <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-white/80 hover:text-white">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
+                <div class="text-sm space-y-2 mb-3 text-white">
+                    <p><strong>Chrome/Edge Desktop:</strong></p>
+                    <p>• Clique no menu (3 pontos) no canto superior direito</p>
+                    <p>• Selecione "Instalar Dois no Bolso"</p>
+                    <p>• Ou procure o ícone 📦 na barra de endereços</p>
+                    <br>
+                    <p><strong>Chrome Mobile:</strong></p>
+                    <p>• Toque no menu (3 pontos)</p>
+                    <p>• Selecione "Adicionar à tela inicial"</p>
+                </div>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" class="w-full bg-white text-blue-600 py-2 px-4 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-sm">
+                    Entendi
                 </button>
-              </div>
-              <div class="text-sm space-y-2 mb-3">
-                <p><strong>Chrome/Edge:</strong> Menu (3 pontos) → "Instalar Dois no Bolso"</p>
-                <p><strong>Mobile:</strong> Menu → "Adicionar à tela inicial"</p>
-                <p><strong>Procure o ícone</strong> 📦 na barra de endereços</p>
-              </div>
             </div>
-          </div>
-        `;
+        </div>
+    `;
 
-        const instructionsElement = document.createElement('div');
-        instructionsElement.innerHTML = instructionsHTML;
-        document.body.appendChild(instructionsElement);
-      }
+    const instructionsElement = document.createElement('div');
+    instructionsElement.innerHTML = instructionsHTML;
+    document.body.appendChild(instructionsElement);
+}
 
       // Função para dispensar o prompt
       window.dismissInstallPrompt = function() {
