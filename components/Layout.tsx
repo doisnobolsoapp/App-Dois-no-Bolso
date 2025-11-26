@@ -10,7 +10,10 @@ import {
   PieChart,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Wallet,
+  Banknote,
+  House
 } from 'lucide-react';
 import { ViewState } from '../types';
 
@@ -29,15 +32,49 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onViewChange, onLogout, ch
     { id: 'transactions' as ViewState, label: 'Transações', icon: CreditCard },
     { id: 'calendar' as ViewState, label: 'Calendário', icon: Calendar },
 
-    // Novo item agrupando Bancos + Carteiras + Cartões
+    // Configurações de Contas seguindo a estrutura da imagem
     { 
       id: 'accountSettings' as ViewState, 
       label: 'Configurações de Contas',
       icon: Landmark,
       subItems: [
-        { id: 'banks' as ViewState, label: 'Bancos', icon: Landmark },
-        { id: 'wallets' as ViewState, label: 'Carteira', icon: CreditCard },
-        { id: 'cards' as ViewState, label: 'Cartões', icon: PieChart }
+        // ATIVOS - Banco
+        { 
+          id: 'bankAccounts' as ViewState, 
+          label: 'Banco', 
+          icon: Landmark,
+          subItems: [
+            { id: 'checkingAccount' as ViewState, label: 'Conta Corrente', icon: Banknote },
+            { id: 'savingsAccount' as ViewState, label: 'Poupança', icon: PieChart }
+          ]
+        },
+        // ATIVOS - Dinheiro
+        { 
+          id: 'cashAccounts' as ViewState, 
+          label: 'Dinheiro', 
+          icon: Wallet,
+          subItems: [
+            { id: 'wallet' as ViewState, label: 'Carteira', icon: Wallet }
+          ]
+        },
+        // PASSIVOS - Cartão de Crédito
+        { 
+          id: 'creditCards' as ViewState, 
+          label: 'Cartão de Crédito', 
+          icon: CreditCard,
+          subItems: [
+            { id: 'creditCard' as ViewState, label: 'Cartão de Crédito', icon: CreditCard }
+          ]
+        },
+        // PASSIVOS - Hipotecas
+        { 
+          id: 'mortgages' as ViewState, 
+          label: 'Hipotecas', 
+          icon: House,
+          subItems: [
+            { id: 'houseMortgage' as ViewState, label: 'Hipoteca da Casa', icon: House }
+          ]
+        }
       ]
     },
 
@@ -45,8 +82,9 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onViewChange, onLogout, ch
     { id: 'settings' as ViewState, label: 'Configurações do App', icon: Settings },
   ];
 
-  const renderMenuItem = (item: any) => {
+  const renderMenuItem = (item: any, level = 0) => {
     const Icon = item.icon;
+    const paddingLeft = level * 16;
 
     // Se não tiver submenu
     if (!item.subItems) {
@@ -57,11 +95,12 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onViewChange, onLogout, ch
             onViewChange(item.id);
             setIsMobileMenuOpen(false);
           }}
-          className={`flex items-center space-x-2 px-3 py-2 rounded-lg whitespace-nowrap ${
+          className={`flex items-center space-x-2 px-3 py-2 rounded-lg whitespace-nowrap w-full text-left ${
             currentView === item.id
               ? 'bg-blue-50 text-blue-600 border border-blue-200'
               : 'text-slate-600 hover:bg-slate-100 border border-transparent'
           }`}
+          style={{ paddingLeft: `${paddingLeft + 12}px` }}
         >
           <Icon size={18} />
           <span className="font-medium text-sm">{item.label}</span>
@@ -69,42 +108,50 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onViewChange, onLogout, ch
       );
     }
 
-    // Se tiver submenus
+    // Se tiver submenus (menu com dropdown)
     return (
       <div key={item.id} className="relative group">
         <button
-          className={`flex items-center space-x-2 px-3 py-2 rounded-lg whitespace-nowrap ${
+          className={`flex items-center space-x-2 px-3 py-2 rounded-lg whitespace-nowrap w-full ${
             currentView === item.id
               ? 'bg-blue-50 text-blue-600 border border-blue-200'
               : 'text-slate-600 hover:bg-slate-100 border border-transparent'
           }`}
+          style={{ paddingLeft: `${paddingLeft + 12}px` }}
         >
           <Icon size={18} />
           <span className="font-medium text-sm">{item.label}</span>
         </button>
 
         {/* Dropdown Submenu */}
-        <div className="absolute left-0 top-full hidden group-hover:block bg-white shadow-lg rounded-lg mt-1 border border-slate-200 z-50 min-w-[200px]">
-          {item.subItems.map((sub: any) => {
-            const SubIcon = sub.icon;
-            return (
-              <button
-                key={sub.id}
-                onClick={() => {
-                  onViewChange(sub.id);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`flex items-center px-3 py-2 gap-2 text-sm w-full text-left ${
-                  currentView === sub.id
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                <SubIcon size={16} />
-                {sub.label}
-              </button>
-            );
-          })}
+        <div 
+          className={`absolute left-0 top-full hidden group-hover:block bg-white shadow-lg rounded-lg mt-1 border border-slate-200 z-50 min-w-[220px] ${
+            level > 0 ? 'ml-1' : ''
+          }`}
+          style={{ 
+            left: level === 0 ? '0' : '100%',
+            top: level > 0 ? '0' : '100%'
+          }}
+        >
+          {/* Headers para ATIVOS e PASSIVOS no primeiro nível */}
+          {level === 0 && (
+            <>
+              <div className="px-3 py-2 text-xs font-semibold text-slate-500 border-b border-slate-200 bg-slate-50">
+                ATIVOS
+              </div>
+              {item.subItems.slice(0, 2).map((sub: any) => renderMenuItem(sub, level + 1))}
+              <div className="px-3 py-2 text-xs font-semibold text-slate-500 border-b border-slate-200 bg-slate-50 border-t border-slate-200 mt-1">
+                PASSIVOS
+              </div>
+              {item.subItems.slice(2).map((sub: any) => renderMenuItem(sub, level + 1))}
+            </>
+          )}
+          
+          {level > 0 && (
+            <>
+              {item.subItems.map((sub: any) => renderMenuItem(sub, level + 1))}
+            </>
+          )}
         </div>
       </div>
     );
@@ -120,7 +167,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onViewChange, onLogout, ch
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
-          {menuItems.map(renderMenuItem)}
+          {menuItems.map(item => renderMenuItem(item))}
         </nav>
 
         <div className="p-4 border-t border-slate-200">
@@ -154,7 +201,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, onViewChange, onLogout, ch
         {isMobileMenuOpen && (
           <div className="absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-lg max-h-[80vh] overflow-y-auto">
             <nav className="p-4 space-y-1">
-              {menuItems.map(renderMenuItem)}
+              {menuItems.map(item => renderMenuItem(item))}
               
               <button
                 onClick={() => {
