@@ -492,11 +492,12 @@ function App(): JSX.Element {
       // ADICIONEI O AccountSettings AQUI
       accountSettings: (
         <AccountSettings 
-          accounts={data.accounts}
-          onAddAccount={handleAddAccountFromSettings}
-          onDeleteAccount={handleDeleteAccount}
-        />
-      )
+    accounts={data.accounts}
+    onAddAccount={handleAddAccountFromSettings}
+    onDeleteAccount={handleDeleteAccount}
+    onUpdateAccount={handleUpdateAccount} 
+  />
+)
     };
 
     return viewProps[currentView] || viewProps.dashboard;
