@@ -1,4 +1,4 @@
-// src/components/Layout.tsx
+// components/Layout.tsx
 import React from 'react';
 import { ViewState } from '../types';
 import { 
