@@ -184,7 +184,7 @@ function App(): JSX.Element {
   ) => {
     // ATENÇÃO: se a assinatura de addInvestmentMovement no storageService for diferente,
     // ajuste aqui para combinar (ex: se aceita só um objeto).
-    const updatedInv = addInvestmentMovement(invId, type, qty, price, date, notes);
+    const updatedInv = addInvestmentMovement(invId);
     if (updatedInv) {
       setData(prev => ({ ...prev, investments: prev.investments.map(inv => (inv.id === invId ? updatedInv : inv)) }));
     }
