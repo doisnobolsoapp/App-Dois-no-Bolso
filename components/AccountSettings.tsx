@@ -1,15 +1,7 @@
 // src/components/AccountSettings.tsx
 import { useState } from 'react';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
-
-interface Account {
-  id: string;
-  name: string;
-  type: 'asset' | 'liability';
-  category: string;
-  balance: number;
-  currency: string;
-}
+import { Account } from '../types'; // IMPORTE A INTERFACE DO SEU SISTEMA
 
 interface AccountSettingsProps {
   accounts: Account[];
@@ -45,24 +37,26 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
     return acc;
   }, {} as Record<string, number>);
 
-  // Separar contas por tipo
-  const assets = accounts.filter(account => account.type === 'asset');
-  const liabilities = accounts.filter(account => account.type === 'liability');
+  // Separar contas por tipo - ADAPTEI PARA USAR SUA INTERFACE
+  const assets = accounts.filter(account => account.type === 'asset' || account.balance >= 0);
+  const liabilities = accounts.filter(account => account.type === 'liability' || account.balance < 0);
 
   // Agrupar por categoria
   const groupedAssets = assets.reduce((acc, account) => {
-    if (!acc[account.category]) {
-      acc[account.category] = [];
+    const category = account.category || 'Outros';
+    if (!acc[category]) {
+      acc[category] = [];
     }
-    acc[account.category].push(account);
+    acc[category].push(account);
     return acc;
   }, {} as Record<string, Account[]>);
 
   const groupedLiabilities = liabilities.reduce((acc, account) => {
-    if (!acc[account.category]) {
-      acc[account.category] = [];
+    const category = account.category || 'Outros';
+    if (!acc[category]) {
+      acc[category] = [];
     }
-    acc[account.category].push(account);
+    acc[category].push(account);
     return acc;
   }, {} as Record<string, Account[]>);
 
@@ -113,7 +107,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
               <div key={account.id} className="flex justify-between items-center p-3 bg-white border border-slate-200 rounded-lg">
                 <div>
                   <span className="font-medium text-slate-800">{account.name}</span>
-                  <span className="text-sm text-slate-500 ml-2">{account.currency}</span>
+                  <span className="text-sm text-slate-500 ml-2">{account.currency || 'BRL'}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`font-bold ${account.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
