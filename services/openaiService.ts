@@ -56,23 +56,34 @@ export const TOOLS_SCHEMA = {
 };
 
 /**
- * Chama a API do OpenAI (model: o1-mini) com function calling habilitado.
- * Retorna o JSON da resposta (raw) para ser processado pelo caller.
+ * Chama a API do OpenAI com function calling habilitado.
  */
 export async function callOpenAIWithTools(prompt: string, systemPrompt = '', userContext = '') {
-  // Corrigido para usar import.meta.env
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  if (!apiKey) throw new Error('VITE_OPENAI_API_KEY não configurada');
+  
+  // DEBUG: Verificar se a chave está carregando
+  console.log('🔑 API Key carregada?', !!apiKey);
+  console.log('📝 Prompt recebido:', prompt);
+  
+  if (!apiKey) {
+    console.error('❌ ERRO: VITE_OPENAI_API_KEY não configurada');
+    throw new Error('VITE_OPENAI_API_KEY não configurada. Verifique seu arquivo .env');
+  }
 
   const body = {
-    model: 'gpt-3.5-turbo', // Usando modelo mais compatível com function calling
+    model: 'gpt-3.5-turbo',
     messages: [
-      { role: 'system', content: systemPrompt || 'Você é um assistente financeiro que pode retornar chamadas de função quando apropriado.' },
-      { role: 'user', content: `${userContext}\n\n${prompt}` }
+      { 
+        role: 'system', 
+        content: systemPrompt || 'Você é um assistente financeiro útil que pode chamar funções quando necessário para adicionar transações, metas ou investimentos.' 
+      },
+      { 
+        role: 'user', 
+        content: `${userContext}\n\nUsuário: ${prompt}` 
+      }
     ],
     temperature: 0.2,
     max_tokens: 800,
-    // function calling - usando tools em vez de functions (formato mais recente)
     tools: [
       {
         type: 'function',
@@ -90,45 +101,110 @@ export async function callOpenAIWithTools(prompt: string, systemPrompt = '', use
     tool_choice: 'auto'
   };
 
-  const res = await fetch(OPENAI_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify(body)
+  console.log('📤 Enviando requisição para OpenAI...', { 
+    model: body.model,
+    messageLength: body.messages[1].content.length,
+    hasTools: body.tools.length > 0
   });
 
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`OpenAI error: ${res.status} ${txt}`);
-  }
+  try {
+    const res = await fetch(OPENAI_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(body)
+    });
 
-  const data = await res.json();
-  return data;
+    console.log('📥 Status da resposta:', res.status);
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('❌ Erro da API OpenAI:', {
+        status: res.status,
+        statusText: res.statusText,
+        error: errorText
+      });
+      
+      let errorMessage = `Erro ${res.status}: `;
+      if (res.status === 401) {
+        errorMessage += 'Chave API inválida ou expirada';
+      } else if (res.status === 429) {
+        errorMessage += 'Limite de requisições excedido';
+      } else if (res.status === 404) {
+        errorMessage += 'Modelo não encontrado';
+      } else {
+        errorMessage += errorText || 'Erro desconhecido';
+      }
+      
+      throw new Error(errorMessage);
+    }
+
+    const data = await res.json();
+    console.log('✅ Resposta da OpenAI recebida:', {
+      hasChoices: !!data.choices,
+      choicesLength: data.choices?.length,
+      message: data.choices?.[0]?.message
+    });
+    
+    return data;
+    
+  } catch (error) {
+    console.error('💥 Erro na requisição para OpenAI:', error);
+    if (error instanceof Error) {
+      throw new Error(`Falha na comunicação com OpenAI: ${error.message}`);
+    }
+    throw new Error('Erro desconhecido ao contactar OpenAI');
+  }
 }
 
 // Função auxiliar para processar a resposta da OpenAI
 export const processOpenAIResponse = (response: any) => {
-  const choice = response.choices?.[0];
-  if (!choice) {
-    throw new Error('Resposta vazia da OpenAI');
+  console.log('🔍 Processando resposta da OpenAI:', response);
+  
+  if (!response.choices || response.choices.length === 0) {
+    throw new Error('Resposta vazia da OpenAI - nenhuma choice encontrada');
+  }
+
+  const choice = response.choices[0];
+  
+  if (!choice.message) {
+    throw new Error('Resposta da OpenAI sem message');
   }
 
   const message = choice.message;
   
-  // Verificar se há tool calls
+  // Verificar se há tool calls (novo formato)
   if (message.tool_calls && message.tool_calls.length > 0) {
+    console.log('🛠️ Tool calls encontrados:', message.tool_calls);
+    
     const toolCall = message.tool_calls[0];
-    return {
-      toolCall: {
+    try {
+      const parsedArgs = typeof toolCall.function.arguments === 'string' 
+        ? JSON.parse(toolCall.function.arguments)
+        : toolCall.function.arguments;
+        
+      console.log('📋 Tool call processado:', {
         name: toolCall.function.name,
-        arguments: JSON.parse(toolCall.function.arguments)
-      },
-      content: message.content
-    };
+        arguments: parsedArgs
+      });
+      
+      return {
+        toolCall: {
+          name: toolCall.function.name,
+          arguments: parsedArgs
+        },
+        content: message.content
+      };
+    } catch (parseError) {
+      console.error('❌ Erro ao parsear arguments do tool call:', parseError);
+      throw new Error('Falha ao processar arguments da função');
+    }
   }
 
+  // Caso de resposta textual normal
+  console.log('💬 Resposta textual:', message.content);
   return {
     toolCall: null,
     content: message.content
