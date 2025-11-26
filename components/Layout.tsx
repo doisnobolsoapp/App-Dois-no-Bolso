@@ -30,25 +30,42 @@ export const Layout: React.FC<LayoutProps> = ({
   const [showMobileMenu, setShowMobileMenu] = React.useState(false);
 
   const menuItems = [
-    { id: 'dashboard' as ViewState, label: 'Visão Geral', icon: Home },
-    { id: 'transactions' as ViewState, label: 'Transações', icon: CreditCard },
-    { id: 'calendar' as ViewState, label: 'Calendário', icon: Calendar },
-
-    // Novo item agrupando Bancos + Carteiras + Cartões
-    { 
-      id: 'accountSettings' as ViewState, 
-      label: 'Configurações de Contas',
-      icon: Landmark,
-      subItems: [
-        { id: 'banks' as ViewState, label: 'Bancos', icon: Landmark },
-        { id: 'wallets' as ViewState, label: 'Carteira', icon: CreditCard },
-        { id: 'cards' as ViewState, label: 'Cartões', icon: PieChart }
-      ]
-    },
-
-    { id: 'chat' as ViewState, label: 'Assistente IA', icon: MessageSquare },
-    { id: 'settings' as ViewState, label: 'Configurações do App', icon: Settings },
-  ];
+  {
+    id: "overview",
+    label: "Visão Geral",
+    icon: Home,
+  },
+  {
+    id: "transactions",
+    label: "Transações",
+    icon: List,
+  },
+  {
+    id: "calendar",
+    label: "Calendário",
+    icon: Calendar,
+  },
+  {
+    id: "accounts-settings",
+    label: "Configurações de Contas",
+    icon: Wallet,
+    children: [
+      { id: "banks", label: "Bancos" },
+      { id: "wallets", label: "Carteira" },
+      { id: "cards", label: "Cartões" },
+    ],
+  },
+  {
+    id: "assistant",
+    label: "Assistente IA",
+    icon: Bot,
+  },
+  {
+    id: "app-settings",
+    label: "Configurações do APP",
+    icon: Settings,
+  },
+];
 const renderMenuItem = (item: any) => {
   const Icon = item.icon;
 
