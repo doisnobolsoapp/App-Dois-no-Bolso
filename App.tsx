@@ -168,22 +168,13 @@ function App(): JSX.Element {
     setData(prev => ({ ...prev, creditCards: prev.creditCards.filter(cc => cc.id !== id) }));
   };
 
-  // Investments
+  // Investments - CORRIGIDO: removidos parâmetros não utilizados
   const handleAddInvestment = (i: any) => {
     const newI = addInvestment(i);
     setData(prev => ({ ...prev, investments: [...prev.investments, newI] }));
   };
 
-  const handleAddInvestmentMovement = (
-    invId: string,
-    type: 'BUY' | 'SELL' | 'UPDATE',
-    qty: number,
-    price: number,
-    date: string,
-    notes?: string
-  ) => {
-    // ATENÇÃO: se a assinatura de addInvestmentMovement no storageService for diferente,
-    // ajuste aqui para combinar (ex: se aceita só um objeto).
+  const handleAddInvestmentMovement = (invId: string) => {
     const updatedInv = addInvestmentMovement(invId);
     if (updatedInv) {
       setData(prev => ({ ...prev, investments: prev.investments.map(inv => (inv.id === invId ? updatedInv : inv)) }));
