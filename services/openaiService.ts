@@ -1,90 +1,91 @@
-// src/services/openaiService.ts - VERSÃO COM PROXY
-export async function callOpenAIWithTools(prompt: string, systemPrompt = '', userContext = '') {
-  console.log('🚀 Usando proxy para OpenAI...');
+// src/services/openaiService.ts
+export type ToolCall =
+  | { name: 'addTransaction'; arguments: any }
+  | { name: 'addGoal'; arguments: any }
+  | { name: 'addInvestment'; arguments: any };
 
-  const body = {
-    messages: [
-      { 
-        role: 'system', 
-        content: systemPrompt || 'Você é um assistente financeiro útil.' 
+const TOOLS_SCHEMA = {
+  addTransaction: {
+    name: 'addTransaction',
+    description: 'Adicionar uma nova transação financeira (receita, despesa, investimento, empréstimo).',
+    parameters: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', enum: ['income', 'expense', 'investment', 'loan'] },
+        category: { type: 'string' },
+        amount: { type: 'number' },
+        description: { type: 'string' },
+        date: { type: 'string' },
+        paid: { type: 'boolean' },
+        paymentMethod: { type: 'string' },
+        accountId: { type: 'string' },
+        cardId: { type: 'string' }
       },
-      { 
-        role: 'user', 
-        content: `${userContext}\n\n${prompt}` 
-      }
-    ],
-    tools: [
-      {
-        type: 'function',
-        function: TOOLS_SCHEMA.addTransaction
+      required: ['type', 'amount', 'description']
+    }
+  },
+  addGoal: {
+    name: 'addGoal',
+    description: 'Criar uma nova meta financeira.',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        targetAmount: { type: 'number' },
+        deadline: { type: 'string' }
       },
-      {
-        type: 'function',
-        function: TOOLS_SCHEMA.addGoal
+      required: ['name', 'targetAmount']
+    }
+  },
+  addInvestment: {
+    name: 'addInvestment',
+    description: 'Cadastrar um novo investimento (apenas cadastro).',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        type: { type: 'string' },
+        broker: { type: 'string' },
+        strategy: { type: 'string' }
       },
-      {
-        type: 'function',
-        function: TOOLS_SCHEMA.addInvestment
-      }
-    ],
-    tool_choice: 'auto'
-  };
-
-  // Tenta diferentes URLs de proxy
-  const proxyUrls = [
-    'http://localhost:3001/api/openai/chat', // Seu backend local
-    'https://your-deployed-backend.vercel.app/api/openai/chat' // Quando deployar
-  ];
-
-  let lastError;
-
-  for (const proxyUrl of proxyUrls) {
-    try {
-      console.log(`🔄 Tentando proxy: ${proxyUrl}`);
-      
-      const res = await fetch(proxyUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        console.log('✅ Resposta recebida via proxy');
-        return data;
-      } else {
-        lastError = await res.text();
-        console.warn(`❌ Proxy ${proxyUrl} falhou:`, lastError);
-      }
-    } catch (error) {
-      lastError = error;
-      console.warn(`❌ Proxy ${proxyUrl} erro:`, error);
+      required: ['name', 'type']
     }
   }
+};
 
-  // Se todos os proxies falharem, use modo simulado
-  console.log('🔧 Usando modo simulado...');
-  return await simulatedOpenAI(prompt);
-}
-
-// Função simulada para quando a API não está disponível
-async function simulatedOpenAI(prompt: string) {
-  await new Promise(resolve => setTimeout(resolve, 1000));
+export async function callOpenAIWithTools(prompt: string, systemPrompt = '', userContext = '') {
+  console.log('🤖 Modo IA Simulada - Processando:', prompt);
+  
+  // Simula delay de processamento
+  await new Promise(resolve => setTimeout(resolve, 800));
   
   const lowerPrompt = prompt.toLowerCase();
   
+  // Transações
   if (lowerPrompt.includes('registre') || lowerPrompt.includes('compra') || 
-      lowerPrompt.includes('supermercado') || lowerPrompt.includes('adicionar')) {
+      lowerPrompt.includes('gasto') || lowerPrompt.includes('adicionar') ||
+      lowerPrompt.includes('supermercado') || lowerPrompt.includes('mercado')) {
     
-    const amountMatch = prompt.match(/R\$\s*(\d+[.,]\d+|\d+)/);
+    const amountMatch = prompt.match(/R\$\s*(\d+[.,]\d+|\d+)/) || prompt.match(/(\d+[.,]\d+|\d+)\s*reais/);
     const amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : 100;
     
-    let description = 'Compra no supermercado';
-    if (lowerPrompt.includes('centerbox')) description = 'Compra no Centerbox';
+    let description = 'Compra';
+    let category = 'Outros';
     
-    // Extrai data se existir
+    if (lowerPrompt.includes('supermercado') || lowerPrompt.includes('centerbox') || lowerPrompt.includes('mercado')) {
+      description = 'Compra no supermercado';
+      category = 'Alimentação';
+    }
+    if (lowerPrompt.includes('restaurante') || lowerPrompt.includes('lanche')) {
+      description = 'Refeição';
+      category = 'Alimentação';
+    }
+    if (lowerPrompt.includes('combustível') || lowerPrompt.includes('gasolina')) {
+      description = 'Abastecimento';
+      category = 'Transporte';
+    }
+    
+    // Extrai data
     const dateMatch = prompt.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
     const date = dateMatch ? formatDate(dateMatch[1]) : new Date().toISOString().split('T')[0];
     
@@ -98,7 +99,7 @@ async function simulatedOpenAI(prompt: string) {
                 type: 'expense',
                 description: description,
                 amount: amount,
-                category: 'Alimentação',
+                category: category,
                 date: date,
                 paid: true,
                 paymentMethod: 'debit'
@@ -110,11 +111,55 @@ async function simulatedOpenAI(prompt: string) {
     };
   }
   
-  // Resposta para outros tipos de pedidos
+  // Metas
+  if (lowerPrompt.includes('meta') || lowerPrompt.includes('economizar') || lowerPrompt.includes('poupar')) {
+    const amountMatch = prompt.match(/(\d+[.,]\d+|\d+)/);
+    const amount = amountMatch ? parseFloat(amountMatch[0].replace(',', '.')) : 1000;
+    
+    return {
+      choices: [{
+        message: {
+          tool_calls: [{
+            function: {
+              name: 'addGoal',
+              arguments: JSON.stringify({
+                name: 'Meta de economia',
+                targetAmount: amount,
+                deadline: '2024-12-31'
+              })
+            }
+          }]
+        }
+      }]
+    };
+  }
+  
+  // Investimentos
+  if (lowerPrompt.includes('investimento') || lowerPrompt.includes('ação') || lowerPrompt.includes('cripto')) {
+    return {
+      choices: [{
+        message: {
+          tool_calls: [{
+            function: {
+              name: 'addInvestment',
+              arguments: JSON.stringify({
+                name: 'Investimento diversificado',
+                type: 'stocks',
+                broker: 'Corretora',
+                strategy: 'LONG_TERM'
+              })
+            }
+          }]
+        }
+      }]
+    };
+  }
+  
+  // Resposta textual padrão
   return {
     choices: [{
       message: {
-        content: `Entendi: "${prompt}". No momento estou processando localmente. Configure um backend para usar a API OpenAI real.`
+        content: `Entendi sua solicitação: "${prompt}". Como posso ajudar com suas finanças? Você pode me pedir para adicionar transações, criar metas ou cadastrar investimentos.`
       }
     }]
   };
@@ -127,3 +172,44 @@ function formatDate(dateStr: string) {
   }
   return new Date().toISOString().split('T')[0];
 }
+
+export const processOpenAIResponse = (response: any) => {
+  console.log('🔍 Processando resposta:', response);
+  
+  if (!response.choices || response.choices.length === 0) {
+    throw new Error('Resposta vazia');
+  }
+
+  const choice = response.choices[0];
+  
+  if (!choice.message) {
+    throw new Error('Resposta sem message');
+  }
+
+  const message = choice.message;
+  
+  if (message.tool_calls && message.tool_calls.length > 0) {
+    const toolCall = message.tool_calls[0];
+    try {
+      const parsedArgs = typeof toolCall.function.arguments === 'string' 
+        ? JSON.parse(toolCall.function.arguments)
+        : toolCall.function.arguments;
+        
+      return {
+        toolCall: {
+          name: toolCall.function.name,
+          arguments: parsedArgs
+        },
+        content: message.content
+      };
+    } catch (parseError) {
+      console.error('Erro ao parsear arguments:', parseError);
+      throw new Error('Falha ao processar arguments da função');
+    }
+  }
+
+  return {
+    toolCall: null,
+    content: message.content
+  };
+};
