@@ -98,23 +98,9 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
     setIsLoading(true);
 
     try {
-      const userContext = `
-Dados atuais do usuário:
-- Transações: ${data.transactions.length}
-- Metas: ${data.goals?.length || 0}
-- Contas: ${data.accounts?.length || 0}
-- Investimentos: ${data.investments?.length || 0}
-
-Use as funções disponíveis para adicionar transações, metas ou investimentos quando solicitado.
-      `.trim();
-
-      const systemPrompt = `Você é um assistente financeiro útil e objetivo. 
-Responda em português brasileiro. 
-Use as funções disponíveis quando o usuário pedir para adicionar transações, metas ou investimentos.`;
-
       console.log('🟡 Iniciando chamada da IA...');
       
-      // Chama a API da OpenAI
+      // Chama a API da OpenAI (apenas com o prompt)
       const result = await callOpenAIWithTools(inputMessage);
       
       console.log('🟢 Resposta recebida:', result);
