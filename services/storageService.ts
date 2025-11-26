@@ -1,3 +1,4 @@
+// services/storageService.ts
 import { AppData, Transaction, Goal, Account, CreditCard, Investment, Property, Debt } from '../types';
 
 const STORAGE_KEY = 'dois-no-bolso-data';
@@ -12,7 +13,6 @@ export const loadData = (): AppData => {
     console.error('Erro ao carregar dados:', error);
   }
   
-  // Dados iniciais padrão
   return {
     transactions: [],
     goals: [],
@@ -32,10 +32,9 @@ export const saveData = (data: AppData) => {
   }
 };
 
-// Funções auxiliares para gerar IDs
 const generateId = () => Date.now().toString() + Math.random().toString(36).substr(2, 9);
 
-// Operações para Transactions
+// Transactions
 export const addTransaction = (transaction: Omit<Transaction, 'id'>): Transaction => {
   const newTransaction: Transaction = {
     ...transaction,
@@ -58,7 +57,7 @@ export const deleteTransaction = (id: string) => {
   saveData(updatedData);
 };
 
-// Operações para Goals
+// Goals
 export const addGoal = (goal: Omit<Goal, 'id'>): Goal => {
   const newGoal: Goal = {
     ...goal,
@@ -77,7 +76,7 @@ export const updateGoal = (goal: Goal) => {
   saveData(updatedData);
 };
 
-// Operações para Accounts
+// Accounts
 export const addAccount = (account: Omit<Account, 'id'>): Account => {
   const newAccount: Account = {
     ...account,
@@ -96,7 +95,7 @@ export const deleteAccount = (id: string) => {
   saveData(updatedData);
 };
 
-// Operações para Credit Cards
+// Credit Cards
 export const addCreditCard = (card: Omit<CreditCard, 'id'>): CreditCard => {
   const newCard: CreditCard = {
     ...card,
@@ -115,7 +114,7 @@ export const deleteCreditCard = (id: string) => {
   saveData(updatedData);
 };
 
-// Operações para Investments - CORRIGIDO
+// Investments
 export const addInvestment = (investment: Omit<Investment, 'id'>): Investment => {
   const newInvestment: Investment = {
     ...investment,
@@ -124,14 +123,10 @@ export const addInvestment = (investment: Omit<Investment, 'id'>): Investment =>
   return newInvestment;
 };
 
-// Operações para Investments - CORRIGIDO (função simplificada)
 export const addInvestmentMovement = (invId: string) => {
   const data = loadData();
   const investment = data.investments.find(inv => inv.id === invId);
-  if (!investment) return null;
-
-  // Retorna o investimento encontrado (implementação básica)
-  return investment;
+  return investment || null;
 };
 
 export const deleteInvestment = (id: string) => {
@@ -144,7 +139,7 @@ export const deleteInvestment = (id: string) => {
   saveData(updatedData);
 };
 
-// Operações para Properties
+// Properties
 export const addProperty = (property: Omit<Property, 'id'>): Property => {
   const newProperty: Property = {
     ...property,
@@ -163,7 +158,7 @@ export const deleteProperty = (id: string) => {
   saveData(updatedData);
 };
 
-// Operações para Debts
+// Debts
 export const addDebt = (debt: Omit<Debt, 'id'>): Debt => {
   const newDebt: Debt = {
     ...debt,
@@ -182,7 +177,7 @@ export const deleteDebt = (id: string) => {
   saveData(updatedData);
 };
 
-// Operações para Categories
+// Categories
 export const addCustomCategory = (category: string) => {
   try {
     const existingCategories = JSON.parse(localStorage.getItem('customCategories') || '[]');
@@ -193,40 +188,18 @@ export const addCustomCategory = (category: string) => {
   }
 };
 
-// Funções auxiliares para buscar dados específicos
-export const getTransactions = (): Transaction[] => {
-  return loadData().transactions;
-};
-
-export const getGoals = (): Goal[] => {
-  return loadData().goals;
-};
-
-export const getAccounts = (): Account[] => {
-  return loadData().accounts;
-};
-
-export const getCreditCards = (): CreditCard[] => {
-  return loadData().creditCards;
-};
-
-export const getInvestments = (): Investment[] => {
-  return loadData().investments;
-};
-
-export const getProperties = (): Property[] => {
-  return loadData().properties;
-};
-
-export const getDebts = (): Debt[] => {
-  return loadData().debts;
-};
-
+// Funções auxiliares
+export const getTransactions = (): Transaction[] => loadData().transactions;
+export const getGoals = (): Goal[] => loadData().goals;
+export const getAccounts = (): Account[] => loadData().accounts;
+export const getCreditCards = (): CreditCard[] => loadData().creditCards;
+export const getInvestments = (): Investment[] => loadData().investments;
+export const getProperties = (): Property[] => loadData().properties;
+export const getDebts = (): Debt[] => loadData().debts;
 export const getCustomCategories = (): string[] => {
   try {
     return JSON.parse(localStorage.getItem('customCategories') || '[]');
   } catch (error) {
-    console.error('Erro ao carregar categorias personalizadas:', error);
     return [];
   }
 };
