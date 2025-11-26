@@ -156,6 +156,26 @@
         background-color: #dcfce7;
         color: #15803d;
       }
+
+      /* Melhorias para PWA */
+      .pwa-prompt {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        color: white;
+        padding: 1rem;
+        z-index: 10000;
+        animation: slideInUp 0.3s ease-out;
+      }
+
+      /* Safe areas para dispositivos com notch */
+      @supports(padding: max(0px)) {
+        .safe-area-bottom {
+          padding-bottom: max(1rem, env(safe-area-inset-bottom));
+        }
+      }
     </style>
   </head>
   
@@ -178,6 +198,9 @@
 
     <!-- Script para registrar Service Worker e gerenciar loading -->
     <script>
+      // Variável global para o deferred prompt
+      let deferredPrompt;
+
       // Remover tela de loading quando o app carregar
       window.addEventListener('load', function() {
         setTimeout(() => {
@@ -192,22 +215,140 @@
       // Registrar Service Worker para PWA
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          // Esperar um pouco para não competir com o carregamento do app
-          setTimeout(() => {
+          const isProduction = !window.location.href.includes('localhost') && 
+                              !window.location.href.includes('127.0.0.1');
+          
+          if (isProduction) {
             navigator.serviceWorker.register('/service-worker.js')
               .then(function(registration) {
                 console.log('🚀 Dois no Bolso: Service Worker registrado com sucesso:', registration.scope);
                 
-                // Verificar atualizações periodicamente
-                setInterval(() => {
-                  registration.update();
-                }, 2 * 60 * 60 * 1000); // A cada 2 horas
+                // Verificar atualizações
+                registration.addEventListener('updatefound', () => {
+                  const newWorker = registration.installing;
+                  console.log('🔄 Nova versão do Service Worker encontrada!');
+                  
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      // Nova versão disponível
+                      showUpdatePrompt();
+                    }
+                  });
+                });
               })
               .catch(function(error) {
                 console.log('❌ Dois no Bolso: Falha no registro do Service Worker:', error);
               });
-          }, 2000);
+          }
         });
+      }
+
+      // Capturar evento de instalação do PWA
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Mostrar prompt de instalação após 5 segundos
+        setTimeout(showInstallPrompt, 5000);
+      });
+
+      // Função para mostrar prompt de instalação
+      function showInstallPrompt() {
+        if (!deferredPrompt) return;
+        
+        // Verificar se já mostrou recentemente
+        const lastPrompt = localStorage.getItem('pwaPromptDismissed');
+        if (lastPrompt && (Date.now() - parseInt(lastPrompt)) < 7 * 24 * 60 * 60 * 1000) {
+          return; // Não mostrar novamente por 7 dias
+        }
+
+        const promptHTML = `
+          <div class="pwa-prompt safe-area-bottom">
+            <div class="max-w-md mx-auto">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                  </svg>
+                  <span class="font-semibold">Instalar App</span>
+                </div>
+                <button onclick="dismissInstallPrompt()" class="text-white/80 hover:text-white">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+              <p class="text-sm mb-3">
+                Instale o <strong>Dois no Bolso</strong> para acesso rápido e experiência offline!
+              </p>
+              <div class="flex gap-2">
+                <button onclick="installPWA()" class="flex-1 bg-white text-green-600 py-2 px-4 rounded-lg font-semibold hover:bg-green-50 transition-colors text-sm">
+                  Instalar
+                </button>
+                <button onclick="dismissInstallPrompt()" class="px-4 py-2 text-white/80 hover:text-white transition-colors text-sm">
+                  Agora Não
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Adicionar o prompt ao body
+        const promptElement = document.createElement('div');
+        promptElement.innerHTML = promptHTML;
+        document.body.appendChild(promptElement);
+      }
+
+      // Função para instalar o PWA
+      window.installPWA = async function() {
+        if (!deferredPrompt) return;
+        
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+          console.log('✅ Usuário aceitou a instalação do PWA');
+          // Remover prompt
+          const prompt = document.querySelector('.pwa-prompt');
+          if (prompt) prompt.remove();
+        }
+        
+        deferredPrompt = null;
+      };
+
+      // Função para dispensar o prompt
+      window.dismissInstallPrompt = function() {
+        localStorage.setItem('pwaPromptDismissed', Date.now().toString());
+        const prompt = document.querySelector('.pwa-prompt');
+        if (prompt) prompt.remove();
+      };
+
+      // Função para mostrar prompt de atualização
+      function showUpdatePrompt() {
+        const updateHTML = `
+          <div class="pwa-prompt safe-area-bottom" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+            <div class="max-w-md mx-auto">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  <span class="font-semibold">Atualização Disponível</span>
+                </div>
+              </div>
+              <p class="text-sm mb-3">
+                Uma nova versão do Dois no Bolso está disponível!
+              </p>
+              <button onclick="window.location.reload()" class="w-full bg-white text-amber-600 py-2 px-4 rounded-lg font-semibold hover:bg-amber-50 transition-colors text-sm">
+                Atualizar Agora
+              </button>
+            </div>
+          </div>
+        `;
+
+        const updateElement = document.createElement('div');
+        updateElement.innerHTML = updateHTML;
+        document.body.appendChild(updateElement);
       }
 
       // Detectar modo standalone (app instalado)
@@ -220,6 +361,35 @@
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       if (isIOS) {
         document.documentElement.classList.add('ios-device');
+        
+        // Mostrar instruções específicas para iOS
+        if (!window.matchMedia('(display-mode: standalone)').matches) {
+          setTimeout(() => {
+            const iosPrompt = document.createElement('div');
+            iosPrompt.className = 'pwa-prompt safe-area-bottom';
+            iosPrompt.innerHTML = `
+              <div class="max-w-md mx-auto">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="font-semibold">Instalar no iPhone</span>
+                  </div>
+                  <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-white/80 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm">
+                  Toque em <strong>Compartilhar</strong> → <strong>"Adicionar à Tela de Início"</strong>
+                </p>
+              </div>
+            `;
+            document.body.appendChild(iosPrompt);
+          }, 8000);
+        }
       }
 
       // Detectar tema preferido do usuário
@@ -246,6 +416,17 @@
           }
         });
       }
+
+      // Gerenciar estado online/offline
+      window.addEventListener('online', () => {
+        console.log('✅ Dois no Bolso: Conexão restaurada');
+        // Mostrar notificação de conexão restaurada se necessário
+      });
+
+      window.addEventListener('offline', () => {
+        console.log('📶 Dois no Bolso: Modo offline ativado');
+        // O Service Worker cuidará do cache
+      });
     </script>
 
     <!-- Script principal da aplicação -->
