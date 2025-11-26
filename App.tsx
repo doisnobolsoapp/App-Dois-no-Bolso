@@ -69,12 +69,23 @@ function App(): JSX.Element {
   const { isOnline, isStandalone } = usePWA();
 
   useEffect(() => {
-    const currentUser = typeof authService !== 'undefined' && authService.getCurrentUser ? authService.getCurrentUser() : null;
-    if (currentUser) {
-      setUser(currentUser as User);
-    }
-    setIsLoading(false);
+    // Verificar autenticação
+    const checkAuth = () => {
+      try {
+        const currentUser = authService?.getCurrentUser ? authService.getCurrentUser() : null;
+        if (currentUser) {
+          setUser(currentUser as User);
+        }
+      } catch (error) {
+        console.warn('Erro ao verificar autenticação:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
+    checkAuth();
+
+    // Configurar Service Worker apenas em produção
     if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
       const isProduction =
         typeof window !== 'undefined' &&
@@ -85,20 +96,21 @@ function App(): JSX.Element {
         navigator.serviceWorker
           .register('/service-worker.js')
           .then(registration => {
-            console.log('Service Worker registrado:', registration);
+            console.log('✅ Service Worker registrado:', registration);
           })
           .catch(error => {
-            console.warn('Erro no Service Worker:', error);
+            console.warn('⚠️ Erro no Service Worker:', error);
           });
       }
     }
   }, []);
 
+  // Salvar dados quando houver mudanças
   useEffect(() => {
     try {
       saveData(data);
     } catch (err) {
-      console.warn('Erro ao salvar dados:', err);
+      console.warn('⚠️ Erro ao salvar dados:', err);
     }
   }, [data]);
 
@@ -107,105 +119,251 @@ function App(): JSX.Element {
   };
 
   const handleLogout = () => {
-    if (authService && typeof authService.logout === 'function') authService.logout();
-    setUser(null);
+    try {
+      if (authService && typeof authService.logout === 'function') {
+        authService.logout();
+      }
+    } catch (error) {
+      console.warn('Erro durante logout:', error);
+    } finally {
+      setUser(null);
+    }
   };
 
   // Transaction handlers
-  const handleAddTransaction = (t: any) => {
-    const newT = addTransaction(t);
-    setData(prev => ({ ...prev, transactions: [...prev.transactions, newT] }));
+  const handleAddTransaction = (transactionData: any) => {
+    try {
+      const newTransaction = addTransaction(transactionData);
+      setData(prev => ({ 
+        ...prev, 
+        transactions: [...prev.transactions, newTransaction] 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao adicionar transação:', error);
+      throw error;
+    }
   };
 
-  const handleAddMultipleTransactions = (ts: any[]) => {
-    const newTs = addMultipleTransactions(ts);
-    setData(prev => ({ ...prev, transactions: [...prev.transactions, ...newTs] }));
+  const handleAddMultipleTransactions = (transactions: any[]) => {
+    try {
+      const newTransactions = addMultipleTransactions(transactions);
+      setData(prev => ({ 
+        ...prev, 
+        transactions: [...prev.transactions, ...newTransactions] 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao adicionar múltiplas transações:', error);
+      throw error;
+    }
   };
 
   const handleDeleteTransaction = (id: string) => {
-    deleteTransaction(id);
-    setData(prev => ({ ...prev, transactions: prev.transactions.filter(tx => tx.id !== id) }));
+    try {
+      deleteTransaction(id);
+      setData(prev => ({ 
+        ...prev, 
+        transactions: prev.transactions.filter(tx => tx.id !== id) 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao deletar transação:', error);
+      throw error;
+    }
   };
 
   // Goals
-  const handleAddGoal = (g: any) => {
-    const newG = addGoal(g);
-    setData(prev => ({ ...prev, goals: [...prev.goals, newG] }));
+  const handleAddGoal = (goalData: any) => {
+    try {
+      const newGoal = addGoal(goalData);
+      setData(prev => ({ 
+        ...prev, 
+        goals: [...prev.goals, newGoal] 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao adicionar meta:', error);
+      throw error;
+    }
   };
 
-  const handleUpdateGoal = (g: any) => {
-    updateGoal(g);
-    setData(prev => ({ ...prev, goals: prev.goals.map(goal => (goal.id === g.id ? g : goal)) }));
+  const handleUpdateGoal = (goalData: any) => {
+    try {
+      updateGoal(goalData);
+      setData(prev => ({ 
+        ...prev, 
+        goals: prev.goals.map(goal => 
+          goal.id === goalData.id ? goalData : goal
+        ) 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao atualizar meta:', error);
+      throw error;
+    }
   };
 
   // Accounts
-  const handleAddAccount = (a: any) => {
-    const newA = addAccount(a);
-    setData(prev => ({ ...prev, accounts: [...prev.accounts, newA] }));
+  const handleAddAccount = (accountData: any) => {
+    try {
+      const newAccount = addAccount(accountData);
+      setData(prev => ({ 
+        ...prev, 
+        accounts: [...prev.accounts, newAccount] 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao adicionar conta:', error);
+      throw error;
+    }
   };
 
   const handleDeleteAccount = (id: string) => {
-    deleteAccount(id);
-    setData(prev => ({ ...prev, accounts: prev.accounts.filter(acc => acc.id !== id) }));
+    try {
+      deleteAccount(id);
+      setData(prev => ({ 
+        ...prev, 
+        accounts: prev.accounts.filter(acc => acc.id !== id) 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao deletar conta:', error);
+      throw error;
+    }
   };
 
   // Credit cards
-  const handleAddCreditCard = (c: any) => {
-    const newC = addCreditCard(c);
-    setData(prev => ({ ...prev, creditCards: [...prev.creditCards, newC] }));
+  const handleAddCreditCard = (cardData: any) => {
+    try {
+      const newCard = addCreditCard(cardData);
+      setData(prev => ({ 
+        ...prev, 
+        creditCards: [...prev.creditCards, newCard] 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao adicionar cartão:', error);
+      throw error;
+    }
   };
 
   const handleDeleteCreditCard = (id: string) => {
-    deleteCreditCard(id);
-    setData(prev => ({ ...prev, creditCards: prev.creditCards.filter(cc => cc.id !== id) }));
+    try {
+      deleteCreditCard(id);
+      setData(prev => ({ 
+        ...prev, 
+        creditCards: prev.creditCards.filter(cc => cc.id !== id) 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao deletar cartão:', error);
+      throw error;
+    }
   };
 
-  // Investments - CORRIGIDO: parâmetros removidos
-  const handleAddInvestment = (i: any) => {
-    const newI = addInvestment(i);
-    setData(prev => ({ ...prev, investments: [...prev.investments, newI] }));
+  // Investments
+  const handleAddInvestment = (investmentData: any) => {
+    try {
+      const newInvestment = addInvestment(investmentData);
+      setData(prev => ({ 
+        ...prev, 
+        investments: [...prev.investments, newInvestment] 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao adicionar investimento:', error);
+      throw error;
+    }
   };
 
-  const handleAddInvestmentMovement = (invId: string) => {
-    const updatedInv = addInvestmentMovement(invId);
-    if (updatedInv) {
-      setData(prev => ({ ...prev, investments: prev.investments.map(inv => (inv.id === invId ? updatedInv : inv)) }));
+  const handleAddInvestmentMovement = (invId: string, movementData?: any) => {
+    try {
+      const updatedInv = addInvestmentMovement(invId, movementData);
+      if (updatedInv) {
+        setData(prev => ({ 
+          ...prev, 
+          investments: prev.investments.map(inv => 
+            inv.id === invId ? updatedInv : inv
+          ) 
+        }));
+      }
+    } catch (error) {
+      console.error('❌ Erro ao adicionar movimento de investimento:', error);
+      throw error;
     }
   };
 
   const handleDeleteInvestment = (id: string) => {
-    deleteInvestment(id);
-    setData(prev => ({ ...prev, investments: prev.investments.filter(inv => inv.id !== id) }));
+    try {
+      deleteInvestment(id);
+      setData(prev => ({ 
+        ...prev, 
+        investments: prev.investments.filter(inv => inv.id !== id) 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao deletar investimento:', error);
+      throw error;
+    }
   };
 
   // Properties & Debts
-  const handleAddProperty = (p: any) => {
-    const newP = addProperty(p);
-    setData(prev => ({ ...prev, properties: [...prev.properties, newP] }));
+  const handleAddProperty = (propertyData: any) => {
+    try {
+      const newProperty = addProperty(propertyData);
+      setData(prev => ({ 
+        ...prev, 
+        properties: [...prev.properties, newProperty] 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao adicionar propriedade:', error);
+      throw error;
+    }
   };
 
   const handleDeleteProperty = (id: string) => {
-    deleteProperty(id);
-    setData(prev => ({ ...prev, properties: prev.properties.filter(pp => pp.id !== id) }));
+    try {
+      deleteProperty(id);
+      setData(prev => ({ 
+        ...prev, 
+        properties: prev.properties.filter(pp => pp.id !== id) 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao deletar propriedade:', error);
+      throw error;
+    }
   };
 
-  const handleAddDebt = (d: any) => {
-    const newD = addDebt(d);
-    setData(prev => ({ ...prev, debts: [...prev.debts, newD] }));
+  const handleAddDebt = (debtData: any) => {
+    try {
+      const newDebt = addDebt(debtData);
+      setData(prev => ({ 
+        ...prev, 
+        debts: [...prev.debts, newDebt] 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao adicionar dívida:', error);
+      throw error;
+    }
   };
 
   const handleDeleteDebt = (id: string) => {
-    deleteDebt(id);
-    setData(prev => ({ ...prev, debts: prev.debts.filter(dd => dd.id !== id) }));
+    try {
+      deleteDebt(id);
+      setData(prev => ({ 
+        ...prev, 
+        debts: prev.debts.filter(dd => dd.id !== id) 
+      }));
+    } catch (error) {
+      console.error('❌ Erro ao deletar dívida:', error);
+      throw error;
+    }
   };
 
   // Custom categories
   const handleAddCategory = (category: string) => {
-    addCustomCategory(category);
+    try {
+      addCustomCategory(category);
+      // Recarregar dados para incluir a nova categoria
+      setData(loadData());
+    } catch (error) {
+      console.error('❌ Erro ao adicionar categoria:', error);
+      throw error;
+    }
   };
 
-  // If user not logged, show login
-  if (!user) {
+  // Se usuário não estiver logado, mostrar login
+  if (!user && !isLoading) {
     return (
       <>
         <OnlineStatus />
@@ -219,7 +377,7 @@ function App(): JSX.Element {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4" />
           <p className="text-slate-600">Carregando Dois no Bolso...</p>
         </div>
       </div>
@@ -228,92 +386,93 @@ function App(): JSX.Element {
 
   // Render views
   const renderCurrentView = () => {
-    switch (currentView) {
-      case 'dashboard':
-        return <Dashboard data={data} onViewChange={setCurrentView} />;
-      case 'transactions':
-        return (
-          <TransactionList
-            data={data}
-            onAddTransaction={handleAddTransaction}
-            onAddMultipleTransactions={handleAddMultipleTransactions}
-            onDeleteTransaction={handleDeleteTransaction}
-            onAddCategory={handleAddCategory}
-          />
-        );
-      case 'goals':
-        return <Goals goals={data.goals} onAddGoal={handleAddGoal} onUpdateGoal={handleUpdateGoal} />;
-      case 'reports':
-        return <Reports data={data} />;
-      case 'calendar':
-        return (
-          <FinancialCalendar
-            data={data}
-            onAddTransaction={handleAddTransaction}
-            onDeleteTransaction={handleDeleteTransaction}
-            currentUserId={user?.id || 'user1'}
-          />
-        );
-      case 'banks':
-        return (
-          <BankList
-            accounts={data.accounts}
-            onAddAccount={handleAddAccount}
-            onDeleteAccount={handleDeleteAccount}
-            onUpdateAccount={(account: Account) => {
-              deleteAccount(account.id);
-              addAccount(account);
-              setData(prev => ({ ...prev, accounts: prev.accounts.map(a => (a.id === account.id ? account : a)) }));
-            }}
-          />
-        );
-      case 'cards':
-        return (
-          <CreditCardList
-            cards={data.creditCards}
-            onAddCreditCard={handleAddCreditCard}
-            onDeleteCreditCard={handleDeleteCreditCard}
-            onUpdateCreditCard={(card: CreditCard) => {
-              deleteCreditCard(card.id);
-              addCreditCard(card);
-              setData(prev => ({ ...prev, creditCards: prev.creditCards.map(c => (c.id === card.id ? card : c)) }));
-            }}
-          />
-        );
-      case 'investments':
-        return (
-          <InvestmentDashboard
-            data={data}
-            onAddInvestment={handleAddInvestment}
-            onAddMovement={handleAddInvestmentMovement}
-            onDeleteInvestment={handleDeleteInvestment}
-            onAddTransaction={handleAddTransaction}
-          />
-        );
-      case 'balance':
-        return (
-          <BalanceSheet
-            data={data}
-            onAddProperty={handleAddProperty}
-            onDeleteProperty={handleDeleteProperty}
-            onAddDebt={handleAddDebt}
-            onDeleteDebt={handleDeleteDebt}
-          />
-        );
-      case 'chat':
-        return (
-          <AIChat
-            data={data}
-            onAddTransaction={handleAddTransaction}
-            onAddGoal={handleAddGoal}
-            onAddInvestment={handleAddInvestment}
-          />
-        );
-      case 'settings':
-        return <Settings data={data} onDataUpdate={setData} />;
-      default:
-        return <Dashboard data={data} onViewChange={setCurrentView} />;
-    }
+    const viewProps = {
+      dashboard: <Dashboard data={data} onViewChange={setCurrentView} />,
+      transactions: (
+        <TransactionList
+          data={data}
+          onAddTransaction={handleAddTransaction}
+          onAddMultipleTransactions={handleAddMultipleTransactions}
+          onDeleteTransaction={handleDeleteTransaction}
+          onAddCategory={handleAddCategory}
+        />
+      ),
+      goals: (
+        <Goals 
+          goals={data.goals} 
+          onAddGoal={handleAddGoal} 
+          onUpdateGoal={handleUpdateGoal} 
+        />
+      ),
+      reports: <Reports data={data} />,
+      calendar: (
+        <FinancialCalendar
+          data={data}
+          onAddTransaction={handleAddTransaction}
+          onDeleteTransaction={handleDeleteTransaction}
+          currentUserId={user?.id || 'user1'}
+        />
+      ),
+      banks: (
+        <BankList
+          accounts={data.accounts}
+          onAddAccount={handleAddAccount}
+          onDeleteAccount={handleDeleteAccount}
+          onUpdateAccount={(account: Account) => {
+            deleteAccount(account.id);
+            addAccount(account);
+            setData(prev => ({
+              ...prev,
+              accounts: prev.accounts.map(a => (a.id === account.id ? account : a))
+            }));
+          }}
+        />
+      ),
+      cards: (
+        <CreditCardList
+          cards={data.creditCards}
+          onAddCreditCard={handleAddCreditCard}
+          onDeleteCreditCard={handleDeleteCreditCard}
+          onUpdateCreditCard={(card: CreditCard) => {
+            deleteCreditCard(card.id);
+            addCreditCard(card);
+            setData(prev => ({
+              ...prev,
+              creditCards: prev.creditCards.map(c => (c.id === card.id ? card : c))
+            }));
+          }}
+        />
+      ),
+      investments: (
+        <InvestmentDashboard
+          data={data}
+          onAddInvestment={handleAddInvestment}
+          onAddMovement={handleAddInvestmentMovement}
+          onDeleteInvestment={handleDeleteInvestment}
+          onAddTransaction={handleAddTransaction}
+        />
+      ),
+      balance: (
+        <BalanceSheet
+          data={data}
+          onAddProperty={handleAddProperty}
+          onDeleteProperty={handleDeleteProperty}
+          onAddDebt={handleAddDebt}
+          onDeleteDebt={handleDeleteDebt}
+        />
+      ),
+      chat: (
+        <AIChat
+          data={data}
+          onAddTransaction={handleAddTransaction}
+          onAddGoal={handleAddGoal}
+          onAddInvestment={handleAddInvestment}
+        />
+      ),
+      settings: <Settings data={data} onDataUpdate={setData} />
+    };
+
+    return viewProps[currentView] || viewProps.dashboard;
   };
 
   return (
@@ -321,7 +480,12 @@ function App(): JSX.Element {
       <OnlineStatus />
       <PWAInstallPrompt />
 
-      <Layout currentView={currentView} onViewChange={setCurrentView} onLogout={handleLogout}>
+      <Layout 
+        currentView={currentView} 
+        onViewChange={setCurrentView} 
+        onLogout={handleLogout}
+        user={user}
+      >
         {renderCurrentView()}
 
         <footer className="py-4 text-center text-slate-500 text-xs mt-8 border-t border-slate-200">
@@ -340,7 +504,9 @@ function App(): JSX.Element {
                 </>
               )}
             </span>
-            {isStandalone && <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">App</span>}
+            {isStandalone && (
+              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">App</span>
+            )}
           </div>
         </footer>
       </Layout>
