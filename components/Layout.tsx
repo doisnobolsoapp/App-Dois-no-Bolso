@@ -1,126 +1,182 @@
-import React from "react";
-import {
-  List,
-  Wallet,
-  Bot,
-  Home,
-  CreditCard,
-  Calendar,
+// src/components/Layout.tsx
+import { useState } from 'react';
+import { 
+  Home, 
+  CreditCard, 
+  Calendar, 
+  Landmark, 
+  MessageSquare, 
   Settings,
-  Landmark,
-  PieChart
-} from "lucide-react";
-
-type ViewState =
-  | "dashboard"
-  | "transactions"
-  | "calendar"
-  | "banks"
-  | "cards"
-  | "chat"
-  | "settings";
-
-interface MenuItem {
-  id: ViewState;
-  label: string;
-  icon: React.ElementType;
-  children?: {
-    id: ViewState;
-    label: string;
-    icon: React.ElementType;
-  }[];
-}
+  PieChart,
+  Menu,
+  X,
+  LogOut
+} from 'lucide-react';
+import { ViewState } from '../types';
 
 interface LayoutProps {
   currentView: ViewState;
-  onViewChange: (v: ViewState) => void;
+  onViewChange: (view: ViewState) => void;
   onLogout: () => void;
+  children: React.ReactNode;
 }
 
-export default function Layout({
-  currentView,
-  onViewChange,
-  onLogout
-}: LayoutProps) {
-  const menuItems: MenuItem[] = [
-    { id: "dashboard", label: "Visão Geral", icon: Home },
-    { id: "transactions", label: "Transações", icon: CreditCard },
-    { id: "calendar", label: "Calendário", icon: Calendar },
+export const Layout: React.FC<LayoutProps> = ({ currentView, onViewChange, onLogout, children }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    {
-      id: "banks",
-      label: "Configurações de Contas",
-      icon: List,
-      children: [
-        { id: "banks", label: "Bancos", icon: Landmark },
-        { id: "banks", label: "Carteira", icon: Wallet },
-        { id: "cards", label: "Cartões", icon: PieChart }
+  const menuItems = [
+    { id: 'dashboard' as ViewState, label: 'Visão Geral', icon: Home },
+    { id: 'transactions' as ViewState, label: 'Transações', icon: CreditCard },
+    { id: 'calendar' as ViewState, label: 'Calendário', icon: Calendar },
+
+    // Novo item agrupando Bancos + Carteiras + Cartões
+    { 
+      id: 'accountSettings' as ViewState, 
+      label: 'Configurações de Contas',
+      icon: Landmark,
+      subItems: [
+        { id: 'banks' as ViewState, label: 'Bancos', icon: Landmark },
+        { id: 'wallets' as ViewState, label: 'Carteira', icon: CreditCard },
+        { id: 'cards' as ViewState, label: 'Cartões', icon: PieChart }
       ]
     },
 
-    { id: "chat", label: "Assistente IA", icon: Bot },
-    { id: "settings", label: "Configurações do App", icon: Settings }
+    { id: 'chat' as ViewState, label: 'Assistente IA', icon: MessageSquare },
+    { id: 'settings' as ViewState, label: 'Configurações do App', icon: Settings },
   ];
 
-  const renderMenuItem = (item: MenuItem) => {
+  const renderMenuItem = (item: any) => {
     const Icon = item.icon;
 
-    return (
-      <div key={item.id} className="w-full">
+    // Se não tiver submenu
+    if (!item.subItems) {
+      return (
         <button
-          onClick={() => onViewChange(item.id)}
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full transition-colors
-          ${currentView === item.id ? "bg-gray-200" : "hover:bg-gray-100"}`}
+          key={item.id}
+          onClick={() => {
+            onViewChange(item.id);
+            setIsMobileMenuOpen(false);
+          }}
+          className={`flex items-center space-x-2 px-3 py-2 rounded-lg whitespace-nowrap ${
+            currentView === item.id
+              ? 'bg-blue-50 text-blue-600 border border-blue-200'
+              : 'text-slate-600 hover:bg-slate-100 border border-transparent'
+          }`}
         >
-          <Icon size={20} />
-          <span>{item.label}</span>
+          <Icon size={18} />
+          <span className="font-medium text-sm">{item.label}</span>
+        </button>
+      );
+    }
+
+    // Se tiver submenus
+    return (
+      <div key={item.id} className="relative group">
+        <button
+          className={`flex items-center space-x-2 px-3 py-2 rounded-lg whitespace-nowrap ${
+            currentView === item.id
+              ? 'bg-blue-50 text-blue-600 border border-blue-200'
+              : 'text-slate-600 hover:bg-slate-100 border border-transparent'
+          }`}
+        >
+          <Icon size={18} />
+          <span className="font-medium text-sm">{item.label}</span>
         </button>
 
-        {item.children && (
-          <div className="pl-10 flex flex-col gap-1 mt-1">
-            {item.children.map(child => {
-              const ChildIcon = child.icon;
-              return (
-                <button
-                  key={child.label}
-                  onClick={() => onViewChange(child.id)}
-                  className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-100"
-                >
-                  <ChildIcon size={16} />
-                  <span>{child.label}</span>
-                </button>
-              );
-            })}
-
-            <button
-              onClick={() => alert("Adicionar nova conta")}
-              className="flex items-center gap-2 px-2 py-1 mt-2 rounded bg-blue-50 text-blue-700 hover:bg-blue-100"
-            >
-              <List size={16} />
-              <span className="text-sm font-medium">Adicionar conta</span>
-            </button>
-          </div>
-        )}
+        {/* Dropdown Submenu */}
+        <div className="absolute left-0 top-full hidden group-hover:block bg-white shadow-lg rounded-lg mt-1 border border-slate-200 z-50 min-w-[200px]">
+          {item.subItems.map((sub: any) => {
+            const SubIcon = sub.icon;
+            return (
+              <button
+                key={sub.id}
+                onClick={() => {
+                  onViewChange(sub.id);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`flex items-center px-3 py-2 gap-2 text-sm w-full text-left ${
+                  currentView === sub.id
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <SubIcon size={16} />
+                {sub.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="flex h-screen">
-      <aside className="bg-white border-r p-4 flex flex-col gap-2 w-64">
-        {menuItems.map(renderMenuItem)}
+    <div className="min-h-screen bg-slate-50">
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-white border-r border-slate-200 flex-col z-40">
+        <div className="p-6 border-b border-slate-200">
+          <h1 className="text-xl font-bold text-slate-800">Dois no Bolso</h1>
+          <p className="text-sm text-slate-500">Controle financeiro</p>
+        </div>
 
-        <button
-          onClick={onLogout}
-          className="mt-auto py-2 px-3 bg-red-50 text-red-600 rounded hover:bg-red-100"
-        >
-          Sair
-        </button>
-      </aside>
+        <nav className="flex-1 p-4 space-y-1">
+          {menuItems.map(renderMenuItem)}
+        </nav>
 
-      <main className="flex-1 p-4 overflow-y-auto">
-        {/* Conteúdo é renderizado pelo App.tsx */}
-      </main>
+        <div className="p-4 border-t border-slate-200">
+          <button
+            onClick={onLogout}
+            className="flex items-center space-x-2 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 w-full text-left"
+          >
+            <LogOut size={18} />
+            <span className="font-medium text-sm">Sair</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-slate-200 z-50">
+        <div className="flex items-center justify-between p-4">
+          <div>
+            <h1 className="text-lg font-bold text-slate-800">Dois no Bolso</h1>
+            <p className="text-xs text-slate-500">Controle financeiro</p>
+          </div>
+          
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+          >
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-lg max-h-[80vh] overflow-y-auto">
+            <nav className="p-4 space-y-1">
+              {menuItems.map(renderMenuItem)}
+              
+              <button
+                onClick={() => {
+                  onLogout();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 w-full text-left border-t border-slate-200 mt-4 pt-4"
+              >
+                <LogOut size={18} />
+                <span className="font-medium text-sm">Sair</span>
+              </button>
+            </nav>
+          </div>
+        )}
+      </div>
+
+      {/* Main Content */}
+      <div className="lg:ml-64 pt-16 lg:pt-0">
+        <main className="p-6 max-w-7xl mx-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
-}
+};
