@@ -1,7 +1,7 @@
 // App.tsx
 import { useEffect, useState } from 'react';
 import { AppData, ViewState, Account, CreditCard } from './types';
-import { Layout } from './components/Layout';
+import Layout from "./components/Layout";
 import { Dashboard } from './components/Dashboard';
 import { TransactionList } from './components/TransactionList';
 import { Goals } from './components/Goals';
