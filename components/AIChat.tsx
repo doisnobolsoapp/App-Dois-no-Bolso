@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, Loader2 } from 'lucide-react';
 import { AppData } from '../types';
+import { callOpenAIWithTools, processOpenAIResponse } from '../services/openaiService';
 
 interface AIChatProps {
   data: AppData;
@@ -16,19 +17,6 @@ type Message = {
   role: 'user' | 'assistant';
   timestamp: Date;
 };
-
-// Interface para a resposta da OpenAI
-interface OpenAIResponse {
-  choices: Array<{
-    message: {
-      content?: string;
-      function_call?: {
-        name: string;
-        arguments: string;
-      };
-    };
-  }>;
-}
 
 export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoal, onAddInvestment }) => {
   const [messages, setMessages] = useState<Message[]>([
@@ -46,56 +34,15 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   useEffect(() => { scrollToBottom(); }, [messages]);
 
-  // Implementação temporária da função callOpenAIWithTools
-  const callOpenAIWithTools = async (userMessage: string, systemPrompt: string, context: string): Promise<OpenAIResponse> => {
-    // TODO: Substituir por chamada real à API da OpenAI
-    console.log('Chamando OpenAI com:', { userMessage, systemPrompt, context });
-    
-    // Simulação de resposta - REMOVER quando implementar a API real
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Simula uma resposta de função para adicionar transação
-        if (userMessage.toLowerCase().includes('adicionar') || userMessage.toLowerCase().includes('gasto')) {
-          resolve({
-            choices: [{
-              message: {
-                function_call: {
-                  name: 'addTransaction',
-                  arguments: JSON.stringify({
-                    type: 'expense',
-                    description: 'Transação via assistente',
-                    amount: 100,
-                    category: 'Outros',
-                    date: new Date().toISOString().split('T')[0],
-                    paid: true,
-                    paymentMethod: 'cash'
-                  })
-                }
-              }
-            }]
-          });
-        } else {
-          // Resposta textual normal
-          resolve({
-            choices: [{
-              message: {
-                content: `Entendi sua solicitação: "${userMessage}". Como posso ajudar com suas finanças?`
-              }
-            }]
-          });
-        }
-      }, 1000);
-    });
-  };
-
+  // Processa o tool_call retornado pela OpenAI e executa a ação localmente
   const handleToolCall = (toolName: string, toolArgs: any) => {
     try {
       console.log('Executando tool:', toolName, toolArgs);
       
       if (toolName === 'addTransaction') {
         const tx = {
-          type: toolArgs.type || 'expense',
-          description: toolArgs.description || 'Transação via assistente',
+          type: toolArgs.type,
+          description: toolArgs.description,
           amount: Number(toolArgs.amount) || 0,
           category: toolArgs.category || 'Outros',
           date: toolArgs.date || new Date().toISOString().split('T')[0],
@@ -105,12 +52,12 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
           cardId: toolArgs.cardId
         };
         onAddTransaction(tx);
-        return `✅ Transação adicionada: ${tx.description} — R$ ${tx.amount.toFixed(2)}`;
+        return `✅ Transação adicionada: ${tx.description} — R$ ${tx.amount.toFixed(2)} (${tx.type})`;
       }
       
       if (toolName === 'addGoal' && onAddGoal) {
         const goal = {
-          name: toolArgs.name || 'Meta financeira',
+          name: toolArgs.name,
           targetAmount: Number(toolArgs.targetAmount) || 0,
           deadline: toolArgs.deadline || ''
         };
@@ -120,13 +67,13 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
       
       if (toolName === 'addInvestment' && onAddInvestment) {
         const inv = {
-          name: toolArgs.name || 'Investimento',
-          type: toolArgs.type || 'stocks',
+          name: toolArgs.name,
+          type: toolArgs.type,
           broker: toolArgs.broker || '',
           strategy: toolArgs.strategy || 'LONG_TERM'
         };
         onAddInvestment(inv);
-        return `📈 Investimento cadastrado: ${inv.name}`;
+        return `📈 Investimento cadastrado: ${inv.name} (${inv.type})`;
       }
       
       return `⚠️ Função ${toolName} não reconhecida ou não suportada.`;
@@ -152,36 +99,35 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
 
     try {
       const userContext = `
-        Transações: ${data.transactions.length}
-        Metas: ${data.goals.length}
-        Contas: ${data.accounts.length}
-        Investimentos: ${data.investments.length}
-      `;
+Dados atuais do usuário:
+- Transações: ${data.transactions.length}
+- Metas: ${data.goals?.length || 0}
+- Contas: ${data.accounts?.length || 0}
+- Investimentos: ${data.investments?.length || 0}
 
-      const result = await callOpenAIWithTools(inputMessage, 'Você é um assistente financeiro útil e objetivo.', userContext);
+Use as funções disponíveis para adicionar transações, metas ou investimentos quando solicitado.
+      `.trim();
+
+      const systemPrompt = `Você é um assistente financeiro útil e objetivo. 
+Responda em português brasileiro. 
+Use as funções disponíveis quando o usuário pedir para adicionar transações, metas ou investimentos.`;
+
+      // Chama a API da OpenAI
+      const result = await callOpenAIWithTools(inputMessage, systemPrompt, userContext);
       
-      console.log('Resposta da OpenAI:', result); // Debug
+      console.log('Resposta completa da OpenAI:', result); // Para debug
 
-      if (!result.choices || result.choices.length === 0) {
-        throw new Error('Resposta vazia da OpenAI');
-      }
-
-      const message = result.choices[0].message;
+      // Processa a resposta usando a função auxiliar
+      const processedResponse = processOpenAIResponse(result);
       
-      if (message?.function_call) {
-        // Caso 1: Chamada de função
-        const fc = message.function_call;
-        let args = {};
+      if (processedResponse.toolCall) {
+        // Caso 1: A IA quer chamar uma função
+        const { name, arguments: args } = processedResponse.toolCall;
         
-        try {
-          args = typeof fc.arguments === 'string' ? JSON.parse(fc.arguments) : fc.arguments;
-        } catch (err) {
-          console.warn('Não foi possível parsear arguments:', err);
-          args = {};
-        }
-
-        const toolResultText = handleToolCall(fc.name, args);
+        // Executa a função localmente
+        const toolResultText = handleToolCall(name, args);
         
+        // Adiciona mensagem de confirmação do assistant
         const assistantMsg: Message = { 
           id: (Date.now() + 1).toString(), 
           content: toolResultText, 
@@ -190,24 +136,24 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
         };
         setMessages(prev => [...prev, assistantMsg]);
         
-      } else if (message?.content) {
-        // Caso 2: Resposta textual
+      } else if (processedResponse.content) {
+        // Caso 2: Resposta textual normal
         const assistantMsg: Message = { 
           id: (Date.now() + 1).toString(), 
-          content: message.content, 
+          content: processedResponse.content, 
           role: 'assistant', 
           timestamp: new Date() 
         };
         setMessages(prev => [...prev, assistantMsg]);
       } else {
-        throw new Error('Formato de resposta não reconhecido');
+        throw new Error('Resposta da OpenAI sem conteúdo válido');
       }
       
     } catch (err) {
       console.error('Erro no handleSend:', err);
       const errorMsg: Message = { 
         id: (Date.now() + 1).toString(), 
-        content: '❌ Erro ao contatar a IA. Verifique a conexão e tente novamente.', 
+        content: '❌ Erro ao contatar a IA. Verifique sua conexão e a chave da API OpenAI.', 
         role: 'assistant', 
         timestamp: new Date() 
       };
@@ -217,13 +163,21 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
     }
   };
 
+  // Função para enviar com Enter (melhoria de UX)
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   return (
     <div className="pb-20 h-full flex flex-col">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-slate-800">Assistente Financeiro IA</h2>
         <div className="flex items-center bg-brand-100 text-brand-700 px-3 py-1 rounded-full text-sm">
           <Bot size={16} className="mr-2" />
-          Assistente (tools)
+          Assistente IA
         </div>
       </div>
 
@@ -261,8 +215,9 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
         <input 
           type="text" 
           value={inputMessage} 
-          onChange={e => setInputMessage(e.target.value)} 
-          placeholder="Digite sua mensagem..." 
+          onChange={e => setInputMessage(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Ex: Adicione uma despesa de R$ 50 com almoço..." 
           className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent" 
           disabled={isLoading} 
         />
