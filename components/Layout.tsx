@@ -11,8 +11,7 @@ import {
   PieChart,
   MessageSquare,
   Settings,
-  Menu,
-  MoreVertical
+  Menu
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -29,16 +28,12 @@ export const Layout: React.FC<LayoutProps> = ({
   children 
 }) => {
   const [showMobileMenu, setShowMobileMenu] = React.useState(false);
-  const [showMoreMenu, setShowMoreMenu] = React.useState(false);
 
-  const mainItems = [
-    { id: 'dashboard' as ViewState, label: 'Visão Geral', icon: Home, shortLabel: 'Visão' },
-    { id: 'transactions' as ViewState, label: 'Transações', icon: CreditCard, shortLabel: 'Gastos' },
-    { id: 'goals' as ViewState, label: 'Metas', icon: Target, shortLabel: 'Metas' },
-    { id: 'investments' as ViewState, label: 'Investimentos', icon: BarChart3, shortLabel: 'Investir' },
-  ];
-
-  const otherItems = [
+  const menuItems = [
+    { id: 'dashboard' as ViewState, label: 'Visão Geral', icon: Home },
+    { id: 'transactions' as ViewState, label: 'Transações', icon: CreditCard },
+    { id: 'goals' as ViewState, label: 'Metas', icon: Target },
+    { id: 'investments' as ViewState, label: 'Investimentos', icon: BarChart3 },
     { id: 'banks' as ViewState, label: 'Bancos', icon: Landmark },
     { id: 'cards' as ViewState, label: 'Cartões', icon: PieChart },
     { id: 'balance' as ViewState, label: 'Patrimônio', icon: Landmark },
@@ -50,49 +45,30 @@ export const Layout: React.FC<LayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header Mobile */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 lg:hidden">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">D</span>
             </div>
             <h1 className="font-semibold text-slate-800">Dois no Bolso</h1>
           </div>
           
-          {/* Menu Hambúrguer */}
+          {/* Mobile Menu Button */}
           <button 
             onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="p-2 rounded-lg hover:bg-slate-100"
+            className="p-2 rounded-lg hover:bg-slate-100 lg:hidden"
           >
             <Menu size={20} />
           </button>
         </div>
 
-        {/* Mobile Menu Dropdown */}
+        {/* Mobile Menu */}
         {showMobileMenu && (
-          <div className="absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-lg z-50">
-            <div className="p-2 space-y-1">
-              <div className="text-xs text-slate-500 px-3 py-2">Navegação</div>
-              
-              {/* Visão Geral */}
-              <button
-                onClick={() => {
-                  onViewChange('dashboard');
-                  setShowMobileMenu(false);
-                }}
-                className={`flex items-center space-x-3 px-3 py-2 rounded-lg w-full text-left ${
-                  currentView === 'dashboard' 
-                    ? 'bg-brand-50 text-brand-600' 
-                    : 'text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                <Home size={20} />
-                <span className="font-medium">Visão Geral</span>
-              </button>
-
-              {/* Demais opções */}
-              {[...mainItems.filter(item => item.id !== 'dashboard'), ...otherItems].map((item) => {
+          <div className="lg:hidden bg-white border-b border-slate-200">
+            <div className="px-4 py-2 space-y-1 max-h-96 overflow-y-auto">
+              {menuItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <button
@@ -103,7 +79,7 @@ export const Layout: React.FC<LayoutProps> = ({
                     }}
                     className={`flex items-center space-x-3 px-3 py-2 rounded-lg w-full text-left ${
                       currentView === item.id 
-                        ? 'bg-brand-50 text-brand-600' 
+                        ? 'bg-blue-50 text-blue-600' 
                         : 'text-slate-700 hover:bg-slate-100'
                     }`}
                   >
@@ -112,8 +88,8 @@ export const Layout: React.FC<LayoutProps> = ({
                   </button>
                 );
               })}
-
-              <div className="border-t border-slate-200 pt-2 mt-2">
+              
+              <div className="border-t border-slate-200 pt-2">
                 <button
                   onClick={() => {
                     onLogout();
@@ -128,148 +104,33 @@ export const Layout: React.FC<LayoutProps> = ({
             </div>
           </div>
         )}
-      </header>
 
-      {/* Bottom Navigation Mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 lg:hidden">
-        <div className="flex justify-around items-center py-2">
-          {mainItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onViewChange(item.id)}
-                className={`flex flex-col items-center p-2 rounded-lg min-w-16 ${
-                  currentView === item.id 
-                    ? 'text-brand-600 bg-brand-50' 
-                    : 'text-slate-500 hover:bg-slate-100'
-                }`}
-              >
-                <Icon size={22} />
-                <span className="text-xs mt-1 font-medium">{item.shortLabel}</span>
-              </button>
-            );
-          })}
-
-          {/* Menu "Mais" */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`flex flex-col items-center p-2 rounded-lg min-w-16 ${
-                otherItems.some(item => item.id === currentView)
-                  ? 'text-brand-600 bg-brand-50' 
-                  : 'text-slate-500 hover:bg-slate-100'
-              }`}
-            >
-              <MoreVertical size={22} />
-              <span className="text-xs mt-1 font-medium">Mais</span>
-            </button>
-            
-            {/* More Menu Dropdown */}
-            {showMoreMenu && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                <div className="p-2 space-y-1 max-h-60 overflow-y-auto">
-                  <div className="text-xs text-slate-500 px-2 py-1">Mais Opções</div>
-                  
-                  {otherItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          onViewChange(item.id);
-                          setShowMoreMenu(false);
-                        }}
-                        className={`flex items-center space-x-2 px-2 py-2 rounded-lg w-full text-left ${
-                          currentView === item.id 
-                            ? 'bg-brand-50 text-brand-600' 
-                            : 'text-slate-700 hover:bg-slate-100'
-                        }`}
-                      >
-                        <Icon size={18} />
-                        <span className="font-medium text-sm">{item.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </nav>
-
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:flex flex-1">
-        <aside className="w-64 bg-white border-r border-slate-200">
-          <div className="p-6 border-b border-slate-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">D</span>
-              </div>
-              <h1 className="font-semibold text-slate-800">Dois no Bolso</h1>
-            </div>
-          </div>
-          
-          <nav className="p-4 space-y-1">
-            {mainItems.map((item) => {
+        {/* Desktop Menu */}
+        <div className="hidden lg:flex border-t border-slate-200">
+          <div className="flex overflow-x-auto px-4 space-x-1">
+            {menuItems.map((item) => {
               const Icon = item.icon;
               return (
                 <button
                   key={item.id}
                   onClick={() => onViewChange(item.id)}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg w-full text-left ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg whitespace-nowrap ${
                     currentView === item.id 
-                      ? 'bg-brand-50 text-brand-600' 
-                      : 'text-slate-700 hover:bg-slate-100'
+                      ? 'bg-blue-50 text-blue-600 border border-blue-200' 
+                      : 'text-slate-600 hover:bg-slate-100 border border-transparent'
                   }`}
                 >
-                  <Icon size={20} />
-                  <span className="font-medium">{item.label}</span>
+                  <Icon size={18} />
+                  <span className="font-medium text-sm">{item.label}</span>
                 </button>
               );
             })}
-            
-            <div className="pt-4 border-t border-slate-200">
-              <div className="text-xs text-slate-500 px-3 py-2">Outros</div>
-              {otherItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => onViewChange(item.id)}
-                    className={`flex items-center space-x-3 px-3 py-2 rounded-lg w-full text-left ${
-                      currentView === item.id 
-                        ? 'bg-brand-50 text-brand-600' 
-                        : 'text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Icon size={20} />
-                    <span className="font-medium">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-            
-            <div className="pt-4 border-t border-slate-200">
-              <button
-                onClick={onLogout}
-                className="flex items-center space-x-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 w-full text-left"
-              >
-                <Settings size={20} />
-                <span className="font-medium">Sair</span>
-              </button>
-            </div>
-          </nav>
-        </aside>
+          </div>
+        </div>
+      </header>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
-      </div>
-
-      {/* Mobile Main Content */}
-      <main className="flex-1 pb-16 lg:pb-0 lg:hidden">
+      {/* Main Content */}
+      <main className="flex-1">
         {children}
       </main>
     </div>
