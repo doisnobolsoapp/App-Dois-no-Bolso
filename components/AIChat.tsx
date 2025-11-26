@@ -115,7 +115,7 @@ Use as funções disponíveis quando o usuário pedir para adicionar transaçõe
       console.log('🟡 Iniciando chamada da IA...');
       
       // Chama a API da OpenAI
-      const result = await callOpenAIWithTools(inputMessage, systemPrompt, userContext);
+      const result = await callOpenAIWithTools(inputMessage);
       
       console.log('🟢 Resposta recebida:', result);
 
