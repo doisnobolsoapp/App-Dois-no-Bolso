@@ -11,7 +11,7 @@ import {
   PieChart,
   BarChart3
 } from 'lucide-react';
-import { AppData, ViewState } from '../types'; // REMOVEU Transaction
+import { AppData, ViewState } from '../types';
 
 interface DashboardProps {
   data: AppData;
@@ -49,9 +49,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
 
     const totalBalance = data.accounts.reduce((sum, acc) => sum + acc.balance, 0);
     
-    // CORREÇÃO: Verifica se existe balance nos cartões, senão usa 0
+    // CORREÇÃO: Usa currentBalance que existe na interface CreditCard
     const creditCardBalance = data.creditCards.reduce((sum, card) => {
-      return sum + (card.balance || 0); // Usa 0 se balance não existir
+      return sum + (card.currentBalance || 0);
     }, 0);
 
     return {
@@ -246,7 +246,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
           subtitle="Contas bancárias"
           icon={DollarSign}
           trend={totals.balance >= 0 ? 'up' : 'down'}
-          onClick={() => onViewChange('accountSettings' as ViewState)} // CORREÇÃO
+          onClick={() => onViewChange('accountSettings')}
         />
         <StatCard
           title="Cartões de Crédito"
@@ -430,7 +430,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onViewChange }) => {
           </button>
           
           <button 
-            onClick={() => onViewChange('accountSettings' as ViewState)} // CORREÇÃO
+            onClick={() => onViewChange('accountSettings')}
             className="p-4 text-left border border-slate-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-colors"
           >
             <CreditCard size={20} className="text-orange-600 mb-2" />
