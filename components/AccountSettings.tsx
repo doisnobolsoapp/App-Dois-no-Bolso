@@ -1,10 +1,19 @@
 // src/components/AccountSettings.tsx
 import { useState } from 'react';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
-import { Account } from '../types'; // IMPORTE A INTERFACE DO SEU SISTEMA
+
+// Interface local para evitar conflito com a interface global Account
+interface AccountItem {
+  id: string;
+  name: string;
+  type: 'asset' | 'liability';
+  category: string;
+  balance: number;
+  currency: string;
+}
 
 interface AccountSettingsProps {
-  accounts: Account[];
+  accounts: any[]; // Use any[] para aceitar qualquer estrutura de conta
   onAddAccount: (accountData: any) => void;
   onDeleteAccount: (id: string) => void;
 }
@@ -28,8 +37,18 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
     liability: ['Cartão de Crédito', 'Financiamentos', 'Empréstimos', 'Outros']
   };
 
+  // Normalizar as contas para a estrutura esperada
+  const normalizedAccounts = accounts.map(account => ({
+    id: account.id,
+    name: account.name,
+    type: account.type || (account.balance >= 0 ? 'asset' : 'liability'),
+    category: account.category || 'Outros',
+    balance: account.balance,
+    currency: account.currency || 'BRL'
+  }));
+
   // Calcular totais por categoria
-  const categoryTotals = accounts.reduce((acc, account) => {
+  const categoryTotals = normalizedAccounts.reduce((acc, account) => {
     if (!acc[account.category]) {
       acc[account.category] = 0;
     }
@@ -37,9 +56,9 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
     return acc;
   }, {} as Record<string, number>);
 
-  // Separar contas por tipo - ADAPTEI PARA USAR SUA INTERFACE
-  const assets = accounts.filter(account => account.type === 'asset' || account.balance >= 0);
-  const liabilities = accounts.filter(account => account.type === 'liability' || account.balance < 0);
+  // Separar contas por tipo
+  const assets = normalizedAccounts.filter(account => account.type === 'asset' || account.balance >= 0);
+  const liabilities = normalizedAccounts.filter(account => account.type === 'liability' || account.balance < 0);
 
   // Agrupar por categoria
   const groupedAssets = assets.reduce((acc, account) => {
@@ -49,7 +68,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
     }
     acc[category].push(account);
     return acc;
-  }, {} as Record<string, Account[]>);
+  }, {} as Record<string, typeof normalizedAccounts>);
 
   const groupedLiabilities = liabilities.reduce((acc, account) => {
     const category = account.category || 'Outros';
@@ -58,7 +77,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
     }
     acc[category].push(account);
     return acc;
-  }, {} as Record<string, Account[]>);
+  }, {} as Record<string, typeof normalizedAccounts>);
 
   const handleAddAccount = () => {
     if (!newAccount.name || !newAccount.category) return;
@@ -89,7 +108,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
     }).format(value);
   };
 
-  const renderAccountGroup = (title: string, groups: Record<string, Account[]>, isAsset: boolean) => (
+  const renderAccountGroup = (title: string, groups: Record<string, any[]>, isAsset: boolean) => (
     <div className="mb-8">
       <h2 className="text-xl font-bold text-slate-800 mb-4">{title}</h2>
       
