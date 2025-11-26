@@ -253,7 +253,7 @@ function App(): JSX.Element {
     }
   };
 
-  // Investments - CORRIGIDO: apenas 1 argumento
+  // Investments - CORRIGIDO: função com apenas 1 parâmetro
   const handleAddInvestment = (investmentData: any) => {
     try {
       const newInvestment = addInvestment(investmentData);
@@ -267,6 +267,7 @@ function App(): JSX.Element {
     }
   };
 
+  // CORREÇÃO: Esta função agora recebe apenas 1 argumento
   const handleAddInvestmentMovement = (invId: string) => {
     try {
       const updatedInv = addInvestmentMovement(invId); // APENAS 1 ARGUMENTO
@@ -480,7 +481,7 @@ function App(): JSX.Element {
       <OnlineStatus />
       <PWAInstallPrompt />
 
-      {/* CORRIGIDO: Removida a prop user */}
+      {/* CORREÇÃO: Removida a prop 'user' que não existe no Layout */}
       <Layout 
         currentView={currentView} 
         onViewChange={setCurrentView} 
