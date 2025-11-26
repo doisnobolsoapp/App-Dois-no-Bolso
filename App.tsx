@@ -37,12 +37,10 @@ import {
   addCustomCategory
 } from './services/storageService';
 
-// IMPORT AJUSTADO para corresponder ao arquivo OnlineStatus.tsx (case-sensitive)
 import { OnlineStatus } from './components/OnlineStatus';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 
 const usePWA = () => {
-  // defensivo para SSR/ambientes sem window/navigator
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
   const isStandalone =
     typeof window !== 'undefined' &&
@@ -63,7 +61,6 @@ interface User {
 }
 
 function App(): JSX.Element {
-  // carregar dados persistidos (storageService)
   const [data, setData] = useState<AppData>(() => loadData());
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [user, setUser] = useState<User | null>(null);
@@ -72,14 +69,12 @@ function App(): JSX.Element {
   const { isOnline, isStandalone } = usePWA();
 
   useEffect(() => {
-    // tenta pegar usuário logado (authService pode ser undefined em alguns setups)
     const currentUser = typeof authService !== 'undefined' && authService.getCurrentUser ? authService.getCurrentUser() : null;
     if (currentUser) {
       setUser(currentUser as User);
     }
     setIsLoading(false);
 
-    // registra service worker apenas em produção (não local)
     if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
       const isProduction =
         typeof window !== 'undefined' &&
@@ -97,10 +92,8 @@ function App(): JSX.Element {
           });
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Salva automaticamente quando `data` muda
   useEffect(() => {
     try {
       saveData(data);
@@ -109,7 +102,6 @@ function App(): JSX.Element {
     }
   }, [data]);
 
-  // Auth handlers
   const handleLogin = (userData: User) => {
     setUser(userData);
   };
@@ -119,7 +111,7 @@ function App(): JSX.Element {
     setUser(null);
   };
 
-  // Transaction handlers (utilizam storageService)
+  // Transaction handlers
   const handleAddTransaction = (t: any) => {
     const newT = addTransaction(t);
     setData(prev => ({ ...prev, transactions: [...prev.transactions, newT] }));
@@ -168,7 +160,7 @@ function App(): JSX.Element {
     setData(prev => ({ ...prev, creditCards: prev.creditCards.filter(cc => cc.id !== id) }));
   };
 
-  // Investments - CORRIGIDO: função simplificada
+  // Investments - CORRIGIDO: parâmetros removidos
   const handleAddInvestment = (i: any) => {
     const newI = addInvestment(i);
     setData(prev => ({ ...prev, investments: [...prev.investments, newI] }));
@@ -227,7 +219,7 @@ function App(): JSX.Element {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
           <p className="text-slate-600">Carregando Dois no Bolso...</p>
         </div>
       </div>
@@ -348,7 +340,7 @@ function App(): JSX.Element {
                 </>
               )}
             </span>
-            {isStandalone && <span className="bg-brand-100 text-brand-700 px-2 py-1 rounded-full text-xs">App</span>}
+            {isStandalone && <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">App</span>}
           </div>
         </footer>
       </Layout>
