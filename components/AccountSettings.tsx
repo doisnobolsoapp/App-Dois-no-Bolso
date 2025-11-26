@@ -1,22 +1,25 @@
 // src/components/AccountSettings.tsx
 import { useState } from 'react';
-import { Plus, Edit2, Trash2, Minus } from 'lucide-react';
+import { Plus, Edit2, Trash2, Minus, Save, X } from 'lucide-react';
 
 interface AccountSettingsProps {
   accounts: any[];
   onAddAccount: (accountData: any) => void;
   onDeleteAccount: (id: string) => void;
+  onUpdateAccount: (accountData: any) => void;
 }
 
 const AccountSettings: React.FC<AccountSettingsProps> = ({ 
   accounts, 
   onAddAccount, 
-  onDeleteAccount 
+  onDeleteAccount,
+  onUpdateAccount 
 }) => {
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
   const [newCategory, setNewCategory] = useState('');
-  const [newAccount, setNewAccount] = useState({
+  const [editingAccount, setEditingAccount] = useState<any>(null);
+  const [accountForm, setAccountForm] = useState({
     name: '',
     type: 'asset' as 'asset' | 'liability',
     category: '',
@@ -79,35 +82,65 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
 
   const handleAddCategory = () => {
     if (newCategory.trim()) {
-      // Adiciona a nova categoria à lista apropriada
-      if (newAccount.type === 'asset') {
+      if (accountForm.type === 'asset') {
         categories.asset.push(newCategory.trim());
       } else {
         categories.liability.push(newCategory.trim());
       }
-      setNewAccount({ ...newAccount, category: newCategory.trim() });
+      setAccountForm({ ...accountForm, category: newCategory.trim() });
       setNewCategory('');
       setShowNewCategoryInput(false);
     }
   };
 
-  const handleAddAccount = () => {
-    if (!newAccount.name || !newAccount.category) return;
+  const handleEditAccount = (account: any) => {
+    const balanceType = account.balance >= 0 ? 'positive' : 'negative';
+    const absoluteBalance = Math.abs(account.balance);
+    
+    setEditingAccount(account);
+    setAccountForm({
+      name: account.name,
+      type: account.type || (account.balance >= 0 ? 'asset' : 'liability'),
+      category: account.category || 'Outros',
+      balance: absoluteBalance,
+      currency: account.currency || 'BRL',
+      balanceType
+    });
+    setShowModal(true);
+  };
+
+  const handleSaveAccount = () => {
+    if (!accountForm.name || !accountForm.category) return;
 
     // Calcular saldo baseado no tipo e no balanceType
-    const absoluteBalance = Math.abs(newAccount.balance);
-    const finalBalance = newAccount.balanceType === 'positive' ? absoluteBalance : -absoluteBalance;
+    const absoluteBalance = Math.abs(accountForm.balance);
+    const finalBalance = accountForm.balanceType === 'positive' ? absoluteBalance : -absoluteBalance;
 
     const accountData = {
-      name: newAccount.name,
-      type: newAccount.type,
-      category: newAccount.category,
+      id: editingAccount?.id,
+      name: accountForm.name,
+      type: accountForm.type,
+      category: accountForm.category,
       balance: finalBalance,
-      currency: newAccount.currency
+      currency: accountForm.currency
     };
 
-    onAddAccount(accountData);
-    setNewAccount({
+    if (editingAccount) {
+      // Editar conta existente
+      onUpdateAccount(accountData);
+    } else {
+      // Adicionar nova conta
+      onAddAccount(accountData);
+    }
+
+    handleCloseModal();
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingAccount(null);
+    setShowNewCategoryInput(false);
+    setAccountForm({
       name: '',
       type: 'asset',
       category: '',
@@ -115,8 +148,6 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
       currency: 'BRL',
       balanceType: 'positive'
     });
-    setShowAddModal(false);
-    setShowNewCategoryInput(false);
   };
 
   const formatCurrency = (value: number) => {
@@ -141,7 +172,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
           
           <div className="space-y-2">
             {categoryAccounts.map(account => (
-              <div key={account.id} className="flex justify-between items-center p-3 bg-white border border-slate-200 rounded-lg">
+              <div key={account.id} className="flex justify-between items-center p-3 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
                 <div>
                   <span className="font-medium text-slate-800">{account.name}</span>
                   <span className="text-sm text-slate-500 ml-2">{account.currency || 'BRL'}</span>
@@ -151,11 +182,14 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                     {formatCurrency(account.balance)}
                   </span>
                   <div className="flex gap-1">
-                    <button className="p-1 text-slate-400 hover:text-blue-600">
+                    <button 
+                      className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                      onClick={() => handleEditAccount(account)}
+                    >
                       <Edit2 size={16} />
                     </button>
                     <button 
-                      className="p-1 text-slate-400 hover:text-red-600"
+                      className="p-1 text-slate-400 hover:text-red-600 transition-colors"
                       onClick={() => onDeleteAccount(account.id)}
                     >
                       <Trash2 size={16} />
@@ -242,18 +276,28 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
 
       {/* Botão Flutuante */}
       <button
-        onClick={() => setShowAddModal(true)}
+        onClick={() => setShowModal(true)}
         className="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-all duration-200 flex items-center gap-2 z-40"
       >
         <Plus size={24} />
         <span className="font-semibold">Nova Conta</span>
       </button>
 
-      {/* Modal Adicionar Conta */}
-      {showAddModal && (
+      {/* Modal Adicionar/Editar Conta */}
+      {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold mb-4">Adicionar Nova Conta</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">
+                {editingAccount ? 'Editar Conta' : 'Adicionar Nova Conta'}
+              </h3>
+              <button
+                onClick={handleCloseModal}
+                className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
             
             <div className="space-y-4">
               <div>
@@ -262,8 +306,8 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={newAccount.name}
-                  onChange={(e) => setNewAccount({...newAccount, name: e.target.value})}
+                  value={accountForm.name}
+                  onChange={(e) => setAccountForm({...accountForm, name: e.target.value})}
                   className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Ex: Bradesco, Cartão Nubank..."
                 />
@@ -274,9 +318,9 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                   Tipo
                 </label>
                 <select
-                  value={newAccount.type}
-                  onChange={(e) => setNewAccount({
-                    ...newAccount, 
+                  value={accountForm.type}
+                  onChange={(e) => setAccountForm({
+                    ...accountForm, 
                     type: e.target.value as 'asset' | 'liability',
                     category: '', // Reset category when type changes
                     balanceType: e.target.value === 'asset' ? 'positive' : 'negative' // Auto-set balance type
@@ -294,19 +338,19 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                 </label>
                 <div className="space-y-2">
                   <select
-                    value={newAccount.category}
+                    value={accountForm.category}
                     onChange={(e) => {
                       if (e.target.value === 'new-category') {
                         setShowNewCategoryInput(true);
                       } else {
-                        setNewAccount({...newAccount, category: e.target.value});
+                        setAccountForm({...accountForm, category: e.target.value});
                         setShowNewCategoryInput(false);
                       }
                     }}
                     className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Selecione uma categoria</option>
-                    {categories[newAccount.type].map(category => (
+                    {categories[accountForm.type].map(category => (
                       <option key={category} value={category}>{category}</option>
                     ))}
                     <option value="new-category">+ Criar nova categoria</option>
@@ -334,15 +378,15 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Saldo Inicial
+                  Saldo
                 </label>
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <input
                       type="number"
                       step="0.01"
-                      value={newAccount.balance}
-                      onChange={(e) => setNewAccount({...newAccount, balance: parseFloat(e.target.value) || 0})}
+                      value={accountForm.balance}
+                      onChange={(e) => setAccountForm({...accountForm, balance: parseFloat(e.target.value) || 0})}
                       className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="0,00"
                     />
@@ -350,9 +394,9 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                   <div className="flex gap-1">
                     <button
                       type="button"
-                      onClick={() => setNewAccount({...newAccount, balanceType: 'positive'})}
+                      onClick={() => setAccountForm({...accountForm, balanceType: 'positive'})}
                       className={`px-3 py-2 rounded-lg border transition-colors ${
-                        newAccount.balanceType === 'positive'
+                        accountForm.balanceType === 'positive'
                           ? 'bg-green-500 text-white border-green-500'
                           : 'bg-white text-slate-600 border-slate-300 hover:bg-green-50'
                       }`}
@@ -361,9 +405,9 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                     </button>
                     <button
                       type="button"
-                      onClick={() => setNewAccount({...newAccount, balanceType: 'negative'})}
+                      onClick={() => setAccountForm({...accountForm, balanceType: 'negative'})}
                       className={`px-3 py-2 rounded-lg border transition-colors ${
-                        newAccount.balanceType === 'negative'
+                        accountForm.balanceType === 'negative'
                           ? 'bg-red-500 text-white border-red-500'
                           : 'bg-white text-slate-600 border-slate-300 hover:bg-red-50'
                       }`}
@@ -373,7 +417,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                   </div>
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
-                  {newAccount.balanceType === 'positive' ? 
+                  {accountForm.balanceType === 'positive' ? 
                     'Valor positivo' : 'Valor negativo (débito)'}
                 </p>
               </div>
@@ -381,20 +425,18 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
 
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setShowNewCategoryInput(false);
-                }}
-                className="flex-1 py-2 px-4 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
+                onClick={handleCloseModal}
+                className="flex-1 py-2 px-4 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
-                onClick={handleAddAccount}
-                disabled={!newAccount.name || !newAccount.category}
-                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleSaveAccount}
+                disabled={!accountForm.name || !accountForm.category}
+                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
-                Adicionar
+                {editingAccount ? <Save size={16} /> : <Plus size={16} />}
+                {editingAccount ? 'Salvar' : 'Adicionar'}
               </button>
             </div>
           </div>
