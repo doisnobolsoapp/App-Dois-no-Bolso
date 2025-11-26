@@ -239,27 +239,44 @@
               .catch(function(error) {
                 console.log('❌ Dois no Bolso: Falha no registro do Service Worker:', error);
               });
+          } else {
+            // Registrar também em desenvolvimento para testes
+            navigator.serviceWorker.register('/service-worker.js')
+              .then(function(registration) {
+                console.log('🔧 Dois no Bolso: Service Worker registrado em desenvolvimento');
+              })
+              .catch(function(error) {
+                console.log('⚠️ Dois no Bolso: Service Worker não registrado em desenvolvimento');
+              });
           }
         });
       }
 
-      // Capturar evento de instalação do PWA
+      // CORREÇÃO: Capturar evento de instalação do PWA com tratamento robusto
       window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('🎯 Evento beforeinstallprompt capturado!');
         e.preventDefault();
         deferredPrompt = e;
         
-        // Mostrar prompt de instalação após 5 segundos
-        setTimeout(showInstallPrompt, 5000);
+        // Mostrar que o PWA está pronto para instalação
+        console.log('✅ Dois no Bolso: Pronto para instalação!');
+        
+        // Mostrar prompt de instalação após 3 segundos
+        setTimeout(showInstallPrompt, 3000);
       });
 
-      // Função para mostrar prompt de instalação
+      // CORREÇÃO: Função para mostrar prompt de instalação com fallbacks
       function showInstallPrompt() {
-        if (!deferredPrompt) return;
-        
         // Verificar se já mostrou recentemente
         const lastPrompt = localStorage.getItem('pwaPromptDismissed');
         if (lastPrompt && (Date.now() - parseInt(lastPrompt)) < 7 * 24 * 60 * 60 * 1000) {
           return; // Não mostrar novamente por 7 dias
+        }
+
+        // Verificar se podemos mostrar o prompt
+        if (!deferredPrompt) {
+          console.log('ℹ️ deferredPrompt não disponível para mostrar prompt');
+          return;
         }
 
         const promptHTML = `
@@ -297,27 +314,78 @@
         const promptElement = document.createElement('div');
         promptElement.innerHTML = promptHTML;
         document.body.appendChild(promptElement);
+        
+        console.log('📱 Prompt de instalação mostrado');
       }
 
-      // Função para instalar o PWA
+      // CORREÇÃO DEFINITIVA: Função para instalar o PWA com tratamento completo de erros
       window.installPWA = async function() {
-        if (!deferredPrompt) return;
+        console.log('🚀 Iniciando instalação do PWA...');
         
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        
-        if (outcome === 'accepted') {
-          console.log('✅ Usuário aceitou a instalação do PWA');
-          // Remover prompt
-          const prompt = document.querySelector('.pwa-prompt');
-          if (prompt) prompt.remove();
+        if (!deferredPrompt) {
+          console.log('❌ deferredPrompt não disponível');
+          showManualInstallInstructions();
+          return;
         }
-        
-        deferredPrompt = null;
+
+        try {
+          console.log('✅ deferredPrompt disponível, mostrando prompt...');
+          deferredPrompt.prompt();
+          
+          const choiceResult = await deferredPrompt.userChoice;
+          console.log('🎯 Resultado da instalação:', choiceResult.outcome);
+          
+          if (choiceResult.outcome === 'accepted') {
+            console.log('🎉 Dois no Bolso instalado com sucesso!');
+            // Remover prompt
+            const prompt = document.querySelector('.pwa-prompt');
+            if (prompt) prompt.remove();
+          } else {
+            console.log('❌ Instalação recusada pelo usuário');
+          }
+          
+          deferredPrompt = null;
+        } catch (error) {
+          console.log('💥 Erro durante a instalação:', error);
+          showManualInstallInstructions();
+        }
       };
+
+      // CORREÇÃO: Função para mostrar instruções manuais de instalação
+      function showManualInstallInstructions() {
+        const instructionsHTML = `
+          <div class="pwa-prompt safe-area-bottom" style="background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);">
+            <div class="max-w-md mx-auto">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span class="font-semibold">Como Instalar</span>
+                </div>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-white/80 hover:text-white">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="text-sm space-y-2 mb-3">
+                <p><strong>Chrome/Edge:</strong> Menu (3 pontos) → "Instalar Dois no Bolso"</p>
+                <p><strong>Mobile:</strong> Menu → "Adicionar à tela inicial"</p>
+                <p><strong>Procure o ícone</strong> 📦 na barra de endereços</p>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const instructionsElement = document.createElement('div');
+        instructionsElement.innerHTML = instructionsHTML;
+        document.body.appendChild(instructionsElement);
+      }
 
       // Função para dispensar o prompt
       window.dismissInstallPrompt = function() {
+        console.log('❌ Prompt de instalação dispensado');
         localStorage.setItem('pwaPromptDismissed', Date.now().toString());
         const prompt = document.querySelector('.pwa-prompt');
         if (prompt) prompt.remove();
@@ -355,6 +423,15 @@
       if (window.matchMedia('(display-mode: standalone)').matches) {
         document.documentElement.classList.add('standalone-mode');
         console.log('📱 Dois no Bolso: Executando em modo standalone');
+        
+        // Mostrar badge de modo app
+        const appBadge = document.createElement('div');
+        appBadge.innerHTML = `
+          <div style="position: fixed; top: 10px; right: 10px; background: #16a34a; color: white; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; z-index: 10000;">
+            📱 Modo App
+          </div>
+        `;
+        document.body.appendChild(appBadge);
       }
 
       // Detectar dispositivo iOS
@@ -420,13 +497,23 @@
       // Gerenciar estado online/offline
       window.addEventListener('online', () => {
         console.log('✅ Dois no Bolso: Conexão restaurada');
-        // Mostrar notificação de conexão restaurada se necessário
       });
 
       window.addEventListener('offline', () => {
         console.log('📶 Dois no Bolso: Modo offline ativado');
-        // O Service Worker cuidará do cache
       });
+
+      // CORREÇÃO: Debug helper para desenvolvedores
+      window.pwaDebug = function() {
+        console.log('🔧 DEBUG PWA:');
+        console.log('deferredPrompt:', deferredPrompt);
+        console.log('Service Worker:', navigator.serviceWorker?.controller ? 'ATIVO' : 'INATIVO');
+        console.log('Display Mode:', window.matchMedia('(display-mode: standalone)').matches ? 'STANDALONE' : 'BROWSER');
+        console.log('Manifest:', document.querySelector('link[rel="manifest"]') ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
+      };
+
+      console.log('🚀 Dois no Bolso PWA inicializado!');
+      console.log('💡 Use pwaDebug() para verificar status');
     </script>
 
     <!-- Script principal da aplicação -->
