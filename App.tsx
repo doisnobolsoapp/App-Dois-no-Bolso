@@ -168,7 +168,7 @@ function App(): JSX.Element {
     setData(prev => ({ ...prev, creditCards: prev.creditCards.filter(cc => cc.id !== id) }));
   };
 
-  // Investments - CORRIGIDO: removidos parâmetros não utilizados
+  // Investments - CORRIGIDO: função simplificada
   const handleAddInvestment = (i: any) => {
     const newI = addInvestment(i);
     setData(prev => ({ ...prev, investments: [...prev.investments, newI] }));
@@ -210,7 +210,6 @@ function App(): JSX.Element {
   // Custom categories
   const handleAddCategory = (category: string) => {
     addCustomCategory(category);
-    // addCustomCategory já persiste no localStorage; se quiser refletir em `data`, adicione campo
   };
 
   // If user not logged, show login
@@ -270,7 +269,6 @@ function App(): JSX.Element {
             onAddAccount={handleAddAccount}
             onDeleteAccount={handleDeleteAccount}
             onUpdateAccount={(account: Account) => {
-              // simple replace strategy
               deleteAccount(account.id);
               addAccount(account);
               setData(prev => ({ ...prev, accounts: prev.accounts.map(a => (a.id === account.id ? account : a)) }));
