@@ -21,7 +21,7 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ currentView, onViewChange, onLogout, children }) => {
+const Layout: React.FC<LayoutProps> = ({ currentView, onViewChange, onLogout, children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
@@ -180,3 +180,6 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, onViewChange, onLog
     </div>
   );
 };
+
+// Mude para default export
+export default Layout;
