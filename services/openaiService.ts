@@ -4,56 +4,7 @@ export type ToolCall =
   | { name: 'addGoal'; arguments: any }
   | { name: 'addInvestment'; arguments: any };
 
-const TOOLS_SCHEMA = {
-  addTransaction: {
-    name: 'addTransaction',
-    description: 'Adicionar uma nova transação financeira (receita, despesa, investimento, empréstimo).',
-    parameters: {
-      type: 'object',
-      properties: {
-        type: { type: 'string', enum: ['income', 'expense', 'investment', 'loan'] },
-        category: { type: 'string' },
-        amount: { type: 'number' },
-        description: { type: 'string' },
-        date: { type: 'string' },
-        paid: { type: 'boolean' },
-        paymentMethod: { type: 'string' },
-        accountId: { type: 'string' },
-        cardId: { type: 'string' }
-      },
-      required: ['type', 'amount', 'description']
-    }
-  },
-  addGoal: {
-    name: 'addGoal',
-    description: 'Criar uma nova meta financeira.',
-    parameters: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        targetAmount: { type: 'number' },
-        deadline: { type: 'string' }
-      },
-      required: ['name', 'targetAmount']
-    }
-  },
-  addInvestment: {
-    name: 'addInvestment',
-    description: 'Cadastrar um novo investimento (apenas cadastro).',
-    parameters: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        type: { type: 'string' },
-        broker: { type: 'string' },
-        strategy: { type: 'string' }
-      },
-      required: ['name', 'type']
-    }
-  }
-};
-
-export async function callOpenAIWithTools(prompt: string, systemPrompt = '', userContext = '') {
+export async function callOpenAIWithTools(prompt: string, _systemPrompt = '', _userContext = '') {
   console.log('🤖 Modo IA Simulada - Processando:', prompt);
   
   // Simula delay de processamento
