@@ -2,16 +2,6 @@
 import { useState } from 'react';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 
-// Interface local para evitar conflito com a interface global Account
-interface AccountItem {
-  id: string;
-  name: string;
-  type: 'asset' | 'liability';
-  category: string;
-  balance: number;
-  currency: string;
-}
-
 interface AccountSettingsProps {
   accounts: any[]; // Use any[] para aceitar qualquer estrutura de conta
   onAddAccount: (accountData: any) => void;
