@@ -90,6 +90,8 @@ export interface Account {
   initialBalance: number;
   institution?: string;
   color?: string;
+  category?: string; // ADICIONADO para AccountSettings
+  currency?: string; // ADICIONADO para AccountSettings
 }
 
 // ------------------------------------
@@ -101,6 +103,7 @@ export interface CreditCard {
   limit: number;
   currentBalance: number;
   dueDate: string;
+  balance?: number; // ADICIONADO para compatibilidade
 }
 
 // ------------------------------------
@@ -195,6 +198,34 @@ export type ViewState =
   | 'balance'
   | 'chat'
   | 'settings'
-  | 'accountSettings';
+  | 'accountSettings'; // JÁ EXISTIA - CORRETO
 
 export type Category = string;
+
+// ------------------------------------
+// ACCOUNT SETTINGS TYPES
+// ------------------------------------
+export interface AccountSettingsProps {
+  accounts: Account[];
+  onAddAccount: (accountData: any) => void;
+  onDeleteAccount: (id: string) => void;
+  onUpdateAccount: (accountData: any) => void;
+}
+
+// ------------------------------------
+// DASHBOARD TYPES
+// ------------------------------------
+export interface DashboardProps {
+  data: AppData;
+  onViewChange: (view: ViewState) => void;
+}
+
+// ------------------------------------
+// USER TYPES
+// ------------------------------------
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  token?: string;
+}
