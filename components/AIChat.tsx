@@ -2,7 +2,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, Loader2 } from 'lucide-react';
 import { AppData } from '../types';
-import { callOpenAIWithTools } from '../services/openaiService';
 
 interface AIChatProps {
   data: AppData;
@@ -18,9 +17,27 @@ type Message = {
   timestamp: Date;
 };
 
+// Interface para a resposta da OpenAI
+interface OpenAIResponse {
+  choices: Array<{
+    message: {
+      content?: string;
+      function_call?: {
+        name: string;
+        arguments: string;
+      };
+    };
+  }>;
+}
+
 export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoal, onAddInvestment }) => {
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', content: 'Olá! Sou seu assistente financeiro inteligente. Como posso ajudar você hoje?', role: 'assistant', timestamp: new Date() }
+    { 
+      id: '1', 
+      content: 'Olá! Sou seu assistente financeiro inteligente. Como posso ajudar você hoje?', 
+      role: 'assistant', 
+      timestamp: new Date() 
+    }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -29,14 +46,56 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   useEffect(() => { scrollToBottom(); }, [messages]);
 
-  // Processa o tool_call retornado pela OpenAI e executa a ação localmente
+  // Implementação temporária da função callOpenAIWithTools
+  const callOpenAIWithTools = async (userMessage: string, systemPrompt: string, context: string): Promise<OpenAIResponse> => {
+    // TODO: Substituir por chamada real à API da OpenAI
+    console.log('Chamando OpenAI com:', { userMessage, systemPrompt, context });
+    
+    // Simulação de resposta - REMOVER quando implementar a API real
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Simula uma resposta de função para adicionar transação
+        if (userMessage.toLowerCase().includes('adicionar') || userMessage.toLowerCase().includes('gasto')) {
+          resolve({
+            choices: [{
+              message: {
+                function_call: {
+                  name: 'addTransaction',
+                  arguments: JSON.stringify({
+                    type: 'expense',
+                    description: 'Transação via assistente',
+                    amount: 100,
+                    category: 'Outros',
+                    date: new Date().toISOString().split('T')[0],
+                    paid: true,
+                    paymentMethod: 'cash'
+                  })
+                }
+              }
+            }]
+          });
+        } else {
+          // Resposta textual normal
+          resolve({
+            choices: [{
+              message: {
+                content: `Entendi sua solicitação: "${userMessage}". Como posso ajudar com suas finanças?`
+              }
+            }]
+          });
+        }
+      }, 1000);
+    });
+  };
+
   const handleToolCall = (toolName: string, toolArgs: any) => {
     try {
+      console.log('Executando tool:', toolName, toolArgs);
+      
       if (toolName === 'addTransaction') {
-        // garante campos mínimos e chamada
         const tx = {
-          type: toolArgs.type,
-          description: toolArgs.description,
+          type: toolArgs.type || 'expense',
+          description: toolArgs.description || 'Transação via assistente',
           amount: Number(toolArgs.amount) || 0,
           category: toolArgs.category || 'Outros',
           date: toolArgs.date || new Date().toISOString().split('T')[0],
@@ -46,31 +105,34 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
           cardId: toolArgs.cardId
         };
         onAddTransaction(tx);
-        return `Transação adicionada: ${tx.description} — R$ ${tx.amount}`;
+        return `✅ Transação adicionada: ${tx.description} — R$ ${tx.amount.toFixed(2)}`;
       }
+      
       if (toolName === 'addGoal' && onAddGoal) {
         const goal = {
-          name: toolArgs.name,
+          name: toolArgs.name || 'Meta financeira',
           targetAmount: Number(toolArgs.targetAmount) || 0,
           deadline: toolArgs.deadline || ''
         };
         onAddGoal(goal);
-        return `Meta criada: ${goal.name} — alvo R$ ${goal.targetAmount}`;
+        return `🎯 Meta criada: ${goal.name} — alvo R$ ${goal.targetAmount.toFixed(2)}`;
       }
+      
       if (toolName === 'addInvestment' && onAddInvestment) {
         const inv = {
-          name: toolArgs.name,
-          type: toolArgs.type,
+          name: toolArgs.name || 'Investimento',
+          type: toolArgs.type || 'stocks',
           broker: toolArgs.broker || '',
           strategy: toolArgs.strategy || 'LONG_TERM'
         };
         onAddInvestment(inv);
-        return `Investimento cadastrado: ${inv.name}`;
+        return `📈 Investimento cadastrado: ${inv.name}`;
       }
-      return `Tool ${toolName} não reconhecida ou não suportada.`;
+      
+      return `⚠️ Função ${toolName} não reconhecida ou não suportada.`;
     } catch (err) {
       console.error('Erro ao executar tool:', err);
-      return `Erro ao executar ${toolName}: ${String(err)}`;
+      return `❌ Erro ao executar ${toolName}: ${String(err)}`;
     }
   };
 
@@ -97,50 +159,55 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
       `;
 
       const result = await callOpenAIWithTools(inputMessage, 'Você é um assistente financeiro útil e objetivo.', userContext);
-      // A resposta vem em result.choices[0]
-      const choice = result.choices && result.choices[0];
-      if (!choice) throw new Error('Resposta vazia da OpenAI');
+      
+      console.log('Resposta da OpenAI:', result); // Debug
 
-      // 1) Se a OpenAI escolheu chamar uma função -> há 'message' com 'function_call'
-      const message = choice.message;
-      if (message && (message as any).function_call) {
-        const fc = (message as any).function_call;
-        // function_call.arguments geralmente vem como string JSON
+      if (!result.choices || result.choices.length === 0) {
+        throw new Error('Resposta vazia da OpenAI');
+      }
+
+      const message = result.choices[0].message;
+      
+      if (message?.function_call) {
+        // Caso 1: Chamada de função
+        const fc = message.function_call;
         let args = {};
+        
         try {
           args = typeof fc.arguments === 'string' ? JSON.parse(fc.arguments) : fc.arguments;
         } catch (err) {
-          console.warn('Não foi possível parsear function_call.arguments', err);
+          console.warn('Não foi possível parsear arguments:', err);
           args = {};
         }
 
-        // Execute a função localmente
         const toolResultText = handleToolCall(fc.name, args);
-
-        // Adiciona mensagem de confirmação do assistant
+        
         const assistantMsg: Message = { 
-          id: Date.now().toString(), 
+          id: (Date.now() + 1).toString(), 
           content: toolResultText, 
           role: 'assistant', 
           timestamp: new Date() 
         };
         setMessages(prev => [...prev, assistantMsg]);
-      } else {
-        // 2) Caso comum: resposta textual
-        const text = (message && message.content) || choice.text || 'Não foi possível gerar resposta.';
+        
+      } else if (message?.content) {
+        // Caso 2: Resposta textual
         const assistantMsg: Message = { 
-          id: Date.now().toString(), 
-          content: text, 
+          id: (Date.now() + 1).toString(), 
+          content: message.content, 
           role: 'assistant', 
           timestamp: new Date() 
         };
         setMessages(prev => [...prev, assistantMsg]);
+      } else {
+        throw new Error('Formato de resposta não reconhecido');
       }
+      
     } catch (err) {
-      console.error(err);
+      console.error('Erro no handleSend:', err);
       const errorMsg: Message = { 
-        id: Date.now().toString(), 
-        content: 'Erro ao contatar a IA. Tente novamente.', 
+        id: (Date.now() + 1).toString(), 
+        content: '❌ Erro ao contatar a IA. Verifique a conexão e tente novamente.', 
         role: 'assistant', 
         timestamp: new Date() 
       };
@@ -164,9 +231,15 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
         <div className="space-y-4">
           {messages.map(msg => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user' ? 'bg-brand-600 text-white rounded-br-none' : 'bg-slate-100 text-slate-800 rounded-bl-none'}`}>
+              <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                msg.role === 'user' 
+                  ? 'bg-brand-600 text-white rounded-br-none' 
+                  : 'bg-slate-100 text-slate-800 rounded-bl-none'
+              }`}>
                 <p className="whitespace-pre-wrap">{msg.content}</p>
-                <div className="text-xs opacity-50 mt-2 text-right">{msg.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+                <div className="text-xs opacity-50 mt-2 text-right">
+                  {msg.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </div>
               </div>
             </div>
           ))}
@@ -174,7 +247,8 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
           {isLoading && (
             <div className="flex justify-start">
               <div className="bg-slate-100 text-slate-800 rounded-2xl px-4 py-3 max-w-[80%]">
-                <Loader2 size={16} className="animate-spin inline-block mr-2" /> Digitando...
+                <Loader2 size={16} className="animate-spin inline-block mr-2" /> 
+                Pensando...
               </div>
             </div>
           )}
@@ -184,8 +258,19 @@ export const AIChat: React.FC<AIChatProps> = ({ data, onAddTransaction, onAddGoa
       </div>
 
       <form onSubmit={handleSend} className="flex gap-2">
-        <input type="text" value={inputMessage} onChange={e => setInputMessage(e.target.value)} placeholder="Digite sua mensagem..." className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500" disabled={isLoading} />
-        <button type="submit" disabled={isLoading || !inputMessage.trim()} className="bg-brand-600 hover:bg-brand-700 text-white px-6 py-3 rounded-lg flex items-center">
+        <input 
+          type="text" 
+          value={inputMessage} 
+          onChange={e => setInputMessage(e.target.value)} 
+          placeholder="Digite sua mensagem..." 
+          className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent" 
+          disabled={isLoading} 
+        />
+        <button 
+          type="submit" 
+          disabled={isLoading || !inputMessage.trim()} 
+          className="bg-brand-600 hover:bg-brand-700 disabled:bg-slate-400 text-white px-6 py-3 rounded-lg flex items-center transition-colors"
+        >
           {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
         </button>
       </form>
