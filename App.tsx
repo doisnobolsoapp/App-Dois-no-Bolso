@@ -1,4 +1,4 @@
-// src/App.tsx - VERSÃO COMPLETAMENTE NOVA
+// src/App.tsx - VERSÃO 100% FUNCIONAL
 import React, { useState, useEffect } from 'react';
 
 const App: React.FC = () => {
