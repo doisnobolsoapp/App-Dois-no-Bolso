@@ -1,115 +1,94 @@
-<script>
-  // Variável global para o deferred prompt
-  let deferredPrompt;
-
-  console.log('🚀 Dois no Bolso inicializando...');
-
-  // Remover Service Workers existentes em desenvolvimento
-  if ('serviceWorker' in navigator) {
-    const isDevelopment = window.location.hostname === 'localhost' || 
-                         window.location.hostname === '127.0.0.1';
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dois no Bolso - Controle Financeiro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body { margin: 0; font-family: Arial, sans-serif; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
     
-    if (isDevelopment) {
-      console.log('🔧 Ambiente de desenvolvimento - Removendo Service Workers...');
+    <script>
+      console.log('🚀 Dois no Bolso - Iniciando...');
       
-      // Desregistrar todos os Service Workers
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for (let registration of registrations) {
-          registration.unregister();
-          console.log('🗑️ Service Worker removido:', registration.scope);
-        }
-      }).catch(function(error) {
-        console.log('✅ Nenhum Service Worker para remover');
-      });
-    }
-  }
-
-  // Remover tela de loading quando o app carregar
-  window.addEventListener('load', function() {
-    console.log('✅ Página totalmente carregada');
-    
-    // Verificar se o React já carregou
-    const checkReactLoaded = setInterval(() => {
-      const rootElement = document.getElementById('root');
-      if (rootElement && rootElement.hasChildNodes()) {
-        console.log('✅ React carregou com sucesso');
-        clearInterval(checkReactLoaded);
-        
-        // Remover loading
-        setTimeout(() => {
-          const loadingElement = document.getElementById('app-loading');
-          if (loadingElement) {
-            loadingElement.style.opacity = '0';
-            setTimeout(() => {
-              if (loadingElement.parentNode) {
-                loadingElement.remove();
-                console.log('🎯 Loading removido');
-              }
-            }, 300);
+      // REMOVER TODOS OS SERVICE WORKERS IMEDIATAMENTE
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          console.log('🧹 Removendo Service Workers...');
+          for(let registration of registrations) {
+            registration.unregister();
+            console.log('✅ Service Worker removido:', registration.scope);
           }
-        }, 1000);
+        }).catch(function(error) {
+          console.log('✅ Nenhum Service Worker encontrado');
+        });
       }
-    }, 100);
 
-    // Timeout de segurança - remover loading após 8 segundos
-    setTimeout(() => {
-      const loadingElement = document.getElementById('app-loading');
-      const rootElement = document.getElementById('root');
-      
-      if (loadingElement && loadingElement.parentNode && rootElement && !rootElement.hasChildNodes()) {
-        console.log('⚠️ React não carregou - mostrando fallback');
-        loadingElement.innerHTML = `
-          <div class="text-center text-white p-8">
-            <div class="text-4xl mb-4">⚠️</div>
-            <h2 class="text-xl font-bold mb-2">Sistema não carregou</h2>
-            <p class="mb-4">Verifique o console (F12) para erros</p>
-            <button onclick="location.reload()" class="bg-white text-green-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100">
-              Recarregar
-            </button>
-            <button onclick="clearServiceWorkers()" class="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600 ml-2">
-              Limpar Cache
-            </button>
+      // Limpar qualquer cache de Service Worker
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (let name of names) {
+            caches.delete(name);
+            console.log('🗑️ Cache removido:', name);
+          }
+        });
+      }
+
+      // Loading simples que será removido pelo React
+      setTimeout(() => {
+        const loading = document.createElement('div');
+        loading.innerHTML = `
+          <div style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 9999;
+            text-align: center;
+          ">
+            <div>
+              <div style="
+                width: 50px;
+                height: 50px;
+                border: 4px solid white;
+                border-top: 4px solid transparent;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 20px;
+              "></div>
+              <h1 style="font-size: 24px; margin-bottom: 10px;">Dois no Bolso</h1>
+              <p>Carregando...</p>
+            </div>
           </div>
+          <style>
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          </style>
         `;
-      }
-    }, 8000);
-  });
+        document.body.appendChild(loading);
+        
+        // Remover loading após 8 segundos (fallback)
+        setTimeout(() => {
+          if (loading.parentNode) {
+            loading.remove();
+          }
+        }, 8000);
+      }, 100);
 
-  // Função para limpar Service Workers manualmente
-  window.clearServiceWorkers = function() {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for (let registration of registrations) {
-          registration.unregister();
-          console.log('🧹 Service Worker removido:', registration.scope);
-        }
-        alert('Service Workers removidos! Recarregando...');
-        location.reload();
-      });
-    }
-  };
-
-  // PWA - Capturar evento de instalação (apenas em produção)
-  window.addEventListener('beforeinstallprompt', (e) => {
-    console.log('📱 PWA pronto para instalação');
-    e.preventDefault();
-    deferredPrompt = e;
-  });
-
-  // Detectar modo standalone
-  if (window.matchMedia('(display-mode: standalone)').matches) {
-    console.log('📱 Executando em modo standalone');
-    document.documentElement.classList.add('standalone-mode');
-  }
-
-  // Gerenciar estado online/offline
-  window.addEventListener('online', () => {
-    console.log('✅ Conexão restaurada');
-  });
-
-  window.addEventListener('offline', () => {
-    console.log('📶 Modo offline ativado');
-  });
-
-  console.log('✅ Dois no Bolso inicializado!');
-</script>
+      console.log('✅ Ambiente preparado para o React');
+    </script>
+  </body>
+</html>
