@@ -1,96 +1,172 @@
-// src/App.tsx - VERSÃO MÍNIMA E FUNCIONAL
+// src/App.tsx - VERSÃO GARANTIDA
 import React, { useState, useEffect } from 'react';
 
-// Interface local simples
-interface User {
-  name: string;
-  email: string;
-}
-
 function App() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<{ name: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('✅ React App carregado com sucesso!');
+    
     // Simular carregamento
-    setTimeout(() => {
-      setUser({
-        name: 'João Silva',
-        email: 'joao@email.com'
-      });
+    const timer = setTimeout(() => {
+      setUser({ name: 'João Silva' });
       setLoading(false);
-    }, 1000);
+    }, 1500);
+
+    return () => clearTimeout(timer);
   }, []);
 
+  // Tela de Loading
   if (loading) {
     return (
-      <div className="min-h-screen bg-blue-500 flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mx-auto mb-4"></div>
-          <h1 className="text-2xl font-bold">Dois no Bolso</h1>
-          <p>Carregando...</p>
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        textAlign: 'center'
+      }}>
+        <div>
+          <div style={{
+            width: '60px',
+            height: '60px',
+            border: '4px solid white',
+            borderTop: '4px solid transparent',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 20px'
+          }}></div>
+          <h1 style={{ fontSize: '28px', marginBottom: '10px' }}>Dois no Bolso</h1>
+          <p>Carregando seu app financeiro...</p>
         </div>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full text-center">
-          <div className="text-4xl mb-4">💰</div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Dois no Bolso</h1>
-          <p className="text-gray-600 mb-6">Controle financeiro pessoal</p>
-          <button 
-            onClick={() => setUser({ name: 'Usuário', email: 'user@email.com' })}
-            className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-600 transition-colors"
-          >
-            Entrar no App
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  // App Principal
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6' }}>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold text-gray-800">Dois no Bolso</h1>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700">Olá, {user.name}</span>
-              <button 
-                onClick={() => setUser(null)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                Sair
-              </button>
-            </div>
+      <header style={{
+        backgroundColor: 'white',
+        padding: '16px',
+        borderBottom: '1px solid #e5e7eb',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <h1 style={{
+            fontSize: '20px',
+            fontWeight: 'bold',
+            color: '#1f2937',
+            margin: 0
+          }}>
+            💰 Dois no Bolso
+          </h1>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <span style={{ color: '#374151' }}>Olá, {user?.name}</span>
+            <button 
+              onClick={() => setUser(null)}
+              style={{
+                background: '#ef4444',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              Sair
+            </button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-          <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">
-            App Funcionando Perfeitamente!
+      <main style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '32px 16px'
+      }}>
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          padding: '40px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px'
+          }}>
+            🎉
+          </div>
+          
+          <h2 style={{
+            fontSize: '32px',
+            fontWeight: 'bold',
+            color: '#1f2937',
+            marginBottom: '16px'
+          }}>
+            Tudo Funcionando!
           </h2>
-          <p className="text-gray-600 mb-6">
-            Seu aplicativo <strong>Dois no Bolso</strong> está rodando sem erros.
+          
+          <p style={{
+            fontSize: '18px',
+            color: '#6b7280',
+            marginBottom: '32px',
+            lineHeight: '1.6'
+          }}>
+            Seu aplicativo <strong>Dois no Bolso</strong> está rodando perfeitamente!
           </p>
-          <div className="bg-green-500 text-white py-3 px-6 rounded-lg inline-block font-semibold">
+          
+          <div style={{
+            background: '#10b981',
+            color: 'white',
+            padding: '16px 32px',
+            borderRadius: '8px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            display: 'inline-block'
+          }}>
             ✅ Build Bem-Sucedida
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t py-6 mt-8">
-        <div className="max-w-7xl mx-auto px-4 text-center text-gray-500">
+      <footer style={{
+        backgroundColor: 'white',
+        borderTop: '1px solid #e5e7eb',
+        padding: '24px 16px',
+        marginTop: '48px'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          textAlign: 'center',
+          color: '#6b7280',
+          fontSize: '14px'
+        }}>
           <p>Dois no Bolso {new Date().getFullYear()} - Controle financeiro pessoal</p>
         </div>
       </footer>
