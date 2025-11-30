@@ -188,10 +188,32 @@
     <!-- Container principal da aplicação -->
     <div id="root"></div>
 
-    <!-- Script simplificado e corrigido -->
+    <!-- SCRIPT CORRIGIDO - SEM SERVICE WORKER EM DEV -->
     <script>
       // Variável global para o deferred prompt
       let deferredPrompt;
+
+      console.log('🚀 Dois no Bolso inicializando...');
+
+      // Remover Service Workers existentes em desenvolvimento
+      if ('serviceWorker' in navigator) {
+        const isDevelopment = window.location.hostname === 'localhost' || 
+                             window.location.hostname === '127.0.0.1';
+        
+        if (isDevelopment) {
+          console.log('🔧 Ambiente de desenvolvimento - Removendo Service Workers...');
+          
+          // Desregistrar todos os Service Workers
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for (let registration of registrations) {
+              registration.unregister();
+              console.log('🗑️ Service Worker removido:', registration.scope);
+            }
+          }).catch(function(error) {
+            console.log('✅ Nenhum Service Worker para remover');
+          });
+        }
+      }
 
       // Remover tela de loading quando o app carregar
       window.addEventListener('load', function() {
@@ -212,67 +234,58 @@
                 setTimeout(() => {
                   if (loadingElement.parentNode) {
                     loadingElement.remove();
+                    console.log('🎯 Loading removido');
                   }
                 }, 300);
               }
-            }, 500);
+            }, 1000);
           }
         }, 100);
 
-        // Timeout de segurança - remover loading após 5 segundos
+        // Timeout de segurança - remover loading após 8 segundos
         setTimeout(() => {
           const loadingElement = document.getElementById('app-loading');
-          if (loadingElement && loadingElement.parentNode) {
-            console.log('⚠️ Removendo loading por timeout');
-            loadingElement.remove();
+          const rootElement = document.getElementById('root');
+          
+          if (loadingElement && loadingElement.parentNode && rootElement && !rootElement.hasChildNodes()) {
+            console.log('⚠️ React não carregou - mostrando fallback');
+            loadingElement.innerHTML = `
+              <div class="text-center text-white p-8">
+                <div class="text-4xl mb-4">⚠️</div>
+                <h2 class="text-xl font-bold mb-2">Sistema não carregou</h2>
+                <p class="mb-4">Verifique o console (F12) para erros</p>
+                <button onclick="location.reload()" class="bg-white text-green-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100">
+                  Recarregar
+                </button>
+                <button onclick="clearServiceWorkers()" class="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600 ml-2">
+                  Limpar Cache
+                </button>
+              </div>
+            `;
           }
-        }, 5000);
+        }, 8000);
       });
 
-      // Service Worker simplificado - apenas se o arquivo existir
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          // Verificar se estamos em produção
-          const isProduction = !window.location.href.includes('localhost') && 
-                              !window.location.href.includes('127.0.0.1');
-          
-          if (isProduction) {
-            // Tentar registrar o service worker
-            navigator.serviceWorker.register('/service-worker.js')
-              .then(function(registration) {
-                console.log('✅ Service Worker registrado:', registration.scope);
-              })
-              .catch(function(error) {
-                console.log('⚠️ Service Worker não registrado:', error.message);
-              });
-          } else {
-            console.log('🔧 Modo desenvolvimento - Service Worker opcional');
-          }
-        });
-      }
+      // Função para limpar Service Workers manualmente
+      window.clearServiceWorkers = function() {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for (let registration of registrations) {
+              registration.unregister();
+              console.log('🧹 Service Worker removido:', registration.scope);
+            }
+            alert('Service Workers removidos! Recarregando...');
+            location.reload();
+          });
+        }
+      };
 
-      // PWA - Capturar evento de instalação
+      // PWA - Capturar evento de instalação (apenas em produção)
       window.addEventListener('beforeinstallprompt', (e) => {
         console.log('📱 PWA pronto para instalação');
         e.preventDefault();
         deferredPrompt = e;
       });
-
-      // Função simples para instalar PWA
-      window.installPWA = async function() {
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          console.log('🎯 Usuário escolheu:', outcome);
-          deferredPrompt = null;
-        }
-      };
-
-      // Função para dispensar prompt
-      window.dismissInstallPrompt = function() {
-        const prompt = document.querySelector('.pwa-prompt');
-        if (prompt) prompt.remove();
-      };
 
       // Detectar modo standalone
       if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -289,27 +302,7 @@
         console.log('📶 Modo offline ativado');
       });
 
-      console.log('🚀 Dois no Bolso inicializado!');
-      
-      // Fallback para caso o React não carregue
-      setTimeout(() => {
-        const rootElement = document.getElementById('root');
-        const loadingElement = document.getElementById('app-loading');
-        
-        if (rootElement && !rootElement.hasChildNodes() && loadingElement) {
-          console.log('⚠️ React não carregou - mostrando fallback');
-          loadingElement.innerHTML = `
-            <div class="text-center text-white p-8">
-              <div class="text-4xl mb-4">⚠️</div>
-              <h2 class="text-xl font-bold mb-2">Sistema não carregou</h2>
-              <p class="mb-4">Verifique o console (F12) para erros</p>
-              <button onclick="location.reload()" class="bg-white text-green-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100">
-                Recarregar
-              </button>
-            </div>
-          `;
-        }
-      }, 8000);
+      console.log('✅ Dois no Bolso inicializado!');
     </script>
   </body>
 </html>
