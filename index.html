@@ -160,6 +160,16 @@
           padding-bottom: max(1rem, env(safe-area-inset-bottom));
         }
       }
+
+      /* Animações CSS */
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .animate-spin {
+        animation: spin 1s linear infinite;
+      }
     </style>
   </head>
   
@@ -168,9 +178,7 @@
     <div id="app-loading" class="fixed inset-0 app-loading flex items-center justify-center z-50 transition-opacity duration-300">
       <div class="text-center text-white">
         <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-white animate-pulse-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <div class="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
         </div>
         <h1 class="text-2xl font-bold mb-2">Dois no Bolso</h1>
         <p class="text-white/80">Carregando seu controle financeiro...</p>
@@ -180,261 +188,128 @@
     <!-- Container principal da aplicação -->
     <div id="root"></div>
 
-    <!-- Script para registrar Service Worker e gerenciar loading -->
+    <!-- Script simplificado e corrigido -->
     <script>
       // Variável global para o deferred prompt
       let deferredPrompt;
 
       // Remover tela de loading quando o app carregar
       window.addEventListener('load', function() {
+        console.log('✅ Página totalmente carregada');
+        
+        // Verificar se o React já carregou
+        const checkReactLoaded = setInterval(() => {
+          const rootElement = document.getElementById('root');
+          if (rootElement && rootElement.hasChildNodes()) {
+            console.log('✅ React carregou com sucesso');
+            clearInterval(checkReactLoaded);
+            
+            // Remover loading
+            setTimeout(() => {
+              const loadingElement = document.getElementById('app-loading');
+              if (loadingElement) {
+                loadingElement.style.opacity = '0';
+                setTimeout(() => {
+                  if (loadingElement.parentNode) {
+                    loadingElement.remove();
+                  }
+                }, 300);
+              }
+            }, 500);
+          }
+        }, 100);
+
+        // Timeout de segurança - remover loading após 5 segundos
         setTimeout(() => {
           const loadingElement = document.getElementById('app-loading');
-          if (loadingElement) {
-            loadingElement.style.opacity = '0';
-            setTimeout(() => loadingElement.remove(), 300);
+          if (loadingElement && loadingElement.parentNode) {
+            console.log('⚠️ Removendo loading por timeout');
+            loadingElement.remove();
           }
-        }, 1000);
+        }, 5000);
       });
 
-      // Registrar Service Worker para PWA
+      // Service Worker simplificado - apenas se o arquivo existir
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
+          // Verificar se estamos em produção
           const isProduction = !window.location.href.includes('localhost') && 
                               !window.location.href.includes('127.0.0.1');
           
           if (isProduction) {
+            // Tentar registrar o service worker
             navigator.serviceWorker.register('/service-worker.js')
               .then(function(registration) {
-                console.log('🚀 Dois no Bolso: Service Worker registrado com sucesso:', registration.scope);
-                
-                // Verificar atualizações
-                registration.addEventListener('updatefound', () => {
-                  const newWorker = registration.installing;
-                  console.log('🔄 Nova versão do Service Worker encontrada!');
-                  
-                  newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                      // Nova versão disponível
-                      showUpdatePrompt();
-                    }
-                  });
-                });
+                console.log('✅ Service Worker registrado:', registration.scope);
               })
               .catch(function(error) {
-                console.log('❌ Dois no Bolso: Falha no registro do Service Worker:', error);
+                console.log('⚠️ Service Worker não registrado:', error.message);
               });
           } else {
-            // Registrar também em desenvolvimento para testes
-            navigator.serviceWorker.register('/service-worker.js')
-              .then(function(registration) {
-                console.log('🔧 Dois no Bolso: Service Worker registrado em desenvolvimento');
-              })
-              .catch(function(error) {
-                console.log('⚠️ Dois no Bolso: Service Worker não registrado em desenvolvimento');
-              });
+            console.log('🔧 Modo desenvolvimento - Service Worker opcional');
           }
         });
       }
 
-      // Capturar evento de instalação do PWA
+      // PWA - Capturar evento de instalação
       window.addEventListener('beforeinstallprompt', (e) => {
-        console.log('🎯 Evento beforeinstallprompt capturado!');
+        console.log('📱 PWA pronto para instalação');
         e.preventDefault();
         deferredPrompt = e;
-        
-        // Mostrar que o PWA está pronto para instalação
-        console.log('✅ Dois no Bolso: Pronto para instalação!');
-        
-        // Mostrar prompt de instalação após 3 segundos
-        setTimeout(showInstallPrompt, 3000);
       });
 
-      // Função para mostrar prompt de instalação
-      function showInstallPrompt() {
-        // Verificar se já mostrou recentemente
-        const lastPrompt = localStorage.getItem('pwaPromptDismissed');
-        if (lastPrompt && (Date.now() - parseInt(lastPrompt)) < 7 * 24 * 60 * 60 * 1000) {
-          return; // Não mostrar novamente por 7 dias
-        }
-
-        // Verificar se podemos mostrar o prompt
-        if (!deferredPrompt) {
-          console.log('ℹ️ deferredPrompt não disponível para mostrar prompt');
-          return;
-        }
-
-        const promptHTML = `
-          <div class="pwa-prompt safe-area-bottom">
-            <div class="max-w-md mx-auto">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                  </svg>
-                  <span class="font-semibold">Instalar App</span>
-                </div>
-                <button onclick="dismissInstallPrompt()" class="text-white/80 hover:text-white">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
-                </button>
-              </div>
-              <p class="text-sm mb-3">
-                Instale o <strong>Dois no Bolso</strong> para acesso rápido e experiência offline!
-              </p>
-              <div class="flex gap-2">
-                <button onclick="installPWA()" class="flex-1 bg-white text-green-600 py-2 px-4 rounded-lg font-semibold hover:bg-green-50 transition-colors text-sm">
-                  Instalar
-                </button>
-                <button onclick="dismissInstallPrompt()" class="px-4 py-2 text-white/80 hover:text-white transition-colors text-sm">
-                  Agora Não
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-
-        // Adicionar o prompt ao body
-        const promptElement = document.createElement('div');
-        promptElement.innerHTML = promptHTML;
-        document.body.appendChild(promptElement);
-        
-        console.log('📱 Prompt de instalação mostrado');
-      }
-
-      // Função para instalar o PWA
+      // Função simples para instalar PWA
       window.installPWA = async function() {
-        console.log('🚀 Iniciando instalação do PWA...');
-        
-        if (window.deferredPrompt && typeof window.deferredPrompt.prompt === 'function') {
-          console.log('✅ deferredPrompt válido, mostrando prompt de instalação...');
-          try {
-            await window.deferredPrompt.prompt();
-            
-            const choiceResult = await window.deferredPrompt.userChoice;
-            console.log('🎯 Usuário escolheu:', choiceResult.outcome);
-            
-            if (choiceResult.outcome === 'accepted') {
-              console.log('🎉 Dois no Bolso instalado com sucesso!');
-              const prompt = document.querySelector('.pwa-prompt');
-              if (prompt) prompt.remove();
-            } else {
-              console.log('❌ Instalação recusada pelo usuário');
-            }
-            
-            window.deferredPrompt = null;
-            
-          } catch (error) {
-            console.log('💥 Erro durante a instalação:', error);
-            showManualInstallInstructions();
-          }
-        } else {
-          console.log('❌ deferredPrompt não disponível para instalação automática');
-          showManualInstallInstructions();
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log('🎯 Usuário escolheu:', outcome);
+          deferredPrompt = null;
         }
       };
 
-      // Função para mostrar instruções manuais
-      function showManualInstallInstructions() {
-        const instructionsHTML = `
-          <div class="pwa-prompt safe-area-bottom" style="background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);">
-            <div class="max-w-md mx-auto">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  <span class="font-semibold">Como Instalar Manualmente</span>
-                </div>
-                <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-white/80 hover:text-white">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
-                </button>
-              </div>
-              <div class="text-sm space-y-2 mb-3 text-white">
-                <p><strong>Chrome/Edge Desktop:</strong></p>
-                <p>• Clique no menu (3 pontos) no canto superior direito</p>
-                <p>• Selecione "Instalar Dois no Bolso"</p>
-                <p>• Ou procure o ícone 📦 na barra de endereços</p>
-                <br>
-                <p><strong>Chrome Mobile:</strong></p>
-                <p>• Toque no menu (3 pontos)</p>
-                <p>• Selecione "Adicionar à tela inicial"</p>
-              </div>
-              <button onclick="this.parentElement.parentElement.parentElement.remove()" class="w-full bg-white text-blue-600 py-2 px-4 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-sm">
-                Entendi
-              </button>
-            </div>
-          </div>
-        `;
-
-        const instructionsElement = document.createElement('div');
-        instructionsElement.innerHTML = instructionsHTML;
-        document.body.appendChild(instructionsElement);
-      }
-
-      // Função para dispensar o prompt
+      // Função para dispensar prompt
       window.dismissInstallPrompt = function() {
-        console.log('❌ Prompt de instalação dispensado');
-        localStorage.setItem('pwaPromptDismissed', Date.now().toString());
         const prompt = document.querySelector('.pwa-prompt');
         if (prompt) prompt.remove();
       };
 
-      // Função para mostrar prompt de atualização
-      function showUpdatePrompt() {
-        const updateHTML = `
-          <div class="pwa-prompt safe-area-bottom" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
-            <div class="max-w-md mx-auto">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                  </svg>
-                  <span class="font-semibold">Atualização Disponível</span>
-                </div>
-              </div>
-              <p class="text-sm mb-3">
-                Uma nova versão do Dois no Bolso está disponível!
-              </p>
-              <button onclick="window.location.reload()" class="w-full bg-white text-amber-600 py-2 px-4 rounded-lg font-semibold hover:bg-amber-50 transition-colors text-sm">
-                Atualizar Agora
-              </button>
-            </div>
-          </div>
-        `;
-
-        const updateElement = document.createElement('div');
-        updateElement.innerHTML = updateHTML;
-        document.body.appendChild(updateElement);
-      }
-
-      // Detectar modo standalone (app instalado)
+      // Detectar modo standalone
       if (window.matchMedia('(display-mode: standalone)').matches) {
+        console.log('📱 Executando em modo standalone');
         document.documentElement.classList.add('standalone-mode');
-        console.log('📱 Dois no Bolso: Executando em modo standalone');
-      }
-
-      // Detectar dispositivo iOS
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-      if (isIOS) {
-        document.documentElement.classList.add('ios-device');
       }
 
       // Gerenciar estado online/offline
       window.addEventListener('online', () => {
-        console.log('✅ Dois no Bolso: Conexão restaurada');
+        console.log('✅ Conexão restaurada');
       });
 
       window.addEventListener('offline', () => {
-        console.log('📶 Dois no Bolso: Modo offline ativado');
+        console.log('📶 Modo offline ativado');
       });
 
-      console.log('🚀 Dois no Bolso PWA inicializado!');
+      console.log('🚀 Dois no Bolso inicializado!');
+      
+      // Fallback para caso o React não carregue
+      setTimeout(() => {
+        const rootElement = document.getElementById('root');
+        const loadingElement = document.getElementById('app-loading');
+        
+        if (rootElement && !rootElement.hasChildNodes() && loadingElement) {
+          console.log('⚠️ React não carregou - mostrando fallback');
+          loadingElement.innerHTML = `
+            <div class="text-center text-white p-8">
+              <div class="text-4xl mb-4">⚠️</div>
+              <h2 class="text-xl font-bold mb-2">Sistema não carregou</h2>
+              <p class="mb-4">Verifique o console (F12) para erros</p>
+              <button onclick="location.reload()" class="bg-white text-green-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100">
+                Recarregar
+              </button>
+            </div>
+          `;
+        }
+      }, 8000);
     </script>
-
-    <!-- NÃO COLOQUE AQUI NENHUM SCRIPT TYPE="MODULE" -->
-    <!-- O VITE INJETA OS SCRIPTS AUTOMATICAMENTE -->
   </body>
 </html>
