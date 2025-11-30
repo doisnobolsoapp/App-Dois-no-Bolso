@@ -1,308 +1,115 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <!-- Título e Descrição -->
-    <title>Dois no Bolso - Controle Financeiro Pessoal</title>
-    <meta name="description" content="Controle suas finanças de forma simples e eficiente. Gerencie gastos, investimentos e metas financeiras com o Dois no Bolso." />
-    
-    <!-- Meta Tags PWA Essenciais -->
-    <meta name="theme-color" content="#16a34a" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Dois no Bolso" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="application-name" content="Dois no Bolso" />
-    
-    <!-- Meta Tags para SEO e Social -->
-    <meta name="keywords" content="finanças, controle financeiro, orçamento, gastos, investimentos, economia, dinheiro" />
-    <meta name="author" content="Dois no Bolso" />
-    <meta name="robots" content="index, follow" />
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Dois no Bolso - Controle Financeiro Pessoal" />
-    <meta property="og:description" content="Controle suas finanças de forma simples e eficiente. Gerencie gastos, investimentos e metas financeiras." />
-    <meta property="og:image" content="/icons/icon-512x512.png" />
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:title" content="Dois no Bolso - Controle Financeiro Pessoal" />
-    <meta property="twitter:description" content="Controle suas finanças de forma simples e eficiente." />
-    <meta property="twitter:image" content="/icons/icon-512x512.png" />
+<script>
+  // Variável global para o deferred prompt
+  let deferredPrompt;
 
-    <!-- Favicon e Ícones PWA -->
-    <link rel="icon" type="image/png" href="/icons/icon-32x32.png" sizes="32x32" />
-    <link rel="icon" type="image/png" href="/icons/icon-16x16.png" sizes="16x16" />
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-    
-    <!-- Manifest PWA -->
-    <link rel="manifest" href="/manifest.json" />
+  console.log('🚀 Dois no Bolso inicializando...');
 
-    <!-- Preconnects para Performance -->
-    <link rel="preconnect" href="https://aistudiocdn.com" />
-    <link rel="dns-prefetch" href="https://aistudiocdn.com" />
+  // Remover Service Workers existentes em desenvolvimento
+  if ('serviceWorker' in navigator) {
+    const isDevelopment = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1';
     
-    <!-- CSS do Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              brand: {
-                50: '#f0fdf4',
-                100: '#dcfce7',
-                500: '#22c55e',
-                600: '#16a34a',
-                700: '#15803d',
-                900: '#14532d',
-              }
-            },
-            animation: {
-              'fade-in': 'fadeIn 0.5s ease-in-out',
-              'slide-in-up': 'slideInUp 0.3s ease-out',
-              'pulse-soft': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            },
-            keyframes: {
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
-              },
-              slideInUp: {
-                '0%': { transform: 'translateY(10px)', opacity: '0' },
-                '100%': { transform: 'translateY(0)', opacity: '1' },
-              }
-            }
-          }
+    if (isDevelopment) {
+      console.log('🔧 Ambiente de desenvolvimento - Removendo Service Workers...');
+      
+      // Desregistrar todos os Service Workers
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+          registration.unregister();
+          console.log('🗑️ Service Worker removido:', registration.scope);
         }
-      }
-    </script>
+      }).catch(function(error) {
+        console.log('✅ Nenhum Service Worker para remover');
+      });
+    }
+  }
 
-    <!-- Estilos CSS Customizados para PWA -->
-    <style>
-      /* Estilos para modo standalone (app instalado) */
-      @media all and (display-mode: standalone) {
-        body {
-          -webkit-touch-callout: none;
-          -webkit-user-select: none;
-          -khtml-user-select: none;
-          -moz-user-select: none;
-          -ms-user-select: none;
-          user-select: none;
-        }
+  // Remover tela de loading quando o app carregar
+  window.addEventListener('load', function() {
+    console.log('✅ Página totalmente carregada');
+    
+    // Verificar se o React já carregou
+    const checkReactLoaded = setInterval(() => {
+      const rootElement = document.getElementById('root');
+      if (rootElement && rootElement.hasChildNodes()) {
+        console.log('✅ React carregou com sucesso');
+        clearInterval(checkReactLoaded);
         
-        /* Adiciona padding seguro para notches */
-        .safe-area-padding {
-          padding-top: env(safe-area-inset-top);
-          padding-bottom: env(safe-area-inset-bottom);
-          padding-left: env(safe-area-inset-left);
-          padding-right: env(safe-area-inset-right);
-        }
-      }
-
-      /* Melhorias de acessibilidade e UX */
-      @media (prefers-reduced-motion: reduce) {
-        * {
-          animation-duration: 0.01ms !important;
-          animation-iteration-count: 1 !important;
-          transition-duration: 0.01ms !important;
-        }
-      }
-
-      /* Loading inicial do app */
-      .app-loading {
-        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-      }
-
-      /* Scrollbar customizada */
-      ::-webkit-scrollbar {
-        width: 6px;
-      }
-      
-      ::-webkit-scrollbar-track {
-        background: #f1f5f9;
-      }
-      
-      ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 3px;
-      }
-      
-      ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-      }
-
-      /* Seleção de texto branda */
-      ::selection {
-        background-color: #dcfce7;
-        color: #15803d;
-      }
-
-      /* Melhorias para PWA */
-      .pwa-prompt {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-        color: white;
-        padding: 1rem;
-        z-index: 10000;
-        animation: slideInUp 0.3s ease-out;
-      }
-
-      /* Safe areas para dispositivos com notch */
-      @supports(padding: max(0px)) {
-        .safe-area-bottom {
-          padding-bottom: max(1rem, env(safe-area-inset-bottom));
-        }
-      }
-
-      /* Animações CSS */
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-      
-      .animate-spin {
-        animation: spin 1s linear infinite;
-      }
-    </style>
-  </head>
-  
-  <body class="bg-slate-50 text-slate-900 antialiased">
-    <!-- Tela de Loading Inicial -->
-    <div id="app-loading" class="fixed inset-0 app-loading flex items-center justify-center z-50 transition-opacity duration-300">
-      <div class="text-center text-white">
-        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <div class="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-        </div>
-        <h1 class="text-2xl font-bold mb-2">Dois no Bolso</h1>
-        <p class="text-white/80">Carregando seu controle financeiro...</p>
-      </div>
-    </div>
-
-    <!-- Container principal da aplicação -->
-    <div id="root"></div>
-
-    <!-- SCRIPT CORRIGIDO - SEM SERVICE WORKER EM DEV -->
-    <script>
-      // Variável global para o deferred prompt
-      let deferredPrompt;
-
-      console.log('🚀 Dois no Bolso inicializando...');
-
-      // Remover Service Workers existentes em desenvolvimento
-      if ('serviceWorker' in navigator) {
-        const isDevelopment = window.location.hostname === 'localhost' || 
-                             window.location.hostname === '127.0.0.1';
-        
-        if (isDevelopment) {
-          console.log('🔧 Ambiente de desenvolvimento - Removendo Service Workers...');
-          
-          // Desregistrar todos os Service Workers
-          navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            for (let registration of registrations) {
-              registration.unregister();
-              console.log('🗑️ Service Worker removido:', registration.scope);
-            }
-          }).catch(function(error) {
-            console.log('✅ Nenhum Service Worker para remover');
-          });
-        }
-      }
-
-      // Remover tela de loading quando o app carregar
-      window.addEventListener('load', function() {
-        console.log('✅ Página totalmente carregada');
-        
-        // Verificar se o React já carregou
-        const checkReactLoaded = setInterval(() => {
-          const rootElement = document.getElementById('root');
-          if (rootElement && rootElement.hasChildNodes()) {
-            console.log('✅ React carregou com sucesso');
-            clearInterval(checkReactLoaded);
-            
-            // Remover loading
-            setTimeout(() => {
-              const loadingElement = document.getElementById('app-loading');
-              if (loadingElement) {
-                loadingElement.style.opacity = '0';
-                setTimeout(() => {
-                  if (loadingElement.parentNode) {
-                    loadingElement.remove();
-                    console.log('🎯 Loading removido');
-                  }
-                }, 300);
-              }
-            }, 1000);
-          }
-        }, 100);
-
-        // Timeout de segurança - remover loading após 8 segundos
+        // Remover loading
         setTimeout(() => {
           const loadingElement = document.getElementById('app-loading');
-          const rootElement = document.getElementById('root');
-          
-          if (loadingElement && loadingElement.parentNode && rootElement && !rootElement.hasChildNodes()) {
-            console.log('⚠️ React não carregou - mostrando fallback');
-            loadingElement.innerHTML = `
-              <div class="text-center text-white p-8">
-                <div class="text-4xl mb-4">⚠️</div>
-                <h2 class="text-xl font-bold mb-2">Sistema não carregou</h2>
-                <p class="mb-4">Verifique o console (F12) para erros</p>
-                <button onclick="location.reload()" class="bg-white text-green-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100">
-                  Recarregar
-                </button>
-                <button onclick="clearServiceWorkers()" class="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600 ml-2">
-                  Limpar Cache
-                </button>
-              </div>
-            `;
+          if (loadingElement) {
+            loadingElement.style.opacity = '0';
+            setTimeout(() => {
+              if (loadingElement.parentNode) {
+                loadingElement.remove();
+                console.log('🎯 Loading removido');
+              }
+            }, 300);
           }
-        }, 8000);
-      });
-
-      // Função para limpar Service Workers manualmente
-      window.clearServiceWorkers = function() {
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            for (let registration of registrations) {
-              registration.unregister();
-              console.log('🧹 Service Worker removido:', registration.scope);
-            }
-            alert('Service Workers removidos! Recarregando...');
-            location.reload();
-          });
-        }
-      };
-
-      // PWA - Capturar evento de instalação (apenas em produção)
-      window.addEventListener('beforeinstallprompt', (e) => {
-        console.log('📱 PWA pronto para instalação');
-        e.preventDefault();
-        deferredPrompt = e;
-      });
-
-      // Detectar modo standalone
-      if (window.matchMedia('(display-mode: standalone)').matches) {
-        console.log('📱 Executando em modo standalone');
-        document.documentElement.classList.add('standalone-mode');
+        }, 1000);
       }
+    }, 100);
 
-      // Gerenciar estado online/offline
-      window.addEventListener('online', () => {
-        console.log('✅ Conexão restaurada');
+    // Timeout de segurança - remover loading após 8 segundos
+    setTimeout(() => {
+      const loadingElement = document.getElementById('app-loading');
+      const rootElement = document.getElementById('root');
+      
+      if (loadingElement && loadingElement.parentNode && rootElement && !rootElement.hasChildNodes()) {
+        console.log('⚠️ React não carregou - mostrando fallback');
+        loadingElement.innerHTML = `
+          <div class="text-center text-white p-8">
+            <div class="text-4xl mb-4">⚠️</div>
+            <h2 class="text-xl font-bold mb-2">Sistema não carregou</h2>
+            <p class="mb-4">Verifique o console (F12) para erros</p>
+            <button onclick="location.reload()" class="bg-white text-green-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100">
+              Recarregar
+            </button>
+            <button onclick="clearServiceWorkers()" class="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600 ml-2">
+              Limpar Cache
+            </button>
+          </div>
+        `;
+      }
+    }, 8000);
+  });
+
+  // Função para limpar Service Workers manualmente
+  window.clearServiceWorkers = function() {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+          registration.unregister();
+          console.log('🧹 Service Worker removido:', registration.scope);
+        }
+        alert('Service Workers removidos! Recarregando...');
+        location.reload();
       });
+    }
+  };
 
-      window.addEventListener('offline', () => {
-        console.log('📶 Modo offline ativado');
-      });
+  // PWA - Capturar evento de instalação (apenas em produção)
+  window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('📱 PWA pronto para instalação');
+    e.preventDefault();
+    deferredPrompt = e;
+  });
 
-      console.log('✅ Dois no Bolso inicializado!');
-    </script>
-  </body>
-</html>
+  // Detectar modo standalone
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    console.log('📱 Executando em modo standalone');
+    document.documentElement.classList.add('standalone-mode');
+  }
+
+  // Gerenciar estado online/offline
+  window.addEventListener('online', () => {
+    console.log('✅ Conexão restaurada');
+  });
+
+  window.addEventListener('offline', () => {
+    console.log('📶 Modo offline ativado');
+  });
+
+  console.log('✅ Dois no Bolso inicializado!');
+</script>
