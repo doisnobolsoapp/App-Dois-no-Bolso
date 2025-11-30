@@ -7,4 +7,9 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  build: {
+    outDir: 'dist',
+  },
+  // ADICIONE ESTA LINHA para definir o ponto de entrada correto:
+  root: '.',
 })
