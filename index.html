@@ -4,6 +4,25 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Tailwind via CDN (remova depois) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#667eea',
+              secondary: '#764ba2',
+            }
+          }
+        }
+      }
+    </script>
+    
     <title>Dois no Bolso - Controle Financeiro</title>
     <style>
       body { 
@@ -60,37 +79,25 @@
     <script>
       console.log('🚀 Dois no Bolso - Iniciando...');
 
-      // Remover Service Workers
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          console.log('🧹 Removendo Service Workers...');
-          for(let registration of registrations) {
-            registration.unregister();
-            console.log('✅ Service Worker removido:', registration.scope);
-          }
-        }).catch(function(error) {
-          console.log('✅ Nenhum Service Worker encontrado');
-        });
-      }
-
-      // Limpar caches
-      if ('caches' in window) {
-        caches.keys().then(function(names) {
-          for (let name of names) {
-            caches.delete(name);
-            console.log('🗑️ Cache removido:', name);
-          }
+      // Registrar Service Worker CORRETAMENTE
+      if ('serviceWorker' in navigator && window.location.hostname !== 'localhost') {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+              console.log('✅ Dois no Bolso: Service Worker registrado com sucesso:', registration.scope);
+            })
+            .catch(error => {
+              console.log('❌ Dois no Bolso: Falha no registro do Service Worker:', error);
+            });
         });
       }
 
       // Remover a tela de loading quando o React carregar
       window.addEventListener('load', function() {
-        // Verifica se o React já carregou
         const checkReactLoaded = setInterval(() => {
           const rootElement = document.getElementById('root');
           if (rootElement && rootElement.hasChildNodes()) {
             clearInterval(checkReactLoaded);
-            // Espera um pouco e remove o loading
             setTimeout(() => {
               const loadingElement = document.getElementById('app-loading');
               if (loadingElement) {
